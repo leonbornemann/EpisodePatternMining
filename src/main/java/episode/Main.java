@@ -26,8 +26,9 @@ public class Main {
 		CsvReader reader = env.readCsvFile(filePath );
 		DataSet<Tuple2<String,Integer>> dataSet = reader.types(String.class,Integer.class);
 		DataSet<Tuple2<EventType,Integer>> newDataSet = dataSet.map(new StringToEvent());
-		EpisodePatternMiner miner = new EpisodePatternMiner(newDataSet.collect(), 0.03, getEventAlphabet(typeToWeight));
-		miner.execute();
+		//DatabaseEpisodePatternMiner miner = new DatabaseEpisodePatternMiner(newDataSet.collect(), getEventAlphabet(typeToWeight), 0.05);
+		LossySerialEpisodePatternMiner miner = new LossySerialEpisodePatternMiner(newDataSet.collect(),getEventAlphabet(typeToWeight),0.05,0.01);
+		miner.executeLossyCounting();
 	}
 	
 	private static Set<EventType> getEventAlphabet(List<Tuple2<String, Integer>> typeToWeight) {

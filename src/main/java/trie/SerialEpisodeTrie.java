@@ -1,8 +1,11 @@
 package trie;
 
+import java.util.Iterator;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import episode.EventType;
+import episode.FrequencyListElement;
 import episode.SerialEpisode;
 
 public class SerialEpisodeTrie<T> {
@@ -23,5 +26,9 @@ public class SerialEpisodeTrie<T> {
 	
 	public boolean hasValue(SerialEpisode e){
 		return root.getValue(e)!=null;
+	}
+
+	public Iterator<Entry<SerialEpisode, T>> bfsIterator() {
+		return new BFSTrieIterator<T>(root);
 	}
 }

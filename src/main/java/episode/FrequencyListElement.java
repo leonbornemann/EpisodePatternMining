@@ -1,4 +1,4 @@
-package lossyCounting.algorithms.impl;
+package episode;
 
 public class FrequencyListElement {
 
