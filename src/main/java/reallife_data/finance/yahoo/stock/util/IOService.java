@@ -1,4 +1,4 @@
-package yahoo.stock_data.download;
+package reallife_data.finance.yahoo.stock.util;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -35,7 +35,7 @@ public class IOService {
 		try {
 			stream = new PrintStream(new FileOutputStream(new File(errorLogLocation),true));
 			stream.println("-----------------------------");
-			stream.println(timestamp.format(StandardDateTimeFormatter.getStandardFormatter()));
+			stream.println(timestamp.format(StandardDateTimeFormatter.getStandardDateTimeFormatter()));
 			e.printStackTrace(stream);
 			stream.println("-----------------------------");
 			stream.close();

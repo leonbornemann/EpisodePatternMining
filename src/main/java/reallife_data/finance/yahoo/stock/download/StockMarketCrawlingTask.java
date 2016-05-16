@@ -1,4 +1,4 @@
-package yahoo.stock_data.download;
+package reallife_data.finance.yahoo.stock.download;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -13,6 +13,9 @@ import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import reallife_data.finance.yahoo.stock.util.IOService;
+import reallife_data.finance.yahoo.stock.util.StandardDateTimeFormatter;
 
 public class StockMarketCrawlingTask implements Runnable {
 
@@ -30,11 +33,16 @@ public class StockMarketCrawlingTask implements Runnable {
 	public void run() {
 		LocalDateTime timestamp = LocalDateTime.now();
 		try {
+			if(!(new File(dataBaseLocation).exists())){
+				PrintWriter out = new PrintWriter(new FileWriter(new File(dataBaseLocation),true));
+				out.println("company,value,timestamp");
+				out.close();
+			}
 			requestMultipleCompanies(allCompanyCodes,timestamp);
 		} catch (IOException e) {
 			IOService.writeErrorLogEntry(errorLogLocation,e,timestamp);
 		}
-		System.out.println("Done with data extraction of timestamp " + timestamp.format(StandardDateTimeFormatter.getStandardFormatter()));
+		System.out.println("Done with data extraction of timestamp " + timestamp.format(StandardDateTimeFormatter.getStandardDateTimeFormatter()));
 	}
 
 	private void requestMultipleCompanies(List<String> allCompanyCodes, LocalDateTime timestamp) throws MalformedURLException, IOException, ProtocolException {
@@ -53,7 +61,7 @@ public class StockMarketCrawlingTask implements Runnable {
 		BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
 		String line;
 		while ((line = rd.readLine()) != null) {
-			out.println(line + "," + timestamp.format(StandardDateTimeFormatter.getStandardFormatter()));
+			out.println(line + "," + timestamp.format(StandardDateTimeFormatter.getStandardDateTimeFormatter()));
 		}
 		rd.close();
 	}
