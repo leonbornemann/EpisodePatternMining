@@ -1,4 +1,4 @@
-package episode;
+package episode.basic;
 
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.tuple.Tuple2;

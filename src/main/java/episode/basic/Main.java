@@ -1,4 +1,4 @@
-package episode;
+package episode.basic;
 
 import java.io.File;
 import java.util.ArrayList;

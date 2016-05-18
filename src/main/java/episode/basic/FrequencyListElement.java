@@ -1,4 +1,4 @@
-package episode;
+package episode.basic;
 
 public class FrequencyListElement {
 

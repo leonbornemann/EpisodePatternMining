@@ -30,7 +30,7 @@ public class IOService {
 		return allCompanyCodes;
 	}
 
-	public static void writeErrorLogEntry(String errorLogLocation, IOException e, LocalDateTime timestamp) {
+	public static void writeErrorLogEntry(String errorLogLocation, Throwable e, LocalDateTime timestamp) {
 		PrintStream stream;
 		try {
 			stream = new PrintStream(new FileOutputStream(new File(errorLogLocation),true));
@@ -41,6 +41,7 @@ public class IOService {
 			stream.close();
 		} catch (FileNotFoundException e1) {
 			e1.printStackTrace();
+			System.out.println("error logging broken");
 			throw new AssertionError("error logging broken");
 		}
 	}

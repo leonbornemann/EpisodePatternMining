@@ -11,8 +11,8 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import episode.EventType;
-import episode.SerialEpisode;
+import episode.basic.EventType;
+import episode.basic.SerialEpisode;
 import trie.SerialEpisodeTrie;
 
 public class TrieTest {

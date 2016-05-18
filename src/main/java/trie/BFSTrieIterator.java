@@ -11,10 +11,10 @@ import java.util.Queue;
 
 import org.apache.commons.collections.iterators.EntrySetMapIterator;
 
-import episode.EventType;
-import episode.SerialEpisode;
+import episode.basic.EventType;
+import episode.basic.SerialEpisode;
 
-public class BFSTrieIterator<T> implements Iterator<java.util.Map.Entry<episode.SerialEpisode, T>> {
+public class BFSTrieIterator<T> implements Iterator<java.util.Map.Entry<episode.basic.SerialEpisode, T>> {
 
 	private SerialEpisodeTrieNode<T> curNode;
 	private List<Entry<EventType,T>> curEntries;

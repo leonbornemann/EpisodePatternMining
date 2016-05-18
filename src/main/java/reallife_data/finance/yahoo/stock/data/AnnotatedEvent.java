@@ -12,14 +12,11 @@ import reallife_data.finance.yahoo.stock.util.StandardDateTimeFormatter;
 
 public class AnnotatedEvent {
 	
-	private String companyId;
-	private Change change;
 	private LocalDateTime timestamp;
+	private AnnotatedEventType annotatedEventType;
 	
 	public AnnotatedEvent(String companyId, Change change, LocalDateTime timestamp) {
-		super();
-		this.companyId = companyId;
-		this.change = change;
+		this.annotatedEventType = new AnnotatedEventType(companyId, change); //TODO: we could have a database of singletons where we just lookup the event types.
 		this.timestamp = timestamp;
 	}
 
@@ -27,13 +24,21 @@ public class AnnotatedEvent {
 		Collections.sort(allAnnotated, (a,b) -> a.getTimestamp().compareTo(b.getTimestamp()));
 		PrintWriter pr = new PrintWriter(new FileWriter(outFile));
 		pr.println("company,change,timestamp");
-		allAnnotated.forEach(e -> pr.println(e.companyId+"," + e.change + ","+e.timestamp.format(StandardDateTimeFormatter.getStandardDateTimeFormatter())));
+		allAnnotated.forEach(e -> pr.println(e.annotatedEventType.getCompanyID()+"," + e.annotatedEventType.getChange() + ","+e.timestamp.format(StandardDateTimeFormatter.getStandardDateTimeFormatter())));
 		pr.close();
 	}
 
-	private LocalDateTime getTimestamp() {
+	public LocalDateTime getTimestamp() {
 		return timestamp;
 	}
 
+	public AnnotatedEventType getEventType() {
+		return annotatedEventType;
+	}
+
+	@Override
+	public String toString(){
+		return annotatedEventType.getCompanyID() + "," + annotatedEventType.getChange() + "," + timestamp.format(StandardDateTimeFormatter.getStandardDateTimeFormatter());
+	}
 	
 }

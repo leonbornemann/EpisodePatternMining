@@ -31,6 +31,7 @@ public class StockMarketCrawlingTask implements Runnable {
 
 	@Override
 	public void run() {
+		System.out.println("starting execution");
 		LocalDateTime timestamp = LocalDateTime.now();
 		try {
 			if(!(new File(dataBaseLocation).exists())){
@@ -39,7 +40,8 @@ public class StockMarketCrawlingTask implements Runnable {
 				out.close();
 			}
 			requestMultipleCompanies(allCompanyCodes,timestamp);
-		} catch (IOException e) {
+		} catch (Throwable e) {
+			System.out.println("encountered exception or error");
 			IOService.writeErrorLogEntry(errorLogLocation,e,timestamp);
 		}
 		System.out.println("Done with data extraction of timestamp " + timestamp.format(StandardDateTimeFormatter.getStandardDateTimeFormatter()));

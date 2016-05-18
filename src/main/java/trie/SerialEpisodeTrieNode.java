@@ -6,10 +6,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.TreeMap;
 
-import episode.EventType;
-import episode.SerialEpisode;
+import episode.basic.EventType;
+import episode.basic.SerialEpisode;
+
+import java.util.TreeMap;
 
 public class SerialEpisodeTrieNode<T> {
 
