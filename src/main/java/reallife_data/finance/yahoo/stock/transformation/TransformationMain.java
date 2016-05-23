@@ -9,7 +9,7 @@ public class TransformationMain {
 	private static String target = "D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Data\\";
 	
 	public static void main(String[] args) throws IOException {
-		LowToAnnotatedTransformator transformer = new LowToAnnotatedTransformator(new File(dataBaseLocation),new File(target));
+		LowToAnnotatedTransformator transformer = new LowToAnnotatedTransformator(new File(dataBaseLocation),new File(target),0.001);
 		transformer.transform();
 	}
 }

@@ -10,6 +10,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import reallife_data.finance.yahoo.stock.data.AnnotatedEvent;
 import reallife_data.finance.yahoo.stock.data.Change;
@@ -67,5 +69,9 @@ public class AnnotatedEventStream {
 
 	public List<AnnotatedEvent> getEvents() {
 		return events;
+	}
+
+	public AnnotatedEventStream filter(Predicate<? super AnnotatedEvent> predicate) {
+		return new AnnotatedEventStream(events.stream().filter(predicate).collect(Collectors.toList()));
 	}
 }

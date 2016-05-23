@@ -21,7 +21,12 @@
       <version>3.8.1</version>
       <scope>test</scope>
     </dependency>
-    
+    <dependency>
+  		<groupId>org.apache.jena</groupId>
+  		<artifactId>apache-jena-libs</artifactId>
+  		<type>pom</type>
+  		<version>3.0.1</version>
+  	</dependency>
 
 <!-- Use this dependency if you are using the DataStream API -->
 	<dependency>

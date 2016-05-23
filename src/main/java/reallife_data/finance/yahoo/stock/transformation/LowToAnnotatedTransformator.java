@@ -17,17 +17,21 @@ public class LowToAnnotatedTransformator {
 	
 	private File outputDir;
 	private File inputDir;
+	private double relativeDelta;
 
-	public LowToAnnotatedTransformator(File inputDir, File outputDir){
+	public LowToAnnotatedTransformator(File inputDir, File outputDir, double relativeDelta){
 		this.inputDir = inputDir;
 		this.outputDir = outputDir;
+		this.relativeDelta =relativeDelta;
 	}
 	
 	public void transform() throws IOException{
 		List<File> allFiles = Arrays.asList(inputDir.listFiles());
 		for(File file : allFiles){
-			if(file.isFile() && file.getName().endsWith(".csv"))
-			transform(file);
+			if(file.isFile() && file.getName().endsWith(".csv")){
+				transform(file);
+				System.out.println("done with "+file.getName());
+			}
 		}
 	}
 
@@ -43,20 +47,25 @@ public class LowToAnnotatedTransformator {
 	}
 
 	private List<AnnotatedEvent> toAnnotated(List<LowLevelEvent> lowLevelEvents) {
+		if(lowLevelEvents.isEmpty()){
+			return new ArrayList<>();
+		}
 		double epsilon = 0.00001;
 		List<AnnotatedEvent> annotatedEvents = new ArrayList<>();
+		double referenceValue = lowLevelEvents.get(0).getValue();
 		for(int i=1;i<lowLevelEvents.size();i++){
-			LowLevelEvent before = lowLevelEvents.get(i-1);
 			LowLevelEvent now = lowLevelEvents.get(i);
 			Change change;
-			if(equalWithinTolerance(before.getValue(), now.getValue(), epsilon)){
-				change = Change.EQUAL;
-			} else if(before.getValue() < now.getValue()){
+			if(now.getValue() >= referenceValue + referenceValue*relativeDelta){
 				change = Change.UP;
-			} else{
+				referenceValue = now.getValue();
+			} else if(now.getValue() <= referenceValue - referenceValue*relativeDelta){
 				change = Change.DOWN;
+				referenceValue = now.getValue();
+			} else{
+				change = Change.EQUAL; //TODO: should this be an event?
 			}
-			annotatedEvents.add(new AnnotatedEvent(before.getCompanyId(), change, now.getTimestamp()));
+			annotatedEvents.add(new AnnotatedEvent(now.getCompanyId(), change, now.getTimestamp()));
 		}
 		return annotatedEvents;
 	}

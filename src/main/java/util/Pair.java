@@ -22,5 +22,9 @@ public class Pair<T1, T2> {
 		this.second = second;
 	}
 	
+	@Override
+	public String toString(){
+		return "(" + first.toString() + "," + second.toString() + ")";
+	}
 	
 }

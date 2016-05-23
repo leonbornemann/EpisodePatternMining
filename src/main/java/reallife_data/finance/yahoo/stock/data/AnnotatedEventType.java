@@ -7,19 +7,11 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
+import reallife_data.finance.yahoo.stock.util.IOService;
+
 public class AnnotatedEventType implements Comparable<AnnotatedEventType>{
 
-	public static Set<AnnotatedEventType> loadEventAlphabet() throws IOException{
-		String companylistPath = "resources/stock_data/companyInfo/companylist.csv";
-		BufferedReader reader = new BufferedReader(new FileReader(new File(companylistPath)));
-		Set<String> allCompanyIDS = new HashSet<>();
-		reader.readLine();
-		String line = reader.readLine();
-		while(line!=null && !line.equals("")){
-			allCompanyIDS.add(line.split(",")[0].replaceAll("\"", ""));
-			line=reader.readLine();
-		}
-		reader.close();
+	public static Set<AnnotatedEventType> loadEventAlphabet(Set<String> allCompanyIDS) throws IOException{
 		Set<AnnotatedEventType> eventAlphabet = new HashSet<>();
 		for(String id : allCompanyIDS ){
 			for(Change change : Change.values()){
@@ -85,5 +77,9 @@ public class AnnotatedEventType implements Comparable<AnnotatedEventType>{
 	@Override
 	public String toString(){
 		return companyID + "_" + change;
+	}
+
+	public static Set<AnnotatedEventType> loadEventAlphabet() throws IOException {
+		return loadEventAlphabet(IOService.getAllCompanyCodes());
 	}
 }
