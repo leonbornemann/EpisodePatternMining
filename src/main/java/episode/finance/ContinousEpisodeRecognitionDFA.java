@@ -29,25 +29,24 @@ public class ContinousEpisodeRecognitionDFA {
 	 * @return A Pair of start- and endtime of an episode if the arrival of event e completed an episode occurance, null otherwise
 	 */
 	public Pair<LocalDateTime,LocalDateTime> processEvent(AnnotatedEvent e){
-		if(e.getEventType().equals(episode.get(0))){
-			if(episode.length()>1){
-				newState(1,e.getTimestamp());
-				return null;
-			} else{
-				return new Pair<>(e.getTimestamp(),e.getTimestamp());
-			}
+		if(e.getEventType().equals(episode.get(0)) && episode.length()==1){
+			return new Pair<>(e.getTimestamp(),e.getTimestamp());
 		} else{
-			Set<Integer> waitsForThis = positions.keySet().stream().filter(i -> positions.get(i).getFirst().equals(e)).collect(Collectors.toSet()) ;//TODO!
+			Set<Integer> waitsForThis = positions.keySet().stream().filter(i -> positions.get(i).getFirst().equals(e.getEventType())).collect(Collectors.toSet()) ;//TODO!
 			List<Pair<LocalDateTime,LocalDateTime>> recognizedEpisodes = new ArrayList<>();
 			for(Integer i : waitsForThis){
 				assert(positions.containsKey(i));
 				if(i==episode.length()-1){
-					positions.remove(i); //We have recognized an episode
-					recognizedEpisodes.add(new Pair<>(positions.get(i).getSecond(),e.getTimestamp()));
+					LocalDateTime startTime = positions.remove(i).getSecond(); //We have recognized an episode
+					recognizedEpisodes.add(new Pair<>(startTime,e.getTimestamp()));
 				} else{
 					Pair<AnnotatedEventType, LocalDateTime> entry = positions.remove(i);
 					newState(i+1,entry.getSecond());
 				}
+			}
+			//special case: we always wait for the first event of the episode, but this is not registered in positions.
+			if(e.getEventType().equals(episode.get(0))){
+				newState(1,e.getTimestamp());
 			}
 			assert(recognizedEpisodes.size()<=1);
 			if(recognizedEpisodes.size()>0){
