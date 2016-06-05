@@ -1,5 +1,6 @@
 package reallife_data.finance.yahoo.stock.mining;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -10,11 +11,12 @@ import episode.finance.SerialEpisodePattern;
 import reallife_data.finance.yahoo.stock.data.AnnotatedEvent;
 import reallife_data.finance.yahoo.stock.data.AnnotatedEventType;
 import reallife_data.finance.yahoo.stock.stream.AnnotatedEventStream;
+import reallife_data.finance.yahoo.stock.stream.MultiFileAnnotatedEventStream;
 import reallife_data.finance.yahoo.stock.stream.StreamWindow;
 
 public class PredictiveMiner {
 
-	private AnnotatedEventStream stream;
+	private MultiFileAnnotatedEventStream stream;
 	private AnnotatedEventType toPredict;
 	private int n;
 	private int m;
@@ -22,7 +24,7 @@ public class PredictiveMiner {
 	private int d;
 	private Set<AnnotatedEventType> eventAlphabet;
 
-	public PredictiveMiner(AnnotatedEventStream stream, AnnotatedEventType toPredict, Set<AnnotatedEventType> eventAlphabet,int m, int s,int n,int d) {
+	public PredictiveMiner(MultiFileAnnotatedEventStream stream, AnnotatedEventType toPredict, Set<AnnotatedEventType> eventAlphabet,int m, int s,int n,int d) {
 		this.stream = stream;
 		this.toPredict = toPredict;
 		this.n = n;
@@ -32,17 +34,17 @@ public class PredictiveMiner {
 		this.eventAlphabet =eventAlphabet;
 	}
 	
-	public Map<SerialEpisodePattern,Integer> getInitialPreditiveEpisodes(){
-		List<AnnotatedEvent> events = stream.getEvents();
+	public Map<SerialEpisodePattern,Integer> getInitialPreditiveEpisodes() throws IOException{
 		List<StreamWindow> predictiveWindows = new ArrayList<>();
 		List<StreamWindow> inversePredictiveWindows = new ArrayList<>();
-		for(int i=0;i<events.size();i++){
-			if(predictiveWindows.size()!=m &&events.get(i).getEventType().equals(toPredict)){
+		while(stream.hasNext()){
+			AnnotatedEvent current = stream.next();
+			if(predictiveWindows.size()!=m &&current.getEventType().equals(toPredict)){
 				System.out.println("found new apple up");
-				predictiveWindows.add(stream.getBackwardsWindow(d, i));
-			} else if(inversePredictiveWindows.size()!=m && events.get(i).getEventType().equals(toPredict.getInverseEvent())){
+				predictiveWindows.add(stream.getBackwardsWindow(d));
+			} else if(inversePredictiveWindows.size()!=m && current.getEventType().equals(toPredict.getInverseEvent())){
 				System.out.println("found new apple down");
-				inversePredictiveWindows.add(stream.getBackwardsWindow(d, i));
+				inversePredictiveWindows.add(stream.getBackwardsWindow(d));
 			}
 			if(predictiveWindows.size()==m && inversePredictiveWindows.size() == m){
 				break;

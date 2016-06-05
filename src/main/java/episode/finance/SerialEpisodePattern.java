@@ -40,8 +40,12 @@ public class SerialEpisodePattern implements EpisodePattern {
 		events.add(annotatedEventType);
 	}
 
-	public EpisodeRecognitionDFA getDFA() {
-		return new EpisodeRecognitionDFA(this);
+	public SimpleEpisodeRecognitionDFA getSimpleDFA() {
+		return new SimpleEpisodeRecognitionDFA(this);
+	}
+	
+	public ContinousEpisodeRecognitionDFA getContinousDFA(){
+		return new ContinousEpisodeRecognitionDFA(this);
 	}
 	
 	@Override
