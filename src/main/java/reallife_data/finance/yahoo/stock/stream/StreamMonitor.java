@@ -3,13 +3,9 @@ package reallife_data.finance.yahoo.stock.stream;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import episode.finance.ContinousEpisodeRecognitionDFA;
@@ -21,12 +17,12 @@ import util.Pair;
 public class StreamMonitor {
 	
 	private Map<ContinousEpisodeRecognitionDFA,Integer> trustScores = new HashMap<>();
-	private PriorityQueue<Pair<ContinousEpisodeRecognitionDFA,LocalDateTime>> predictorOccuranceExpiryTimes = new PriorityQueue<>((a,b) -> a.getSecond().compareTo(b.getSecond()));
-	private MultiFileAnnotatedEventStream stream;
+	private PriorityQueue<PredictorOccuranceState> predictorOccuranceExpiryTimes = new PriorityQueue<>((a,b) -> a.getExpiryTime().compareTo(b.getExpiryTime()));
+	private AnnotatedEventStream stream;
 	private AnnotatedEventType toPredict;
 	private int episodeDuration;
 	
-	public StreamMonitor(Map<SerialEpisodePattern, Integer> predictors, MultiFileAnnotatedEventStream stream, AnnotatedEventType toPredict, int episodeDuration) {
+	public StreamMonitor(Map<SerialEpisodePattern, Integer> predictors, AnnotatedEventStream stream, AnnotatedEventType toPredict, int episodeDuration) {
 		for(SerialEpisodePattern pattern : predictors.keySet()){
 			trustScores.put(pattern.getContinousDFA(), predictors.get(pattern));
 		}
@@ -38,15 +34,23 @@ public class StreamMonitor {
 	public void monitor() throws IOException{
 		while(stream.hasNext()){
 			AnnotatedEvent curEvent = stream.next();
-			while(predictorOccuranceExpiryTimes.peek() != null && isSmaller(predictorOccuranceExpiryTimes.peek().getSecond(),curEvent.getTimestamp())){
-				predictorOccuranceExpiryTimes.poll();
+			while(predictorOccuranceExpiryTimes.peek() != null && isSmaller(predictorOccuranceExpiryTimes.peek().getExpiryTime(),curEvent.getTimestamp())){
+				PredictorOccuranceState expired = predictorOccuranceExpiryTimes.poll();
+				if(!expired.hadOccurance()){
+					penalize(expired.getDFA());
+				}
 			}
 			if(curEvent.getEventType().equals(toPredict)){
-				predictorOccuranceExpiryTimes.forEach(e -> trustScores.put(e.getFirst(), trustScores.get(e.getFirst())+1)); //Reward
-			} else if(curEvent.getEventType().equals(toPredict)){
-				predictorOccuranceExpiryTimes.forEach(e -> trustScores.put(e.getFirst(), trustScores.get(e.getFirst())-1)); //Penalize
-			} //TODO: look at the case that we never find anything!
-			
+				predictorOccuranceExpiryTimes.forEach(e -> {
+					reward(e.getDFA());
+					e.setOccurance(true);
+				}); //Reward
+			} else if(curEvent.getEventType().equals(toPredict.getInverseEvent())){
+				predictorOccuranceExpiryTimes.forEach(e -> {
+					penalize(e.getDFA());
+					e.setOccurance(true);
+				}); //Reward
+			}
 			//advance automata
 			for(ContinousEpisodeRecognitionDFA automaton : trustScores.keySet()){
 				Pair<LocalDateTime, LocalDateTime> occurance = automaton.processEvent(curEvent);
@@ -57,12 +61,20 @@ public class StreamMonitor {
 		}
 	}
 
+	private Integer penalize(ContinousEpisodeRecognitionDFA dfa) {
+		return trustScores.put(dfa, trustScores.get(dfa)-1);
+	}
+
+	private Integer reward(ContinousEpisodeRecognitionDFA dfa) {
+		return trustScores.put(dfa, trustScores.get(dfa)+1);
+	}
+
 	private boolean isSmaller(LocalDateTime first, LocalDateTime second) {
 		return first.compareTo(second) < 0;
 	}
 
 	private void addPredictorOccurance(ContinousEpisodeRecognitionDFA automaton, LocalDateTime start) {
-		predictorOccuranceExpiryTimes.add(new Pair<>(automaton,getExpiryTime(start)));
+		predictorOccuranceExpiryTimes.add(new PredictorOccuranceState(automaton,getExpiryTime(start)));
 	}
 
 	private LocalDateTime getExpiryTime(LocalDateTime start) {

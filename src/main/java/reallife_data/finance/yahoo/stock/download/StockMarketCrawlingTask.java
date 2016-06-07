@@ -10,41 +10,64 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
 
 import reallife_data.finance.yahoo.stock.util.IOService;
 import reallife_data.finance.yahoo.stock.util.StandardDateTimeFormatter;
 
-public class StockMarketCrawlingTask implements Runnable {
+public class StockMarketCrawlingTask implements Runnable, org.quartz.Job{
 
 	private List<String> allCompanyCodes;
 	private String dataBaseLocation;
 	private String errorLogLocation;
+	private String outLogLocation;
 
-	public StockMarketCrawlingTask(List<String> allCompanyCodes, String dataBaseLocation, String errorLogLocation) {
+	public StockMarketCrawlingTask(List<String> allCompanyCodes, String dataBaseLocation, String errorLogLocation, String outLogLocation) {
 		this.allCompanyCodes = allCompanyCodes;
 		this.dataBaseLocation = dataBaseLocation;
 		this.errorLogLocation = errorLogLocation;
+		this.outLogLocation = outLogLocation;
+	}
+	
+	public StockMarketCrawlingTask() throws IOException{
+		errorLogLocation = "D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\errorLog.txt";
+		outLogLocation = "D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\log.txt";
+		allCompanyCodes = new ArrayList<>(IOService.getAllCompanyCodes());
+		Collections.sort(allCompanyCodes);
+		String dateToday = LocalDate.now().format(StandardDateTimeFormatter.getStandardDateFormatter());
+		dataBaseLocation = "D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Low Level Data\\NASDAQ_" +dateToday + ".csv";
 	}
 
 	@Override
 	public void run() {
-		System.out.println("starting execution");
-		LocalDateTime timestamp = LocalDateTime.now();
-		try {
-			if(!(new File(dataBaseLocation).exists())){
-				PrintWriter out = new PrintWriter(new FileWriter(new File(dataBaseLocation),true));
-				out.println("company,value,timestamp");
-				out.close();
+		try{
+			IOService.writeLogEntry(outLogLocation, "starting execution");
+			LocalDateTime timestamp = LocalDateTime.now();
+			try {
+				if(!(new File(dataBaseLocation).exists())){
+					PrintWriter out = new PrintWriter(new FileWriter(new File(dataBaseLocation),true));
+					out.println("company,value,timestamp");
+					out.close();
+				}
+				requestMultipleCompanies(allCompanyCodes,timestamp);
+			} catch (Throwable e) {
+				IOService.writeLogEntry(outLogLocation, "encountered exception or error");
+				IOService.writeErrorLogEntry(errorLogLocation,e,timestamp);
 			}
-			requestMultipleCompanies(allCompanyCodes,timestamp);
-		} catch (Throwable e) {
-			System.out.println("encountered exception or error");
-			IOService.writeErrorLogEntry(errorLogLocation,e,timestamp);
+			IOService.writeLogEntry(outLogLocation, "Done with data extraction of timestamp " + timestamp.format(StandardDateTimeFormatter.getStandardDateTimeFormatter()));
+		} catch(Throwable e){
+			System.out.println("Caught outer Exception");
 		}
-		System.out.println("Done with data extraction of timestamp " + timestamp.format(StandardDateTimeFormatter.getStandardDateTimeFormatter()));
 	}
 
 	private void requestMultipleCompanies(List<String> allCompanyCodes, LocalDateTime timestamp) throws MalformedURLException, IOException, ProtocolException {
@@ -82,5 +105,10 @@ public class StockMarketCrawlingTask implements Runnable {
 			start +=numCompaniesPerRequest;
 		}
 		return urls;
+	}
+
+	@Override
+	public void execute(JobExecutionContext arg0) throws JobExecutionException {
+		run();		
 	}
 }

@@ -17,7 +17,7 @@ import reallife_data.finance.yahoo.stock.data.AnnotatedEvent;
 import reallife_data.finance.yahoo.stock.data.Change;
 import reallife_data.finance.yahoo.stock.util.StandardDateTimeFormatter;
 
-public class MultiFileAnnotatedEventStream {
+public class MultiFileAnnotatedEventStream implements AnnotatedEventStream{
 
 	private List<File> files;
 	private int fileIndex = 0;

@@ -1,4 +1,4 @@
-package TestFlinkProject.main.episode.finance;
+package episode.finance;
 
 import static org.junit.Assert.*;
 

@@ -46,5 +46,17 @@ public class IOService {
 			throw new AssertionError("error logging broken");
 		}
 	}
+	
+	public static void writeLogEntry(String outLogLocation,String message){
+		PrintStream stream;
+		try {
+			stream = new PrintStream(new FileOutputStream(new File(outLogLocation),true));
+			stream.println(message);
+			stream.close();
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+			System.out.println("logging broken");
+		}
+	}
 
 }

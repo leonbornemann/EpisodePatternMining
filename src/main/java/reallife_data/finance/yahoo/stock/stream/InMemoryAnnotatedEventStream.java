@@ -17,9 +17,9 @@ import reallife_data.finance.yahoo.stock.data.AnnotatedEvent;
 import reallife_data.finance.yahoo.stock.data.Change;
 import reallife_data.finance.yahoo.stock.util.StandardDateTimeFormatter;
 
-public class SimpleAnnotatedEventStream{
+public class InMemoryAnnotatedEventStream implements AnnotatedEventStream{
 	
-	public static SimpleAnnotatedEventStream read(File streamFile) throws IOException{
+	public static InMemoryAnnotatedEventStream read(File streamFile) throws IOException{
 		List<AnnotatedEvent> events = new ArrayList<>();
 		BufferedReader br = new BufferedReader(new FileReader(streamFile));
 		br.readLine();
@@ -31,13 +31,15 @@ public class SimpleAnnotatedEventStream{
 			line=br.readLine();
 		}
 		br.close();
-		return new SimpleAnnotatedEventStream(events);
+		return new InMemoryAnnotatedEventStream(events);
 	}
 
 	private final List<AnnotatedEvent> events;
+	private int pos;
 	
-	public SimpleAnnotatedEventStream(List<AnnotatedEvent> events){
+	public InMemoryAnnotatedEventStream(List<AnnotatedEvent> events){
 		this.events = Collections.unmodifiableList(events);
+		this.pos = 0;
 	}
 	
 	/***
@@ -71,7 +73,22 @@ public class SimpleAnnotatedEventStream{
 		return events;
 	}
 
-	public SimpleAnnotatedEventStream filter(Predicate<? super AnnotatedEvent> predicate) {
-		return new SimpleAnnotatedEventStream(events.stream().filter(predicate).collect(Collectors.toList()));
+	public InMemoryAnnotatedEventStream filter(Predicate<? super AnnotatedEvent> predicate) {
+		return new InMemoryAnnotatedEventStream(events.stream().filter(predicate).collect(Collectors.toList()));
+	}
+
+	@Override
+	public StreamWindow getBackwardsWindow(int d) {
+		return getBackwardsWindow(d,pos);
+	}
+
+	@Override
+	public boolean hasNext() {
+		return pos<events.size();
+	}
+
+	@Override
+	public AnnotatedEvent next() throws IOException {
+		return events.get(pos++);
 	}
 }
