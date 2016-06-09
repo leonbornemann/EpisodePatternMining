@@ -2,15 +2,17 @@ package reallife_data.finance.yahoo.stock.mining;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import episode.finance.EpisodePatternMiner;
+import episode.finance.EpisodePattern;
+import episode.finance.ParallelEpisodePatternMiner;
 import episode.finance.SerialEpisodePattern;
+import episode.finance.SerialEpisodePatternMiner;
 import reallife_data.finance.yahoo.stock.data.AnnotatedEvent;
 import reallife_data.finance.yahoo.stock.data.AnnotatedEventType;
-import reallife_data.finance.yahoo.stock.stream.AnnotatedEventStream;
 import reallife_data.finance.yahoo.stock.stream.MultiFileAnnotatedEventStream;
 import reallife_data.finance.yahoo.stock.stream.StreamWindow;
 
@@ -34,7 +36,7 @@ public class PredictiveMiner {
 		this.eventAlphabet =eventAlphabet;
 	}
 	
-	public Map<SerialEpisodePattern,Integer> getInitialPreditiveEpisodes() throws IOException{
+	public Map<EpisodePattern,Integer> getInitialPreditiveEpisodes() throws IOException{
 		List<StreamWindow> predictiveWindows = new ArrayList<>();
 		List<StreamWindow> inversePredictiveWindows = new ArrayList<>();
 		while(stream.hasNext()){
@@ -50,8 +52,12 @@ public class PredictiveMiner {
 				break;
 			}
 		}
-		EpisodePatternMiner patternMiner = new EpisodePatternMiner(predictiveWindows, inversePredictiveWindows, eventAlphabet);
-		return patternMiner.mineSerialEpisodes(s, n);
+		SerialEpisodePatternMiner serialEpisodeMiner = new SerialEpisodePatternMiner(predictiveWindows, inversePredictiveWindows, eventAlphabet);
+		ParallelEpisodePatternMiner parallelEpisodeMiner = new ParallelEpisodePatternMiner(predictiveWindows, inversePredictiveWindows, eventAlphabet);
+		Map<EpisodePattern,Integer> initialPredictiveEpisodes = new HashMap<>();
+		initialPredictiveEpisodes.putAll(serialEpisodeMiner.mineEpisodePatterns(s, n));
+		initialPredictiveEpisodes.putAll(parallelEpisodeMiner.mineEpisodePatterns(s, n));
+		return initialPredictiveEpisodes;
 	}
 
 }

@@ -8,8 +8,9 @@ import reallife_data.finance.yahoo.stock.data.AnnotatedEventType;
 public interface EpisodePattern {
 
 	public int length();
-	
-	public Collection<AnnotatedEventType> getAll();
-	
+		
+	public SimpleEpisodeRecognitionDFA getSimpleRecognitionDFA();
+
+	public ContinousEpisodeRecognitionDFA getContinousDFA();
 	
 }

@@ -9,7 +9,7 @@ import java.time.temporal.TemporalUnit;
 import org.junit.Before;
 import org.junit.Test;
 
-import episode.finance.ContinousEpisodeRecognitionDFA;
+import episode.finance.ContinousSerialEpisodeRecognitionDFA;
 import episode.finance.SerialEpisodePattern;
 import reallife_data.finance.yahoo.stock.data.AnnotatedEvent;
 import reallife_data.finance.yahoo.stock.data.AnnotatedEventType;
@@ -38,7 +38,7 @@ public class ContinousEpisodeRecognitionDFATest {
 	@Test
 	public void noisySize1Test() {
 		SerialEpisodePattern pattern = new SerialEpisodePattern(A);
-		ContinousEpisodeRecognitionDFA dfa = pattern.getContinousDFA();
+		ContinousSerialEpisodeRecognitionDFA dfa = pattern.getContinousDFA();
 		assertNull(dfa.processEvent(nextEvent(B)));
 		assertNull(dfa.processEvent(nextEvent(C)));
 		assertNull(dfa.processEvent(nextEvent(D)));
@@ -65,7 +65,7 @@ public class ContinousEpisodeRecognitionDFATest {
 	@Test
 	public void basicSize5Test() {
 		SerialEpisodePattern pattern = new SerialEpisodePattern(A,B,C,A,D);
-		ContinousEpisodeRecognitionDFA dfa = pattern.getContinousDFA();
+		ContinousSerialEpisodeRecognitionDFA dfa = pattern.getContinousDFA();
 		assertNull(dfa.processEvent(nextEvent(A)));
 		assertNull(dfa.processEvent(nextEvent(B)));
 		assertNull(dfa.processEvent(nextEvent(C)));
@@ -78,7 +78,7 @@ public class ContinousEpisodeRecognitionDFATest {
 	@Test
 	public void noisySize5Test() {
 		SerialEpisodePattern pattern = new SerialEpisodePattern(A,B,C,A,D);
-		ContinousEpisodeRecognitionDFA dfa = pattern.getContinousDFA();
+		ContinousSerialEpisodeRecognitionDFA dfa = pattern.getContinousDFA();
 		//noise
 		assertNull(dfa.processEvent(nextEvent(F)));
 		assertNull(dfa.processEvent(nextEvent(C)));
@@ -114,7 +114,7 @@ public class ContinousEpisodeRecognitionDFATest {
 	@Test
 	public void latestOccuranceTest(){
 		SerialEpisodePattern pattern = new SerialEpisodePattern(A,B,C,A,D);
-		ContinousEpisodeRecognitionDFA dfa = pattern.getContinousDFA();
+		ContinousSerialEpisodeRecognitionDFA dfa = pattern.getContinousDFA();
 		assertNull(dfa.processEvent(nextEvent(A)));
 		assertNull(dfa.processEvent(nextEvent(B)));
 		assertNull(dfa.processEvent(nextEvent(C)));
@@ -136,7 +136,7 @@ public class ContinousEpisodeRecognitionDFATest {
 	@Test
 	public void multiOccurance(){
 		SerialEpisodePattern pattern = new SerialEpisodePattern(A,B,C);
-		ContinousEpisodeRecognitionDFA dfa = pattern.getContinousDFA();
+		ContinousSerialEpisodeRecognitionDFA dfa = pattern.getContinousDFA();
 		for(int i=0;i<10;i++){
 			assertNull(dfa.processEvent(nextEvent(A)));
 			assertNull(dfa.processEvent(nextEvent(B)));
@@ -149,7 +149,7 @@ public class ContinousEpisodeRecognitionDFATest {
 	@Test
 	public void singleEventPartOfMultipleEpisodes(){
 		SerialEpisodePattern pattern = new SerialEpisodePattern(A,B,C,A,B);
-		ContinousEpisodeRecognitionDFA dfa = pattern.getContinousDFA();
+		ContinousSerialEpisodeRecognitionDFA dfa = pattern.getContinousDFA();
 		assertNull(dfa.processEvent(nextEvent(A)));
 		assertNull(dfa.processEvent(nextEvent(B)));
 		assertNull(dfa.processEvent(nextEvent(C)));
@@ -169,7 +169,7 @@ public class ContinousEpisodeRecognitionDFATest {
 	@Test
 	public void interleavingEpisodes(){
 		SerialEpisodePattern pattern = new SerialEpisodePattern(A,B,C,D,E,F);
-		ContinousEpisodeRecognitionDFA dfa = pattern.getContinousDFA();
+		ContinousSerialEpisodeRecognitionDFA dfa = pattern.getContinousDFA();
 		assertNull(dfa.processEvent(nextEvent(A)));
 		assertNull(dfa.processEvent(nextEvent(B)));
 		assertNull(dfa.processEvent(nextEvent(A)));

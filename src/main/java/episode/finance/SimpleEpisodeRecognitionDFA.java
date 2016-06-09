@@ -2,34 +2,15 @@ package episode.finance;
 
 import reallife_data.finance.yahoo.stock.data.AnnotatedEventType;
 
-public class SimpleEpisodeRecognitionDFA {
+public interface SimpleEpisodeRecognitionDFA {
 
-	private int pos;
-	private SerialEpisodePattern serialEpisodePattern;
+	public void reset();
 	
-	public SimpleEpisodeRecognitionDFA(SerialEpisodePattern serialEpisodePattern) {
-		pos = 0;
-		this.serialEpisodePattern = serialEpisodePattern;
-	}
+	public void processEvent(AnnotatedEventType e);
 	
-	public void reset(){
-		pos=0;
-	}
-	
-	public void transition(){
-		assert(pos<serialEpisodePattern.length());
-		pos++;
-	}
-	
-	public boolean isDone(){
-		return pos >= serialEpisodePattern.length();
-	}
+	public boolean isDone();
 
-	public AnnotatedEventType waitsFor(){
-		return serialEpisodePattern.get(pos);
-	}
+	public boolean waitsFor(AnnotatedEventType e);
 
-	public SerialEpisodePattern getEpisodePattern() {
-		return serialEpisodePattern;
-	}
+	public EpisodePattern getEpisodePattern();
 }

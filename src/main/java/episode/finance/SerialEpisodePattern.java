@@ -23,11 +23,6 @@ public class SerialEpisodePattern implements EpisodePattern {
 		return events.size();
 	}
 
-	@Override
-	public Collection<AnnotatedEventType> getAll() {
-		return events;
-	}
-
 	public AnnotatedEventType get(int i) {
 		return events.get(i);
 	}
@@ -40,17 +35,22 @@ public class SerialEpisodePattern implements EpisodePattern {
 		events.add(annotatedEventType);
 	}
 
-	public SimpleEpisodeRecognitionDFA getSimpleDFA() {
-		return new SimpleEpisodeRecognitionDFA(this);
+	public SimpleSerialEpisodeRecognitionDFA getSimpleDFA() {
+		return new SimpleSerialEpisodeRecognitionDFA(this);
 	}
 	
-	public ContinousEpisodeRecognitionDFA getContinousDFA(){
-		return new ContinousEpisodeRecognitionDFA(this);
+	public ContinousSerialEpisodeRecognitionDFA getContinousDFA(){
+		return new ContinousSerialEpisodeRecognitionDFA(this);
 	}
 	
 	@Override
 	public String toString(){
 		return events.stream().map(Object::toString).reduce((a,b) -> a + " -> " + b).get();
+	}
+
+	@Override
+	public SimpleEpisodeRecognitionDFA getSimpleRecognitionDFA() {
+		return new SimpleSerialEpisodeRecognitionDFA(this);
 	}
 
 }

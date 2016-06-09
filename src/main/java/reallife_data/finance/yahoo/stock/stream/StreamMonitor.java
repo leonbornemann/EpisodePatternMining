@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.stream.Collectors;
 
+import episode.finance.ContinousSerialEpisodeRecognitionDFA;
+import episode.finance.EpisodePattern;
 import episode.finance.ContinousEpisodeRecognitionDFA;
 import episode.finance.SerialEpisodePattern;
 import reallife_data.finance.yahoo.stock.data.AnnotatedEvent;
@@ -22,8 +24,8 @@ public class StreamMonitor {
 	private AnnotatedEventType toPredict;
 	private int episodeDuration;
 	
-	public StreamMonitor(Map<SerialEpisodePattern, Integer> predictors, AnnotatedEventStream stream, AnnotatedEventType toPredict, int episodeDuration) {
-		for(SerialEpisodePattern pattern : predictors.keySet()){
+	public StreamMonitor(Map<EpisodePattern, Integer> predictors, AnnotatedEventStream stream, AnnotatedEventType toPredict, int episodeDuration) {
+		for(EpisodePattern pattern : predictors.keySet()){
 			trustScores.put(pattern.getContinousDFA(), predictors.get(pattern));
 		}
 		this.toPredict = toPredict;
@@ -81,7 +83,7 @@ public class StreamMonitor {
 		return start.plus(episodeDuration, ChronoUnit.SECONDS);
 	}
 
-	public Map<SerialEpisodePattern, Integer> getCurrentTrustScores() {
+	public Map<EpisodePattern, Integer> getCurrentTrustScores() {
 		return trustScores.entrySet().stream().collect(Collectors.toMap(e -> e.getKey().getEpsiodePattern(), e -> e.getValue()));
 	}
 	

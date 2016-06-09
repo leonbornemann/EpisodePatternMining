@@ -12,7 +12,7 @@ import org.apache.flink.api.java.tuple.Tuple2;
 
 import reallife_data.finance.yahoo.stock.data.AnnotatedEventType;
 
-public class SerialEpisodePatternGenerator {
+public class SerialEpisodePatternGenerator implements EpisodePatternGenerator<SerialEpisodePattern>{
 
 	protected Set<AnnotatedEventType> eventAlphabet;
 

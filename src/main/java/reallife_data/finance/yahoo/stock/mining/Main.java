@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import episode.finance.EpisodePattern;
 import episode.finance.SerialEpisodePattern;
 import reallife_data.finance.yahoo.stock.data.AnnotatedEventType;
 import reallife_data.finance.yahoo.stock.data.Change;
@@ -28,18 +29,18 @@ public class Main {
 		File streamDir = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Data\\");
 		Set<String> annotatedCompanyCodes = new SemanticKnowledgeCollector().getAnnotatedCompanyCodes();
 		System.out.println(annotatedCompanyCodes.size());
-		int d = 50;
+		int d = 240;
 		MultiFileAnnotatedEventStream stream = new MultiFileAnnotatedEventStream(Arrays.stream(streamDir.listFiles()).sorted().collect(Collectors.toList()),d,e -> annotatedCompanyCodes.contains(e.getEventType().getCompanyID()));
 		PredictiveMiner miner = new PredictiveMiner(stream,new AnnotatedEventType(APPLE, Change.UP),AnnotatedEventType.loadEventAlphabet(annotatedCompanyCodes),100,15,10,d);
-		Map<SerialEpisodePattern, Integer> predictors = miner.getInitialPreditiveEpisodes();
+		Map<EpisodePattern, Integer> predictors = miner.getInitialPreditiveEpisodes();
 		printTrustScores(predictors);
 		StreamMonitor monitor = new StreamMonitor(predictors, stream, new AnnotatedEventType(APPLE, Change.UP), d);
 		monitor.monitor();
-		Map<SerialEpisodePattern, Integer> trustScores = monitor.getCurrentTrustScores();
+		Map<EpisodePattern, Integer> trustScores = monitor.getCurrentTrustScores();
 		printTrustScores(trustScores);
 	}
 
-	private static void printTrustScores(Map<SerialEpisodePattern, Integer> trustScores) {
+	private static void printTrustScores(Map<EpisodePattern, Integer> trustScores) {
 		trustScores.forEach( (k,v) -> System.out.println("found predictor " +k+" with Trust score: "+v));
 	}
 

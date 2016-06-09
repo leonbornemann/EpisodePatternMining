@@ -50,7 +50,6 @@ public class LowToAnnotatedTransformator {
 		if(lowLevelEvents.isEmpty()){
 			return new ArrayList<>();
 		}
-		double epsilon = 0.00001;
 		List<AnnotatedEvent> annotatedEvents = new ArrayList<>();
 		double referenceValue = lowLevelEvents.get(0).getValue();
 		for(int i=1;i<lowLevelEvents.size();i++){
@@ -59,13 +58,17 @@ public class LowToAnnotatedTransformator {
 			if(now.getValue() >= referenceValue + referenceValue*relativeDelta){
 				change = Change.UP;
 				referenceValue = now.getValue();
+				annotatedEvents.add(new AnnotatedEvent(now.getCompanyId(), change, now.getTimestamp()));
 			} else if(now.getValue() <= referenceValue - referenceValue*relativeDelta){
 				change = Change.DOWN;
 				referenceValue = now.getValue();
+				annotatedEvents.add(new AnnotatedEvent(now.getCompanyId(), change, now.getTimestamp()));
 			} else{
-				change = Change.EQUAL; //TODO: should this be an event?
+				//Lets try ignoring equality at some point and see where we get
+				//change = Change.EQUAL; //TODO: should this be an event?
+				//annotatedEvents.add(new AnnotatedEvent(now.getCompanyId(), change, now.getTimestamp()));
 			}
-			annotatedEvents.add(new AnnotatedEvent(now.getCompanyId(), change, now.getTimestamp()));
+			
 		}
 		return annotatedEvents;
 	}
