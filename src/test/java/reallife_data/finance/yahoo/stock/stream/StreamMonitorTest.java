@@ -1,8 +1,7 @@
 package reallife_data.finance.yahoo.stock.stream;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
-import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -13,6 +12,7 @@ import java.util.Map;
 
 import org.junit.Test;
 
+import episode.finance.EpisodePattern;
 import episode.finance.SerialEpisodePattern;
 import reallife_data.finance.yahoo.stock.data.AnnotatedEvent;
 import reallife_data.finance.yahoo.stock.data.AnnotatedEventType;
@@ -35,7 +35,7 @@ public class StreamMonitorTest {
 	
 	@Test
 	public void singlePredictor() throws IOException {
-		Map<SerialEpisodePattern, Integer> predictors = new HashMap<>();
+		Map<EpisodePattern, Integer> predictors = new HashMap<>();
 		predictors.put(episode3, 0);
 		int d = 5;
 		AnnotatedEventStream stream = buildStream(1,
@@ -50,7 +50,7 @@ public class StreamMonitorTest {
 	
 	@Test
 	public void multi() throws IOException {
-		Map<SerialEpisodePattern, Integer> predictors = new HashMap<>();
+		Map<EpisodePattern, Integer> predictors = new HashMap<>();
 		predictors.put(episode3, 0);
 		predictors.put(episode2, 0);
 		int d = 5;

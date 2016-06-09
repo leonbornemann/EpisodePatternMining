@@ -53,8 +53,7 @@ public class ContinousSerialEpisodeRecognitionDFA implements ContinousEpisodeRec
 				return recognizedEpisodes.get(0);
 			} else{
 				return null;
-			}
-			
+			}	
 		}
 	}
 
