@@ -14,8 +14,8 @@ import reallife_data.finance.yahoo.stock.stream.StreamWindow;
 
 public class SerialEpisodePatternMiner extends EpisodePatternMiner<SerialEpisodePattern>{
 
-	public SerialEpisodePatternMiner(List<StreamWindow> precedingTargetWindows,List<StreamWindow> precedingInverseTargetWindows, Set<AnnotatedEventType> eventAlphabet) {
-		super(precedingTargetWindows, precedingInverseTargetWindows, eventAlphabet);
+	public SerialEpisodePatternMiner(List<StreamWindow> precedingTargetWindows,List<StreamWindow> precedingInverseTargetWindows, List<StreamWindow> precedingNothingWindows, Set<AnnotatedEventType> eventAlphabet) {
+		super(precedingTargetWindows, precedingInverseTargetWindows,precedingNothingWindows, eventAlphabet);
 	}
 
 	protected Map<SerialEpisodePattern,Integer> countSupport(List<SerialEpisodePattern> candidates, List<StreamWindow> windows) {
@@ -72,6 +72,11 @@ public class SerialEpisodePatternMiner extends EpisodePatternMiner<SerialEpisode
 	@Override
 	protected EpisodePatternGenerator<SerialEpisodePattern> createPatternGen(Set<AnnotatedEventType> eventAlphabet) {
 		return new SerialEpisodePatternGenerator(eventAlphabet);
+	}
+
+	@Override
+	protected String getEpisodeTypeName() {
+		return "Serial Episodes";
 	}
 
 }

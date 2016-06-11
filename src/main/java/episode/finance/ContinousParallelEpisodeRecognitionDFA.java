@@ -16,7 +16,6 @@ public class ContinousParallelEpisodeRecognitionDFA implements ContinousEpisodeR
 	private ParallelEpisodePattern pattern;
 	private Map<AnnotatedEventType,Queue<LocalDateTime>> eventOccurances;
 	private Collection<AnnotatedEventType> relevantTypes;
-	private boolean done;
 	private HashMap<AnnotatedEventType,Integer> remaining;
 
 	public ContinousParallelEpisodeRecognitionDFA(ParallelEpisodePattern pattern) {
@@ -24,7 +23,6 @@ public class ContinousParallelEpisodeRecognitionDFA implements ContinousEpisodeR
 		eventOccurances = new HashMap<>();
 		relevantTypes = pattern.getEvents().keySet();
 		remaining = new HashMap<>(pattern.getEvents());
-		done = false;
 	}
 
 	@Override
@@ -54,15 +52,15 @@ public class ContinousParallelEpisodeRecognitionDFA implements ContinousEpisodeR
 	private void addOccurance(AnnotatedEventType eventType, LocalDateTime timestamp) {
 		if(eventOccurances.containsKey(eventType)){
 			eventOccurances.get(eventType).add(timestamp);
-			if(remaining.get(eventType)==0){
+			if(!remaining.containsKey(eventType)){
 				//delete the earliest occurance in favor of the one we just added
 				eventOccurances.get(eventType).poll();
 			} else{
-				assert(!done);
+				assert(!completed());
 				decrementRemaining(eventType);
 			}
 		} else{
-			assert(!done);
+			assert(!completed());
 			Queue<LocalDateTime> queue = new LinkedList<>();
 			queue.add(timestamp);
 			eventOccurances.put(eventType, queue);

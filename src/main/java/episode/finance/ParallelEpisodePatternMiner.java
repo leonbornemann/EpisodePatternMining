@@ -12,8 +12,8 @@ import reallife_data.finance.yahoo.stock.stream.StreamWindow;
 
 public class ParallelEpisodePatternMiner extends EpisodePatternMiner<ParallelEpisodePattern>{
 
-	public ParallelEpisodePatternMiner(List<StreamWindow> precedingTargetWindows, List<StreamWindow> precedingInverseTargetWindows,Set<AnnotatedEventType> eventAlphabet){
-		super(precedingTargetWindows,precedingInverseTargetWindows,eventAlphabet);
+	public ParallelEpisodePatternMiner(List<StreamWindow> precedingTargetWindows, List<StreamWindow> precedingInverseTargetWindows,List<StreamWindow> precedingNothingWindows, Set<AnnotatedEventType> eventAlphabet){
+		super(precedingTargetWindows,precedingInverseTargetWindows,precedingNothingWindows,eventAlphabet);
 	}
 
 	@Override
@@ -73,6 +73,11 @@ public class ParallelEpisodePatternMiner extends EpisodePatternMiner<ParallelEpi
 	@Override
 	protected EpisodePatternGenerator<ParallelEpisodePattern> createPatternGen(Set<AnnotatedEventType> eventAlphabet) {
 		return new ParallelEpisodePatternGenerator(eventAlphabet);
+	}
+
+	@Override
+	protected String getEpisodeTypeName() {
+		return "Parallel Episodes";
 	}
 	
 	

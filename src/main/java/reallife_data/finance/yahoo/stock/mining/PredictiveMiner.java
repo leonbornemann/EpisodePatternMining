@@ -1,6 +1,8 @@
 package reallife_data.finance.yahoo.stock.mining;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,8 +27,11 @@ public class PredictiveMiner {
 	private int s;
 	private int d;
 	private Set<AnnotatedEventType> eventAlphabet;
+	private List<StreamWindow> predictiveWindows;
+	private List<StreamWindow> inversePredictiveWindows;
+	private List<StreamWindow> nothingWindows;
 
-	public PredictiveMiner(MultiFileAnnotatedEventStream stream, AnnotatedEventType toPredict, Set<AnnotatedEventType> eventAlphabet,int m, int s,int n,int d) {
+	public PredictiveMiner(MultiFileAnnotatedEventStream stream, AnnotatedEventType toPredict, Set<AnnotatedEventType> eventAlphabet,int m, int s,int n,int d) throws IOException {
 		this.stream = stream;
 		this.toPredict = toPredict;
 		this.n = n;
@@ -34,30 +39,53 @@ public class PredictiveMiner {
 		this.s = s;
 		this.d = d;
 		this.eventAlphabet =eventAlphabet;
-	}
-	
-	public Map<EpisodePattern,Integer> getInitialPreditiveEpisodes() throws IOException{
-		List<StreamWindow> predictiveWindows = new ArrayList<>();
-		List<StreamWindow> inversePredictiveWindows = new ArrayList<>();
+		predictiveWindows = new ArrayList<>();
+		inversePredictiveWindows = new ArrayList<>();
+		nothingWindows = new ArrayList<>();
+		LocalDateTime currentTime;
+		LocalDateTime lastUsedTime =null;;
 		while(stream.hasNext()){
 			AnnotatedEvent current = stream.next();
+			currentTime = current.getTimestamp();
+			if(lastUsedTime==null){
+				lastUsedTime = currentTime;
+			}
 			if(predictiveWindows.size()!=m &&current.getEventType().equals(toPredict)){
 				System.out.println("found new apple up");
 				predictiveWindows.add(stream.getBackwardsWindow(d));
+				lastUsedTime = current.getTimestamp();
 			} else if(inversePredictiveWindows.size()!=m && current.getEventType().equals(toPredict.getInverseEvent())){
 				System.out.println("found new apple down");
 				inversePredictiveWindows.add(stream.getBackwardsWindow(d));
+				lastUsedTime = current.getTimestamp();
+			} else if(nothingWindows.size()!=m &&ChronoUnit.SECONDS.between(lastUsedTime, currentTime) >=d){ //TODO: fix this, should be 2*d and window should start in the middle
+				System.out.println("found empty Window");
+				lastUsedTime = current.getTimestamp();
+				nothingWindows.add(stream.getBackwardsWindow(d));
 			}
-			if(predictiveWindows.size()==m && inversePredictiveWindows.size() == m){
+			//TODO: get a window of size m where neither happens!
+			if(predictiveWindows.size()==m && inversePredictiveWindows.size() == m && nothingWindows.size()==m){
 				break;
 			}
 		}
-		SerialEpisodePatternMiner serialEpisodeMiner = new SerialEpisodePatternMiner(predictiveWindows, inversePredictiveWindows, eventAlphabet);
-		ParallelEpisodePatternMiner parallelEpisodeMiner = new ParallelEpisodePatternMiner(predictiveWindows, inversePredictiveWindows, eventAlphabet);
+		predictiveWindows.forEach(e -> System.out.println(e.getWindowBorders()));
+	}
+	
+	public Map<EpisodePattern,Integer> getInitialPreditiveEpisodes() throws IOException{
+		return mineEpisodes(predictiveWindows,inversePredictiveWindows,nothingWindows);
+	}
+
+	private Map<EpisodePattern, Integer> mineEpisodes(List<StreamWindow> predictiveWindows,List<StreamWindow> inversePredictiveWindows,List<StreamWindow> nothingWindows) {
+		SerialEpisodePatternMiner serialEpisodeMiner = new SerialEpisodePatternMiner(predictiveWindows, inversePredictiveWindows,nothingWindows, eventAlphabet);
+		ParallelEpisodePatternMiner parallelEpisodeMiner = new ParallelEpisodePatternMiner(predictiveWindows, inversePredictiveWindows,nothingWindows, eventAlphabet);
 		Map<EpisodePattern,Integer> initialPredictiveEpisodes = new HashMap<>();
 		initialPredictiveEpisodes.putAll(serialEpisodeMiner.mineEpisodePatterns(s, n));
 		initialPredictiveEpisodes.putAll(parallelEpisodeMiner.mineEpisodePatterns(s, n));
 		return initialPredictiveEpisodes;
+	}
+
+	public Map<EpisodePattern, Integer> getInitialInversePreditiveEpisodes() {
+		return mineEpisodes(inversePredictiveWindows,predictiveWindows,nothingWindows);
 	}
 
 }

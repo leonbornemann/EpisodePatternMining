@@ -29,15 +29,19 @@ public class Main {
 		File streamDir = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Data\\");
 		Set<String> annotatedCompanyCodes = new SemanticKnowledgeCollector().getAnnotatedCompanyCodes();
 		System.out.println(annotatedCompanyCodes.size());
-		int d = 240;
+		int d = 180;
 		MultiFileAnnotatedEventStream stream = new MultiFileAnnotatedEventStream(Arrays.stream(streamDir.listFiles()).sorted().collect(Collectors.toList()),d,e -> annotatedCompanyCodes.contains(e.getEventType().getCompanyID()));
-		PredictiveMiner miner = new PredictiveMiner(stream,new AnnotatedEventType(APPLE, Change.UP),AnnotatedEventType.loadEventAlphabet(annotatedCompanyCodes),100,15,10,d);
+		PredictiveMiner miner = new PredictiveMiner(stream,new AnnotatedEventType(APPLE, Change.UP),AnnotatedEventType.loadEventAlphabet(annotatedCompanyCodes),100,15,20,d);
 		Map<EpisodePattern, Integer> predictors = miner.getInitialPreditiveEpisodes();
+		Map<EpisodePattern, Integer> inversePredictors = miner.getInitialInversePreditiveEpisodes();
 		printTrustScores(predictors);
-		StreamMonitor monitor = new StreamMonitor(predictors, stream, new AnnotatedEventType(APPLE, Change.UP), d);
+		StreamMonitor monitor = new StreamMonitor(predictors,inversePredictors, stream, new AnnotatedEventType(APPLE, Change.UP), d,new File("resources/logs/performanceLog.txt"));
+		System.out.println(monitor.getInvestmentTracker().netWorth());
 		monitor.monitor();
 		Map<EpisodePattern, Integer> trustScores = monitor.getCurrentTrustScores();
 		printTrustScores(trustScores);
+		System.out.println(monitor.getInvestmentTracker().netWorth());
+		System.out.println(monitor.getInvestmentTracker().getPrice());
 	}
 
 	private static void printTrustScores(Map<EpisodePattern, Integer> trustScores) {

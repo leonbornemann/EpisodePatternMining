@@ -42,7 +42,7 @@ public class StreamMonitorTest {
 				A,B,C,F,E,E,
 				A,B,C,E,E,F,
 				A,E,B,E,C,F);
-		StreamMonitor monitor = new StreamMonitor(predictors,stream,F,d);
+		StreamMonitor monitor = new StreamMonitor(predictors,new HashMap<>(),stream,F,d);
 		monitor.monitor();
 		predictors = monitor.getCurrentTrustScores();
 		assertEquals(new Integer(3),predictors.get(episode3));
@@ -58,7 +58,7 @@ public class StreamMonitorTest {
 				A,B,C,D,E,F, //both should fire
 				A,D,E,E,E,F, //A->D should fire TODO: should they get penalized for not recognizing episodes?
 				A,B,C,E,E,F); //A->B->C should fire
-		StreamMonitor monitor = new StreamMonitor(predictors,stream,F,d);
+		StreamMonitor monitor = new StreamMonitor(predictors,new HashMap<>(),stream,F,d);
 		monitor.monitor();
 		predictors = monitor.getCurrentTrustScores();
 		assertEquals(new Integer(2),predictors.get(episode3));

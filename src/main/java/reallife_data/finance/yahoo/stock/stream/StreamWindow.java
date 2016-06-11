@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import reallife_data.finance.yahoo.stock.data.AnnotatedEvent;
 import reallife_data.finance.yahoo.stock.data.AnnotatedEventType;
+import util.Pair;
 
 public class StreamWindow {
 
@@ -23,6 +24,10 @@ public class StreamWindow {
 	public Map<LocalDateTime, List<AnnotatedEvent>> getEventTypesByTimestamp() {
 		return window.stream().collect(Collectors.groupingBy(AnnotatedEvent::getTimestamp));
 		
+	}
+
+	public Pair<LocalDateTime,LocalDateTime> getWindowBorders() {
+		return new Pair<>(window.get(0).getTimestamp(),window.get(window.size()-1).getTimestamp());
 	}
 	
 }
