@@ -18,6 +18,7 @@ public class ContinousSerialEpisodeRecognitionDFA implements ContinousEpisodeRec
 	//TODO: incorporate d!
 	private SerialEpisodePattern episode;
 	private Map<Integer,Pair<AnnotatedEventType,LocalDateTime>> positions = new HashMap<>();
+	private int ocurranceCount = 0;
 
 	public ContinousSerialEpisodeRecognitionDFA(SerialEpisodePattern serialEpisodePattern) {
 		this.episode = serialEpisodePattern;
@@ -30,6 +31,7 @@ public class ContinousSerialEpisodeRecognitionDFA implements ContinousEpisodeRec
 	 */
 	public Pair<LocalDateTime,LocalDateTime> processEvent(AnnotatedEvent e){
 		if(e.getEventType().equals(episode.get(0)) && episode.length()==1){
+			ocurranceCount++;
 			return new Pair<>(e.getTimestamp(),e.getTimestamp());
 		} else{
 			Set<Integer> waitsForThis = positions.keySet().stream().filter(i -> positions.get(i).getFirst().equals(e.getEventType())).collect(Collectors.toSet()) ;//TODO!
@@ -50,6 +52,7 @@ public class ContinousSerialEpisodeRecognitionDFA implements ContinousEpisodeRec
 			}
 			assert(recognizedEpisodes.size()<=1);
 			if(recognizedEpisodes.size()>0){
+				ocurranceCount++;
 				return recognizedEpisodes.get(0);
 			} else{
 				return null;
@@ -64,6 +67,11 @@ public class ContinousSerialEpisodeRecognitionDFA implements ContinousEpisodeRec
 	
 	public EpisodePattern getEpsiodePattern(){
 		return episode;
+	}
+
+	@Override
+	public int getOccuranceCount() {
+		return ocurranceCount;
 	}
 	
 

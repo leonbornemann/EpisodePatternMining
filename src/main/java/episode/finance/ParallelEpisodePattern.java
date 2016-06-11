@@ -1,6 +1,7 @@
 package episode.finance;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +20,10 @@ public class ParallelEpisodePattern implements EpisodePattern{
 	public ParallelEpisodePattern(List<AnnotatedEventType> pattern) {
 		events = new HashMap<>();
 		pattern.forEach(e -> addToEvents(e));
+	}
+
+	public ParallelEpisodePattern(AnnotatedEventType... types) {
+		this(Arrays.asList(types));
 	}
 
 	private void addToEvents(AnnotatedEventType e) {

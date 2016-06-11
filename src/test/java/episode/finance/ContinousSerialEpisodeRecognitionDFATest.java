@@ -17,7 +17,7 @@ import reallife_data.finance.yahoo.stock.data.Change;
 import reallife_data.finance.yahoo.stock.util.StandardDateTimeFormatter;
 import util.Pair;
 
-public class ContinousEpisodeRecognitionDFATest {
+public class ContinousSerialEpisodeRecognitionDFATest {
 
 	//some event types for testing
 	private static AnnotatedEventType A = new AnnotatedEventType("foo", Change.UP);
@@ -55,6 +55,7 @@ public class ContinousEpisodeRecognitionDFATest {
 		occurance = dfa.processEvent(nextEvent(A));
 		assertNotNull(occurance);
 		assertTimeDifferenceInSeconds(occurance,0);
+		assertEquals(3, dfa.getOccuranceCount());
 	}
 	
 	private void assertTimeDifferenceInSeconds(Pair<LocalDateTime, LocalDateTime> occurance, int diff) {
@@ -73,6 +74,7 @@ public class ContinousEpisodeRecognitionDFATest {
 		Pair<LocalDateTime, LocalDateTime> occurance = dfa.processEvent(nextEvent(D));
 		assertNotNull(occurance);
 		assertTimeDifferenceInSeconds(occurance,4);
+		assertEquals(1, dfa.getOccuranceCount());
 	}
 	
 	@Test
@@ -109,6 +111,7 @@ public class ContinousEpisodeRecognitionDFATest {
 		Pair<LocalDateTime, LocalDateTime> occurance = dfa.processEvent(nextEvent(D));
 		assertNotNull(occurance);
 		assertTimeDifferenceInSeconds(occurance,15);
+		assertEquals(1, dfa.getOccuranceCount());
 	}
 	
 	@Test
@@ -131,6 +134,7 @@ public class ContinousEpisodeRecognitionDFATest {
 		assertNotNull(occurance);
 		assertTimeDifferenceInSeconds(occurance,4);
 		System.out.println(occurance);
+		assertEquals(1, dfa.getOccuranceCount());
 	}
 	
 	@Test
@@ -143,6 +147,7 @@ public class ContinousEpisodeRecognitionDFATest {
 			Pair<LocalDateTime, LocalDateTime> occurance = dfa.processEvent(nextEvent(C));
 			assertNotNull(occurance);
 			assertTimeDifferenceInSeconds(occurance,2);
+			assertEquals(i+1, dfa.getOccuranceCount());
 		}
 	}
 	
@@ -164,6 +169,7 @@ public class ContinousEpisodeRecognitionDFATest {
 		occurance = dfa.processEvent(nextEvent(B));
 		assertNotNull(occurance);
 		assertTimeDifferenceInSeconds(occurance,4);
+		assertEquals(2,dfa.getOccuranceCount());
 	}
 	
 	@Test
@@ -175,7 +181,6 @@ public class ContinousEpisodeRecognitionDFATest {
 		assertNull(dfa.processEvent(nextEvent(A)));
 		assertNull(dfa.processEvent(nextEvent(C)));
 		assertNull(dfa.processEvent(nextEvent(B)));
-		//the next two events will be part of two episode occurances!
 		assertNull(dfa.processEvent(nextEvent(D)));
 		assertNull(dfa.processEvent(nextEvent(C)));
 		assertNull(dfa.processEvent(nextEvent(E)));
@@ -188,9 +193,22 @@ public class ContinousEpisodeRecognitionDFATest {
 		occurance = dfa.processEvent(nextEvent(F));
 		assertNotNull(occurance);
 		assertTimeDifferenceInSeconds(occurance,9);
+		assertEquals(2,dfa.getOccuranceCount());
 	}
 	
-	
+	@Test
+	public void overlapping(){
+		SerialEpisodePattern pattern = new SerialEpisodePattern(A,B,C,D);
+		ContinousSerialEpisodeRecognitionDFA dfa = pattern.getContinousDFA();
+		assertNull(dfa.processEvent(nextEvent(A)));
+		assertNull(dfa.processEvent(nextEvent(B)));
+		assertNull(dfa.processEvent(nextEvent(A)));
+		assertNull(dfa.processEvent(nextEvent(B)));
+		assertNull(dfa.processEvent(nextEvent(C)));
+		Pair<LocalDateTime, LocalDateTime> occurance = dfa.processEvent(nextEvent(D));
+		assertNotNull(occurance);
+		assertTimeDifferenceInSeconds(occurance,3);
+	}
 
 
 	//creates a new event one second after the last event that was created via this method

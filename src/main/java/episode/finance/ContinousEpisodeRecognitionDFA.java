@@ -10,4 +10,6 @@ public interface ContinousEpisodeRecognitionDFA {
 	public Pair<LocalDateTime,LocalDateTime> processEvent(AnnotatedEvent e);
 	
 	public EpisodePattern getEpsiodePattern();
+	
+	public int getOccuranceCount();
 }

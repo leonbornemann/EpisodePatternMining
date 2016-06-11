@@ -17,6 +17,7 @@ public class ContinousParallelEpisodeRecognitionDFA implements ContinousEpisodeR
 	private Map<AnnotatedEventType,Queue<LocalDateTime>> eventOccurances;
 	private Collection<AnnotatedEventType> relevantTypes;
 	private HashMap<AnnotatedEventType,Integer> remaining;
+	private int occuranceCount = 0;
 
 	public ContinousParallelEpisodeRecognitionDFA(ParallelEpisodePattern pattern) {
 		this.pattern = pattern;
@@ -28,10 +29,11 @@ public class ContinousParallelEpisodeRecognitionDFA implements ContinousEpisodeR
 	@Override
 	public Pair<LocalDateTime, LocalDateTime> processEvent(AnnotatedEvent e) {
 		if(relevantTypes.contains(e.getEventType())){
-			addOccurance(e.getEventType(), e.getTimestamp());
+			addEventOccurance(e.getEventType(), e.getTimestamp());
 			if(completed()){
 				LocalDateTime endTime = e.getTimestamp();
 				LocalDateTime startTime = getCurrentStartTime();
+				occuranceCount ++;
 				return new Pair<>(startTime,endTime);
 			} else{
 				return null;
@@ -49,7 +51,7 @@ public class ContinousParallelEpisodeRecognitionDFA implements ContinousEpisodeR
 		return remaining.isEmpty();
 	}
 
-	private void addOccurance(AnnotatedEventType eventType, LocalDateTime timestamp) {
+	private void addEventOccurance(AnnotatedEventType eventType, LocalDateTime timestamp) {
 		if(eventOccurances.containsKey(eventType)){
 			eventOccurances.get(eventType).add(timestamp);
 			if(!remaining.containsKey(eventType)){
@@ -79,6 +81,11 @@ public class ContinousParallelEpisodeRecognitionDFA implements ContinousEpisodeR
 	@Override
 	public EpisodePattern getEpsiodePattern() {
 		return pattern;
+	}
+
+	@Override
+	public int getOccuranceCount() {
+		return occuranceCount;
 	}
 
 }
