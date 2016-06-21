@@ -2,7 +2,10 @@ package episode.finance;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import reallife_data.finance.yahoo.stock.data.AnnotatedEventType;
 
@@ -51,6 +54,16 @@ public class SerialEpisodePattern implements EpisodePattern {
 	@Override
 	public SimpleEpisodeRecognitionDFA getSimpleRecognitionDFA() {
 		return new SimpleSerialEpisodeRecognitionDFA(this);
+	}
+
+	@Override
+	public Set<AnnotatedEventType> getAllContainedTypes() {
+		return new HashSet<>(events);
+	}
+
+	@Override
+	public boolean containsType(AnnotatedEventType e) {
+		return events.contains(e);
 	}
 
 }

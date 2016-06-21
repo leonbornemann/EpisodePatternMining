@@ -23,7 +23,7 @@ public class SerialEpisodePatternMiner extends EpisodePatternMiner<SerialEpisode
 		candidates.forEach(e -> frequencies.put(e, 0));
 		for(StreamWindow window : windows){
 			List<SimpleSerialEpisodeRecognitionDFA> dfas = candidates.stream().map(e -> e.getSimpleDFA()).collect(Collectors.toList());
-			Map<AnnotatedEventType, List<SimpleSerialEpisodeRecognitionDFA>> waits = dfas.stream().collect(Collectors.groupingBy(SimpleSerialEpisodeRecognitionDFA::nextEvent));
+			Map<AnnotatedEventType, List<SimpleSerialEpisodeRecognitionDFA>> waits = dfas.stream().collect(Collectors.groupingBy(SimpleSerialEpisodeRecognitionDFA::peek));
 			Map<LocalDateTime, List<AnnotatedEvent>> byTimestamp = window.getEventTypesByTimestamp();
 			byTimestamp.keySet().stream().sorted().forEachOrdered(ts -> processEventArrival(frequencies,waits,ts,byTimestamp.get(ts)));
 			/*for(LocalDateTime ts: byTimestamp.keySet()){
@@ -45,7 +45,7 @@ public class SerialEpisodePatternMiner extends EpisodePatternMiner<SerialEpisode
 					if(dfa.isDone()){
 						frequencies.put(dfa.getEpisodePattern(), frequencies.get(dfa.getEpisodePattern())+1);
 					} else {
-						AnnotatedEventType nextEvent = dfa.nextEvent();
+						AnnotatedEventType nextEvent = dfa.peek();
 						if(bag.containsKey(nextEvent)){
 							bag.get(nextEvent).add(dfa);
 						} else{

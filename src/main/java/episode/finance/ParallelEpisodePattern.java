@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import reallife_data.finance.yahoo.stock.data.AnnotatedEventType;
 
@@ -77,6 +78,16 @@ public class ParallelEpisodePattern implements EpisodePattern{
 	@Override
 	public ContinousEpisodeRecognitionDFA getContinousDFA() {
 		return new ContinousParallelEpisodeRecognitionDFA(this);
+	}
+
+	@Override
+	public Set<AnnotatedEventType> getAllContainedTypes() {
+		return events.keySet();
+	}
+	
+	@Override
+	public boolean containsType(AnnotatedEventType e) {
+		return events.keySet().contains(e);
 	}
 
 }

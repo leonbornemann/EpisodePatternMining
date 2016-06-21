@@ -28,7 +28,7 @@ public class SimpleSerialEpisodeRecognitionDFA implements SimpleEpisodeRecogniti
 		return serialEpisodePattern;
 	}
 	
-	public AnnotatedEventType nextEvent(){
+	public AnnotatedEventType peek(){
 		if(pos<serialEpisodePattern.length()){
 			return serialEpisodePattern.get(pos);
 		} else{
