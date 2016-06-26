@@ -20,6 +20,11 @@ public class AnnotatedEvent {
 		this.timestamp = timestamp;
 	}
 
+	public AnnotatedEvent(AnnotatedEventType type, LocalDateTime timestamp) {
+		this.annotatedEventType = type;
+		this.timestamp = timestamp;
+	}
+
 	public static void serialize(List<AnnotatedEvent> allAnnotated, File outFile) throws IOException {
 		Collections.sort(allAnnotated, (a,b) -> a.getTimestamp().compareTo(b.getTimestamp()));
 		PrintWriter pr = new PrintWriter(new FileWriter(outFile));

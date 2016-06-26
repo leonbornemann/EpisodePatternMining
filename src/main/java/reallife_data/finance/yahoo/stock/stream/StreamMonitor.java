@@ -175,6 +175,10 @@ public class StreamMonitor {
 	public InvestmentTracker getInvestmentTracker() {
 		return investmentTracker;
 	}
+
+	public Map<EpisodePattern, Integer> getCurrentInverseTrustScores() {
+		return inverseTrustScores.entrySet().stream().collect(Collectors.toMap(e -> e.getKey().getEpsiodePattern(), e -> e.getValue()));
+	}
 	
 	
 }

@@ -28,7 +28,6 @@ public abstract class EpisodePatternMiner<E extends EpisodePattern> {
 		List<E> candidates = patternGen.generateSize1Candidates();
 		Map<E,Integer> frequent = new HashMap<>();
 		while(true){
-			System.out.println("new Iteration");
 			Map<E,Integer> frequencies = countSupport(candidates,pred);
 			Map<E,Integer> newFrequent = frequencies.entrySet().stream().filter(e -> e.getValue() >=s).collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
 			if(newFrequent.isEmpty()){
@@ -46,7 +45,7 @@ public abstract class EpisodePatternMiner<E extends EpisodePattern> {
 	private Map<E,Integer> getBestPredictors(Map<E, Integer> frequent, int n) {
 		Map<E, Integer> supportForInverse = countSupport(frequent.keySet().stream().collect(Collectors.toList()), inversePred);
 		Map<E, Integer> supportForNothing = countSupport(frequent.keySet().stream().collect(Collectors.toList()), precedingNothingWindows);
-		Map<E, Integer> trustScore = frequent.entrySet().stream().collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue() - supportForInverse.get(e.getKey()) - supportForNothing.get(e.getKey())));
+		Map<E, Integer> trustScore = frequent.entrySet().stream().collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue() - supportForInverse.get(e.getKey()) /*- supportForNothing.get(e.getKey())*/));
 		Map<E,Integer> best = trustScore.entrySet().stream().sorted((e1,e2) -> ascending(e1.getValue(),e2.getValue())).limit(n).collect(Collectors.toMap( e -> e.getKey(), e -> e.getValue()));
 		return best;
 	}
