@@ -15,12 +15,13 @@ import episode.finance.ContinousEpisodeRecognitionDFA;
 import episode.finance.SerialEpisodePattern;
 import reallife_data.finance.yahoo.stock.data.AnnotatedEvent;
 import reallife_data.finance.yahoo.stock.data.AnnotatedEventType;
+import reallife_data.finance.yahoo.stock.data.Change;
 import reallife_data.finance.yahoo.stock.util.IOService;
 import util.Pair;
 
 public class StreamMonitor {
 	
-	private Map<ContinousEpisodeRecognitionDFA,Integer> trustScores = new HashMap<>();
+	private Map<ContinousEpisodeRecognitionDFA,PredictorPerformance> trustScores = new HashMap<>();
 	private PriorityQueue<PredictorOccuranceState> predictorOccuranceExpiryTimes = new PriorityQueue<>((a,b) -> a.getExpiryTime().compareTo(b.getExpiryTime()));
 	private PriorityQueue<PredictorOccuranceState> inversePredictorOccuranceExpiryTimes = new PriorityQueue<>((a,b) -> a.getExpiryTime().compareTo(b.getExpiryTime()));
 	private AnnotatedEventStream stream;
@@ -31,7 +32,7 @@ public class StreamMonitor {
 	private int ensembleScore = 0;
 	private File performanceLog;
 	private InvestmentTracker investmentTracker;
-	private Map<ContinousEpisodeRecognitionDFA, Integer> inverseTrustScores = new HashMap<>();
+	private Map<ContinousEpisodeRecognitionDFA, PredictorPerformance> inverseTrustScores = new HashMap<>();
 	
 	public StreamMonitor(Map<EpisodePattern, Integer> predictors,Map<EpisodePattern, Integer> inversePredictors, AnnotatedEventStream stream, AnnotatedEventType toPredict, int episodeDuration){
 		this(predictors,inversePredictors,stream,toPredict,episodeDuration,null);
@@ -39,10 +40,10 @@ public class StreamMonitor {
 	
 	public StreamMonitor(Map<EpisodePattern, Integer> predictors,Map<EpisodePattern, Integer> inversePredictors, AnnotatedEventStream stream, AnnotatedEventType toPredict, int episodeDuration, File performanceLog) {
 		for(EpisodePattern pattern : predictors.keySet()){
-			trustScores.put(pattern.getContinousDFA(), predictors.get(pattern));
+			trustScores.put(pattern.getContinousDFA(), new PredictorPerformance()); //TODO: are predictors now passed with PredictorPreformances?
 		}
 		for(EpisodePattern pattern : inversePredictors.keySet()){
-			inverseTrustScores.put(pattern.getContinousDFA(), predictors.get(pattern));
+			inverseTrustScores.put(pattern.getContinousDFA(), new PredictorPerformance());
 		}
 		this.toPredict = toPredict;
 		this.episodeDuration = episodeDuration;
@@ -58,31 +59,9 @@ public class StreamMonitor {
 			handleExpiration(curEvent, inversePredictorOccuranceExpiryTimes);
 			//TODO: also process the inverse predictors here!
 			if(curEvent.getEventType().equals(toPredict)){
-				investmentTracker.up();
-				toPredictCount++;
-				if(!predictorOccuranceExpiryTimes.isEmpty()){
-					rewardEnsemble();
-					predictorOccuranceExpiryTimes.forEach(e -> {
-						reward(e.getDFA());
-						e.setOccurance(true);
-					}); //Reward individual predictors
-				} else{
-					penalizeEnsemble();
-				}
-				logStatus();
+				handleTargetEventOccurrence();
 			} else if(curEvent.getEventType().equals(toPredict.getInverseEvent())){
-				investmentTracker.down();
-				inverseToPredictCount++;
-				if(!predictorOccuranceExpiryTimes.isEmpty()){
-					penalizeEnsemble();
-					predictorOccuranceExpiryTimes.forEach(e -> {
-						penalize(e.getDFA());
-						e.setOccurance(true);
-					}); //Reward
-				} else{
-					//rewardEnsemble();
-				}
-				logStatus();
+				handleInverseTargeEventOccurrence();
 			}
 			//advance automata
 			for(ContinousEpisodeRecognitionDFA automaton : trustScores.keySet()){
@@ -101,6 +80,55 @@ public class StreamMonitor {
 				}
 			}
 		}
+	}
+
+	private void handleInverseTargeEventOccurrence() {
+		changePrice();
+		inverseToPredictCount++;
+		if(!predictorOccuranceExpiryTimes.isEmpty()){
+			penalizeEnsemble();
+			predictorOccuranceExpiryTimes.forEach(e -> {
+				trustScores.get(e).incFalsePositives(); //is that really false positives
+				e.setOccurance(true);
+			}); //Reward
+			inversePredictorOccuranceExpiryTimes.forEach(e -> {
+				inverseTrustScores.get(e).incTruePositives();
+				e.setOccurance(true);
+			});
+			//TODO: false and true negatives
+		} else{
+			//rewardEnsemble();
+		}
+		logStatus();
+	}
+
+	private void changePrice() {
+		if(toPredict.getChange()==Change.UP){
+			investmentTracker.up();
+		} else if(toPredict.getChange()==Change.DOWN){
+			investmentTracker.down();
+		}
+		
+	}
+
+	private void handleTargetEventOccurrence() {
+		changePrice();
+		toPredictCount++;
+		if(!predictorOccuranceExpiryTimes.isEmpty()){
+			rewardEnsemble();
+			predictorOccuranceExpiryTimes.forEach(e -> {
+				trustScores.get(e).incTruePositives();
+				e.setOccurance(true);
+			}); //Reward individual predictors
+			inversePredictorOccuranceExpiryTimes.forEach(e -> {
+				inverseTrustScores.get(e).incFalsePositives(); //TODO: is that actually false positives?
+				e.setOccurance(true);
+			});
+		} else{
+			penalizeEnsemble();
+		}
+		logStatus();
+		//TODO: false and true negatives
 	}
 
 	private void handleExpiration(AnnotatedEvent curEvent, PriorityQueue<PredictorOccuranceState> occuranceExpiryTimes) {
@@ -126,14 +154,6 @@ public class StreamMonitor {
 
 	private void rewardEnsemble() {
 		ensembleScore++;
-	}
-
-	private Integer penalize(ContinousEpisodeRecognitionDFA dfa) {
-		return trustScores.put(dfa, trustScores.get(dfa)-1);
-	}
-
-	private Integer reward(ContinousEpisodeRecognitionDFA dfa) {
-		return trustScores.put(dfa, trustScores.get(dfa)+1);
 	}
 
 	private boolean isSmaller(LocalDateTime first, LocalDateTime second) {
