@@ -28,6 +28,7 @@ public class StreamMonitorTest {
 	private static AnnotatedEventType D = new AnnotatedEventType("magic", Change.UP);
 	private static AnnotatedEventType E = new AnnotatedEventType("company", Change.EQUAL);
 	private static AnnotatedEventType F = new AnnotatedEventType("names", Change.DOWN);
+	private static AnnotatedEventType G = new AnnotatedEventType("names", Change.UP);
 	//some predefined Episodes
 	private static SerialEpisodePattern episode1 = new SerialEpisodePattern(A);
 	private static SerialEpisodePattern episode2 = new SerialEpisodePattern(A,D);
@@ -39,13 +40,19 @@ public class StreamMonitorTest {
 		predictors.put(episode3, 0);
 		int d = 5;
 		AnnotatedEventStream stream = buildStream(1,
-				A,B,C,F,E,E,
-				A,B,C,E,E,F,
-				A,E,B,E,C,F);
+				A,B,C,F,E,E, //true positive
+				A,B,C,E,E,F, //true positive
+				A,E,B,E,C,F, //true positive
+				A,B,C,E,E,G, //false positive
+				E,E,E,E,E,F, //false negative
+				E,E,E,E,E,G  //true negative
+				);
 		StreamMonitor monitor = new StreamMonitor(predictors,new HashMap<>(),stream,F,d);
 		monitor.monitor();
-		predictors = monitor.getCurrentTrustScores();
-		assertEquals(new Integer(3),predictors.get(episode3));
+		PredictorPerformance result = monitor.getCurrentTrustScores().get(episode3);
+		assertEquals(4.0/6.0,result.getAccuracy(),Double.MIN_VALUE);
+		assertEquals(3.0/4.0,result.getPrecision(),Double.MIN_VALUE);
+		assertEquals(3.0/4.0,result.getRecall(),Double.MIN_VALUE);
 	}
 	
 	@Test
@@ -56,13 +63,17 @@ public class StreamMonitorTest {
 		int d = 5;
 		AnnotatedEventStream stream = buildStream(1,
 				A,B,C,D,E,F, //both should fire
-				A,D,E,E,E,F, //A->D should fire TODO: should they get penalized for not recognizing episodes?
+				A,D,E,E,E,F, //A->D should fire
 				A,B,C,E,E,F); //A->B->C should fire
 		StreamMonitor monitor = new StreamMonitor(predictors,new HashMap<>(),stream,F,d);
 		monitor.monitor();
-		predictors = monitor.getCurrentTrustScores();
-		assertEquals(new Integer(2),predictors.get(episode3));
-		assertEquals(new Integer(2),predictors.get(episode2));
+		Map<EpisodePattern, PredictorPerformance> results = monitor.getCurrentTrustScores();
+		assertEquals(2.0/3.0,results.get(episode3).getAccuracy(),Double.MIN_VALUE);
+		assertEquals(2.0/3.0,results.get(episode2).getAccuracy(),Double.MIN_VALUE);
+		assertEquals(2.0/3.0,results.get(episode3).getRecall(),Double.MIN_VALUE);
+		assertEquals(2.0/3.0,results.get(episode2).getRecall(),Double.MIN_VALUE);
+		assertEquals(2.0/2.0,results.get(episode3).getPrecision(),Double.MIN_VALUE);
+		assertEquals(2.0/2.0,results.get(episode2).getPrecision(),Double.MIN_VALUE);
 	}
 
 

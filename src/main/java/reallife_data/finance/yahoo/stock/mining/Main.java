@@ -13,6 +13,7 @@ import reallife_data.finance.yahoo.stock.data.AnnotatedEventType;
 import reallife_data.finance.yahoo.stock.data.Change;
 import reallife_data.finance.yahoo.stock.stream.AnnotatedEventStream;
 import reallife_data.finance.yahoo.stock.stream.MultiFileAnnotatedEventStream;
+import reallife_data.finance.yahoo.stock.stream.PredictorPerformance;
 import reallife_data.finance.yahoo.stock.stream.StreamMonitor;
 import semantic.SemanticKnowledgeCollector;
 
@@ -34,18 +35,20 @@ public class Main {
 		PredictiveMiner miner = new PredictiveMiner(stream,new AnnotatedEventType(APPLE, Change.UP),AnnotatedEventType.loadEventAlphabet(annotatedCompanyCodes),100,15,20,d);
 		Map<EpisodePattern, Integer> predictors = miner.getInitialPreditiveEpisodes();
 		Map<EpisodePattern, Integer> inversePredictors = miner.getInitialInversePreditiveEpisodes();
-		printTrustScores(predictors);
+		//printTrustScores(predictors);
 		StreamMonitor monitor = new StreamMonitor(predictors,inversePredictors, stream, new AnnotatedEventType(APPLE, Change.UP), d,new File("resources/logs/performanceLog.txt"));
 		System.out.println(monitor.getInvestmentTracker().netWorth());
+		System.out.println(monitor.getInvestmentTracker().getPrice());
 		monitor.monitor();
-		Map<EpisodePattern, Integer> trustScores = monitor.getCurrentTrustScores();
+		Map<EpisodePattern, PredictorPerformance> trustScores = monitor.getCurrentTrustScores();
 		printTrustScores(trustScores);
 		System.out.println(monitor.getInvestmentTracker().netWorth());
 		System.out.println(monitor.getInvestmentTracker().getPrice());
 	}
 
-	private static void printTrustScores(Map<EpisodePattern, Integer> trustScores) {
+	private static void printTrustScores(Map<EpisodePattern, PredictorPerformance> trustScores) {
 		trustScores.forEach( (k,v) -> System.out.println("found predictor " +k+" with Trust score: "+v));
+		trustScores.forEach( (k,v) -> System.out.println("found predictor " +k+" with Precision: "+v.getPrecision() + " and Recall: " + v.getRecall() + " and accuracy: " + v.getAccuracy()));
 	}
 
 	/*private static void singleStream() throws IOException {

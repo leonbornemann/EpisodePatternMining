@@ -5,14 +5,14 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-import episode.finance.ContinousSerialEpisodeRecognitionDFA;
-import episode.finance.EpisodePattern;
 import episode.finance.ContinousEpisodeRecognitionDFA;
-import episode.finance.SerialEpisodePattern;
+import episode.finance.EpisodePattern;
 import reallife_data.finance.yahoo.stock.data.AnnotatedEvent;
 import reallife_data.finance.yahoo.stock.data.AnnotatedEventType;
 import reallife_data.finance.yahoo.stock.data.Change;
@@ -21,7 +21,7 @@ import util.Pair;
 
 public class StreamMonitor {
 	
-	private Map<ContinousEpisodeRecognitionDFA,PredictorPerformance> trustScores = new HashMap<>();
+	private Map<EpisodePattern,PredictorPerformance> trustScores = new HashMap<>();
 	private PriorityQueue<PredictorOccuranceState> predictorOccuranceExpiryTimes = new PriorityQueue<>((a,b) -> a.getExpiryTime().compareTo(b.getExpiryTime()));
 	private PriorityQueue<PredictorOccuranceState> inversePredictorOccuranceExpiryTimes = new PriorityQueue<>((a,b) -> a.getExpiryTime().compareTo(b.getExpiryTime()));
 	private AnnotatedEventStream stream;
@@ -32,7 +32,9 @@ public class StreamMonitor {
 	private int ensembleScore = 0;
 	private File performanceLog;
 	private InvestmentTracker investmentTracker;
-	private Map<ContinousEpisodeRecognitionDFA, PredictorPerformance> inverseTrustScores = new HashMap<>();
+	private Map<EpisodePattern, PredictorPerformance> inverseTrustScores = new HashMap<>();
+	private Map<EpisodePattern, ContinousEpisodeRecognitionDFA> automata = new HashMap<>();
+	private Map<EpisodePattern, ContinousEpisodeRecognitionDFA> inverseAutomata = new HashMap<>();
 	
 	public StreamMonitor(Map<EpisodePattern, Integer> predictors,Map<EpisodePattern, Integer> inversePredictors, AnnotatedEventStream stream, AnnotatedEventType toPredict, int episodeDuration){
 		this(predictors,inversePredictors,stream,toPredict,episodeDuration,null);
@@ -40,10 +42,12 @@ public class StreamMonitor {
 	
 	public StreamMonitor(Map<EpisodePattern, Integer> predictors,Map<EpisodePattern, Integer> inversePredictors, AnnotatedEventStream stream, AnnotatedEventType toPredict, int episodeDuration, File performanceLog) {
 		for(EpisodePattern pattern : predictors.keySet()){
-			trustScores.put(pattern.getContinousDFA(), new PredictorPerformance()); //TODO: are predictors now passed with PredictorPreformances?
+			trustScores.put(pattern, new PredictorPerformance()); //TODO: are predictors now passed with PredictorPreformances?
+			automata.put(pattern,pattern.getContinousDFA());
 		}
 		for(EpisodePattern pattern : inversePredictors.keySet()){
-			inverseTrustScores.put(pattern.getContinousDFA(), new PredictorPerformance());
+			inverseTrustScores.put(pattern, new PredictorPerformance());
+			inverseAutomata .put(pattern,pattern.getContinousDFA());
 		}
 		this.toPredict = toPredict;
 		this.episodeDuration = episodeDuration;
@@ -64,7 +68,7 @@ public class StreamMonitor {
 				handleInverseTargeEventOccurrence();
 			}
 			//advance automata
-			for(ContinousEpisodeRecognitionDFA automaton : trustScores.keySet()){
+			for(ContinousEpisodeRecognitionDFA automaton : automata.values()){
 				Pair<LocalDateTime, LocalDateTime> occurance = automaton.processEvent(curEvent);
 				if(occurance!=null){
 					investmentTracker.buyIfPossible();
@@ -72,7 +76,7 @@ public class StreamMonitor {
 				}
 			}
 			//other automata:
-			for(ContinousEpisodeRecognitionDFA automaton : inverseTrustScores.keySet()){
+			for(ContinousEpisodeRecognitionDFA automaton : inverseAutomata.values()){
 				Pair<LocalDateTime, LocalDateTime> occurance = automaton.processEvent(curEvent);
 				if(occurance!=null){
 					investmentTracker.sellIfPossible();
@@ -82,24 +86,45 @@ public class StreamMonitor {
 		}
 	}
 
+	private void handleTargetEventOccurrence() {
+		changePrice();
+		toPredictCount++;
+		Set<EpisodePattern> occurredPredictors = getOccurredPatterns(predictorOccuranceExpiryTimes);
+		Set<EpisodePattern> occurredInversePredictors = getOccurredPatterns(inversePredictorOccuranceExpiryTimes);
+		occurredPredictors.forEach(e -> trustScores.get(e).incTruePositives()); //Reward individual predictors
+		occurredInversePredictors.forEach(e -> inverseTrustScores.get(e).incFalsePositives()); //TODO: is that actually false positives?
+		//false negatives
+		HashSet<EpisodePattern> nonOccurringPredictors = new HashSet<EpisodePattern>(trustScores.keySet());
+		nonOccurringPredictors.removeAll(occurredPredictors);
+		nonOccurringPredictors.forEach(e -> trustScores.get(e).incFalseNegatives());
+		//true negatives:
+		HashSet<EpisodePattern> nonOccurringInversePredictors = new HashSet<EpisodePattern>(inverseTrustScores.keySet());
+		nonOccurringInversePredictors.removeAll(occurredInversePredictors);
+		nonOccurringInversePredictors.forEach(e -> inverseTrustScores.get(e).incTrueNegatives());
+		logStatus();
+	}
+
+	
 	private void handleInverseTargeEventOccurrence() {
 		changePrice();
-		inverseToPredictCount++;
-		if(!predictorOccuranceExpiryTimes.isEmpty()){
-			penalizeEnsemble();
-			predictorOccuranceExpiryTimes.forEach(e -> {
-				trustScores.get(e).incFalsePositives(); //is that really false positives
-				e.setOccurance(true);
-			}); //Reward
-			inversePredictorOccuranceExpiryTimes.forEach(e -> {
-				inverseTrustScores.get(e).incTruePositives();
-				e.setOccurance(true);
-			});
-			//TODO: false and true negatives
-		} else{
-			//rewardEnsemble();
-		}
+		toPredictCount++;
+		Set<EpisodePattern> occurredPredictors = getOccurredPatterns(predictorOccuranceExpiryTimes);
+		Set<EpisodePattern> occurredInversePredictors = getOccurredPatterns(inversePredictorOccuranceExpiryTimes);
+		occurredPredictors.forEach(e -> trustScores.get(e).incFalsePositives()); //Reward individual predictors
+		occurredInversePredictors.forEach(e -> inverseTrustScores.get(e).incTruePositives()); //TODO: is that actually false positives?
+		//false negatives
+		HashSet<EpisodePattern> nonOccurringPredictors = new HashSet<EpisodePattern>(trustScores.keySet());
+		nonOccurringPredictors.removeAll(occurredPredictors);
+		nonOccurringPredictors.forEach(e -> trustScores.get(e).incTrueNegatives());
+		//true negatives:
+		HashSet<EpisodePattern> nonOccurringInversePredictors = new HashSet<EpisodePattern>(inverseTrustScores.keySet());
+		nonOccurringInversePredictors.removeAll(occurredInversePredictors);
+		nonOccurringInversePredictors.forEach(e -> inverseTrustScores.get(e).incFalseNegatives());
 		logStatus();
+	}
+
+	private Set<EpisodePattern> getOccurredPatterns(PriorityQueue<PredictorOccuranceState> priorityQueue) {
+		return priorityQueue.stream().map(e -> e.getDFA().getEpsiodePattern()).collect(Collectors.toSet());
 	}
 
 	private void changePrice() {
@@ -109,26 +134,6 @@ public class StreamMonitor {
 			investmentTracker.down();
 		}
 		
-	}
-
-	private void handleTargetEventOccurrence() {
-		changePrice();
-		toPredictCount++;
-		if(!predictorOccuranceExpiryTimes.isEmpty()){
-			rewardEnsemble();
-			predictorOccuranceExpiryTimes.forEach(e -> {
-				trustScores.get(e).incTruePositives();
-				e.setOccurance(true);
-			}); //Reward individual predictors
-			inversePredictorOccuranceExpiryTimes.forEach(e -> {
-				inverseTrustScores.get(e).incFalsePositives(); //TODO: is that actually false positives?
-				e.setOccurance(true);
-			});
-		} else{
-			penalizeEnsemble();
-		}
-		logStatus();
-		//TODO: false and true negatives
 	}
 
 	private void handleExpiration(AnnotatedEvent curEvent, PriorityQueue<PredictorOccuranceState> occuranceExpiryTimes) {
@@ -168,16 +173,16 @@ public class StreamMonitor {
 		return start.plus(episodeDuration, ChronoUnit.SECONDS);
 	}
 
-	public Map<EpisodePattern, Integer> getCurrentTrustScores() {
-		return trustScores.entrySet().stream().collect(Collectors.toMap(e -> e.getKey().getEpsiodePattern(), e -> e.getValue()));
+	public Map<EpisodePattern, PredictorPerformance> getCurrentTrustScores() {
+		return trustScores;
 	}
 
 	public InvestmentTracker getInvestmentTracker() {
 		return investmentTracker;
 	}
 
-	public Map<EpisodePattern, Integer> getCurrentInverseTrustScores() {
-		return inverseTrustScores.entrySet().stream().collect(Collectors.toMap(e -> e.getKey().getEpsiodePattern(), e -> e.getValue()));
+	public Map<EpisodePattern, PredictorPerformance> getCurrentInverseTrustScores() {
+		return inverseTrustScores;
 	}
 	
 	

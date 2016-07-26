@@ -22,5 +22,22 @@ public class PredictorPerformance {
 	public void incTrueNegatives(){
 		trueNegatives++;
 	}
+	
+	@Override
+	public String toString(){
+		return "[TP: "+truePositives + " TN: " + trueNegatives + " FP: " + falsePositives + " FN: " + falseNegatives + "]";
+	}
+
+	public double getPrecision() {
+		return ((double) truePositives) / (truePositives + falsePositives);
+	}
+	
+	public double getRecall(){
+		return ((double) truePositives) / (truePositives + falseNegatives);
+	}
+	
+	public double getAccuracy(){
+		return ((double) truePositives + trueNegatives) / (truePositives + trueNegatives + falsePositives + falseNegatives);
+	}
 
 }
