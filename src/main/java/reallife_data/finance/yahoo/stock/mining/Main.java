@@ -27,15 +27,30 @@ public class Main {
 	}
 
 	private static void multiStream() throws IOException {
-		File streamDir = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Data\\");
-		Set<String> annotatedCompanyCodes = new SemanticKnowledgeCollector().getAnnotatedCompanyCodes();
-		System.out.println(annotatedCompanyCodes.size());
+		//parameters:
 		int d = 180;
+		int m = 100;
+		int s=15;
+		AnnotatedEventType toPredict = new AnnotatedEventType(APPLE, Change.UP);
+		Set<String> annotatedCompanyCodes = new SemanticKnowledgeCollector().getAnnotatedCompanyCodes();
+		Set<AnnotatedEventType> eventAlphabet = AnnotatedEventType.loadEventAlphabet(annotatedCompanyCodes);
+
+		//setup stream:
+		File streamDir = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Data\\");
+		System.out.println(annotatedCompanyCodes.size());
 		MultiFileAnnotatedEventStream stream = new MultiFileAnnotatedEventStream(Arrays.stream(streamDir.listFiles()).sorted().collect(Collectors.toList()),d,e -> annotatedCompanyCodes.contains(e.getEventType().getCompanyID()));
-		PredictiveMiner miner = new PredictiveMiner(stream,new AnnotatedEventType(APPLE, Change.UP),AnnotatedEventType.loadEventAlphabet(annotatedCompanyCodes),100,15,20,d);
+		//mine relevant windows:
+		WindowMiner winMiner = new WindowMiner(stream,toPredict,m,d);
+		
+		//find frequent Episodes
+		
+		//do first method predictive mining
+		PredictiveMiner miner = new PredictiveMiner(stream,new AnnotatedEventType(APPLE, Change.UP),eventAlphabet,100,s,20,d);
 		Map<EpisodePattern, Integer> predictors = miner.getInitialPreditiveEpisodes();
 		Map<EpisodePattern, Integer> inversePredictors = miner.getInitialInversePreditiveEpisodes();
-		//printTrustScores(predictors);
+		//feature based predictive mining:
+		FeatureBasedMiner featureBasedMiner = new FeatureBasedMiner(winMiner.getPredictiveWindows(), winMiner.getInversePredictiveWindows(), winMiner.getNothingWindows(), eventAlphabet, s);
+		//monitoring
 		StreamMonitor monitor = new StreamMonitor(predictors,inversePredictors, stream, new AnnotatedEventType(APPLE, Change.UP), d,new File("resources/logs/performanceLog.txt"));
 		System.out.println(monitor.getInvestmentTracker().netWorth());
 		System.out.println(monitor.getInvestmentTracker().getPrice());

@@ -69,16 +69,18 @@ public class PredictiveMiner {
 		//predictiveWindows.forEach(e -> System.out.println(e.getWindowBorders()));
 	}
 	
+	public getFrequentEpisodesInWindows()
+	
 	public Map<EpisodePattern,Integer> getInitialPreditiveEpisodes() throws IOException{
 		return mineEpisodes(predictiveWindows,inversePredictiveWindows,nothingWindows);
 	}
 
 	private Map<EpisodePattern, Integer> mineEpisodes(List<StreamWindow> predictiveWindows,List<StreamWindow> inversePredictiveWindows,List<StreamWindow> nothingWindows) {
 		SerialEpisodePatternMiner serialEpisodeMiner = new SerialEpisodePatternMiner(predictiveWindows, inversePredictiveWindows,nothingWindows, eventAlphabet);
-		//ParallelEpisodePatternMiner parallelEpisodeMiner = new ParallelEpisodePatternMiner(predictiveWindows, inversePredictiveWindows,nothingWindows, eventAlphabet);
+		ParallelEpisodePatternMiner parallelEpisodeMiner = new ParallelEpisodePatternMiner(predictiveWindows, inversePredictiveWindows,nothingWindows, eventAlphabet);
 		Map<EpisodePattern,Integer> initialPredictiveEpisodes = new HashMap<>();
-		initialPredictiveEpisodes.putAll(serialEpisodeMiner.mineEpisodePatterns(s, n));
-		//initialPredictiveEpisodes.putAll(parallelEpisodeMiner.mineEpisodePatterns(s, n));
+		initialPredictiveEpisodes.putAll(serialEpisodeMiner.mineBestEpisodePatterns(s, n));
+		initialPredictiveEpisodes.putAll(parallelEpisodeMiner.mineBestEpisodePatterns(s, n));
 		return initialPredictiveEpisodes;
 	}
 

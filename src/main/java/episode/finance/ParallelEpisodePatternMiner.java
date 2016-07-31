@@ -1,5 +1,6 @@
 package episode.finance;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -12,19 +13,20 @@ import reallife_data.finance.yahoo.stock.stream.StreamWindow;
 
 public class ParallelEpisodePatternMiner extends EpisodePatternMiner<ParallelEpisodePattern>{
 
-	public ParallelEpisodePatternMiner(List<StreamWindow> precedingTargetWindows, List<StreamWindow> precedingInverseTargetWindows,List<StreamWindow> precedingNothingWindows, Set<AnnotatedEventType> eventAlphabet){
-		super(precedingTargetWindows,precedingInverseTargetWindows,precedingNothingWindows,eventAlphabet);
+	public ParallelEpisodePatternMiner(List<StreamWindow> precedingTargetWindows, Set<AnnotatedEventType> eventAlphabet){
+		super(precedingTargetWindows,eventAlphabet);
 	}
 
 	@Override
-	protected Map<ParallelEpisodePattern, Integer> countSupport(List<ParallelEpisodePattern> candidates,List<StreamWindow> windows) {
-		Map<ParallelEpisodePattern,Integer> frequencies = new HashMap<>();
-		candidates.forEach(e -> frequencies.put(e, 0));
-		for(StreamWindow window : windows){
+	protected Map<ParallelEpisodePattern, List<Boolean>> countSupport(List<ParallelEpisodePattern> candidates,List<StreamWindow> windows) {
+		Map<ParallelEpisodePattern,List<Boolean>> frequencies = new HashMap<>();
+		candidates.forEach(e -> frequencies.put(e, new ArrayList<>(windows.size())));
+		for(int i=0;i<windows.size();i++){
+			StreamWindow window = windows.get(i);
 			List<SimpleParallelEpisodeRecognitionDFA> dfas = candidates.stream().map(e -> e.getSimpleDFA()).collect(Collectors.toList());
-			//TODO: this
 			Map<AnnotatedEventType, Set<SimpleParallelEpisodeRecognitionDFA>> waits = buildWaits(dfas);
-			window.getEvents().forEach(e -> processEventArrival(e.getEventType(),waits,frequencies));
+			final int windowIndex = i;
+			window.getEvents().forEach(e -> processEventArrival(e.getEventType(),waits,frequencies,windowIndex));
 			/*for(LocalDateTime ts: byTimestamp.keySet()){
 				processEventArrival(frequencies, waits, event);
 			}*/
@@ -32,7 +34,8 @@ public class ParallelEpisodePatternMiner extends EpisodePatternMiner<ParallelEpi
 		return frequencies;
 	}
 
-	private void processEventArrival(AnnotatedEventType eventType,Map<AnnotatedEventType, Set<SimpleParallelEpisodeRecognitionDFA>> waits,Map<ParallelEpisodePattern, Integer> frequencies) {
+	private void processEventArrival(AnnotatedEventType eventType,Map<AnnotatedEventType, Set<SimpleParallelEpisodeRecognitionDFA>> waits,Map<ParallelEpisodePattern, List<Boolean>> frequencies, int windowIndex) {
+		frequencies.values().forEach(list -> list.set(windowIndex, false));
 		if(waits.containsKey(eventType)){
 			Set<SimpleParallelEpisodeRecognitionDFA> toRemove = new HashSet<>();
 			for(SimpleParallelEpisodeRecognitionDFA dfa : waits.get(eventType)){
@@ -41,7 +44,9 @@ public class ParallelEpisodePatternMiner extends EpisodePatternMiner<ParallelEpi
 				if(!dfa.waitsFor(eventType)){
 					toRemove.add(dfa);
 					if(dfa.isDone()){
-						frequencies.put(dfa.getEpisodePattern(), frequencies.get(dfa.getEpisodePattern())+1);
+						List<Boolean> occurrenceList = frequencies.get(dfa.getEpisodePattern());
+						assert(occurrenceList.get(windowIndex)==false);
+						occurrenceList.set(windowIndex,true);
 					}
 				}
 			}
