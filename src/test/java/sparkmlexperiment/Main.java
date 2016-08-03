@@ -24,12 +24,12 @@ import org.apache.spark.sql.types.DataTypes;
 // Import StructType and StructField
 import org.apache.spark.sql.types.StructType;
 import org.apache.spark.sql.types.StructField;
-import org.apache.spark.sql.DataFrame;
 // Import Row.
 import org.apache.spark.sql.Row;
 // Import RowFactory.
 import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.SQLContext;
+import org.apache.spark.sql.SparkSession;
 
 public class Main {
 
@@ -38,8 +38,8 @@ public class Main {
 	public static void main(String[] args) {
 		JavaSparkContext sc = new JavaSparkContext("local", "Simple App",
 			      "C:/Users/LeonBornemann/Documents/Uni/Master thesis/spark-1.6.2", new String[]{"target/simple-project-1.0.jar"});
-		SQLContext sqlContext = new org.apache.spark.sql.SQLContext(sc);
-
+		SparkSession session = SparkSession.builder().master("local").appName("Random Forest Party").getOrCreate();
+		session.read().
 		int n=1000;
 		// Load a text file and convert each line to a JavaBean.
 		JavaRDD<WindowInfo> windows = createWindowInfos(n,sc);
@@ -61,7 +61,7 @@ public class Main {
 		  });
 
 		// Apply the schema to the RDD.
-		DataFrame data = sqlContext.createDataFrame(rowRDD, schema);
+		DataFrame data = session.createDataFrame(rowRDD, schema);
 		System.out.println(data);
 		
 				// Split the data into training and test sets (30% held out for testing)

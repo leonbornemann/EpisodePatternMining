@@ -19,20 +19,22 @@ import org.apache.spark.mllib.linalg.Vectors;
 import org.apache.spark.mllib.regression.LabeledPoint;
 import org.apache.spark.mllib.tree.RandomForest;
 import org.apache.spark.mllib.tree.model.RandomForestModel;
-import org.apache.spark.sql.DataFrame;
 import org.junit.Test;
 
 import scala.Tuple2;
 
-public class SparkExperiment {
+public class ThisWorksUseThis {
 
 	private static Random random = new Random(13);
 	
 	@Test
 	public void test() {
 		
-		JavaSparkContext jsc = new JavaSparkContext("local", "Simple App",
-			      "C:/Users/LeonBornemann/Documents/Uni/Master thesis/spark-1.6.2", new String[]{"target/simple-project-1.0.jar"});
+		String sparkPath = "D:/Personal/Documents/Uni/Master thesis/spark-2.0.0-bin-hadoop2.7";
+		SparkConf sparkConf = new SparkConf().setAppName("JavaRandomForestClassificationExample").setMaster("local");
+		JavaSparkContext jsc = new JavaSparkContext(sparkConf);
+		
+		//JavaSparkContext jsc = new JavaSparkContext("local", "Simple App",sparkPath, new String[]{"target/simple-project-1.0.jar"});
 		//SparkConf conf = new SparkConf().setMaster("local").setAppName("My App");
 	    //JavaSparkContext jsc = new JavaSparkContext(conf);
 		
