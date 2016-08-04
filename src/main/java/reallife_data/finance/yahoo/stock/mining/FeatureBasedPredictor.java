@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.mllib.linalg.Vector;
 import org.apache.spark.mllib.linalg.Vectors;
 import org.apache.spark.mllib.regression.LabeledPoint;
 import org.apache.spark.mllib.tree.RandomForest;
@@ -19,26 +20,31 @@ import org.apache.spark.mllib.tree.model.RandomForestModel;
 import episode.finance.EpisodePattern;
 import reallife_data.finance.yahoo.stock.data.AnnotatedEventType;
 import reallife_data.finance.yahoo.stock.data.Change;
+import reallife_data.finance.yahoo.stock.stream.FixedStreamWindow;
 import reallife_data.finance.yahoo.stock.stream.StreamWindow;
 import util.Pair;
 
-public class FeatureBasedMiner {
+public class FeatureBasedPredictor {
 	
 	private static String sparkLaptopPath = "C:\\Users\\LeonBornemann\\Documents\\Uni\\Master thesis\\spark-2.0.0-bin-hadoop2.7\\";
 
 	private int featuresToKeep = 1000; //TODO - parameter?
 	private int seed = 13;
-	private List<StreamWindow> positiveExamples;
-	private List<StreamWindow> negativeExamples;
-	private List<StreamWindow> neutralExamples;
+	private List<FixedStreamWindow> upExamples;
+	private List<FixedStreamWindow> downExamples;
+	private List<FixedStreamWindow> neutralExamples;
 
-	public FeatureBasedMiner(List<StreamWindow> positiveExamples, List<StreamWindow> negativeExamples, List<StreamWindow> neutralExamples, Set<AnnotatedEventType> eventAlphabet, int s){
-		this.positiveExamples = positiveExamples;
-		this.negativeExamples = negativeExamples;
+	private RandomForestModel model;
+
+	private List<EpisodePattern> bestEpisodes;
+
+	public FeatureBasedPredictor(List<FixedStreamWindow> upExamples, List<FixedStreamWindow> downExamples, List<FixedStreamWindow> neutralExamples, Set<AnnotatedEventType> eventAlphabet, int s){
+		this.upExamples = upExamples;
+		this.downExamples = downExamples;
 		this.neutralExamples = neutralExamples;
 		HashSet<EpisodePattern> allFrequent = mineFrequentEpisodes(eventAlphabet, s);
 		//feature selection via information gain:
-		List<EpisodePattern> bestEpisodes = selectBest(allFrequent);
+		bestEpisodes = selectBest(allFrequent);
 		//use apache spark's mlib to train random forest
 		
 		SparkConf sparkConf = new SparkConf().setAppName("JavaRandomForestClassificationExample").setMaster("local");
@@ -60,7 +66,7 @@ public class FeatureBasedMiner {
 		Integer maxDepth = 5;
 		Integer maxBins = 32; //does not matter
 		
-		final RandomForestModel model = RandomForest.trainClassifier(trainingData, numClasses,
+		model = RandomForest.trainClassifier(trainingData, numClasses,
 				  categoricalFeaturesInfo, numTrees, featureSubsetStrategy, impurity, maxDepth, maxBins,
 				  seed);
 		/*
@@ -79,6 +85,12 @@ public class FeatureBasedMiner {
 		}
 		System.out.println(correct / (incorrect+correct) );*/
 	}
+	
+	public Change predict(StreamWindow window){
+		Vector features = buildFeatures(window,bestEpisodes);
+		double prediction = model.predict(features);
+		return Change.fromDouble(prediction);
+	}
 
 	/***
 	 * Mines all episodes that are frequent in at least ONE of the window collections
@@ -89,8 +101,8 @@ public class FeatureBasedMiner {
 	private HashSet<EpisodePattern> mineFrequentEpisodes(Set<AnnotatedEventType> eventAlphabet, int s) {
 		EpisodeDiscovery discovery = new EpisodeDiscovery();
 		HashSet<EpisodePattern> allFrequent = new HashSet<>();
-		allFrequent.addAll(discovery.mineFrequentEpisodes(positiveExamples, eventAlphabet, s).keySet());
-		allFrequent.addAll(discovery.mineFrequentEpisodes(negativeExamples, eventAlphabet, s).keySet());
+		allFrequent.addAll(discovery.mineFrequentEpisodes(upExamples, eventAlphabet, s).keySet());
+		allFrequent.addAll(discovery.mineFrequentEpisodes(downExamples, eventAlphabet, s).keySet());
 		allFrequent.addAll(discovery.mineFrequentEpisodes(neutralExamples, eventAlphabet, s).keySet());
 		return allFrequent;
 	}
@@ -112,29 +124,35 @@ public class FeatureBasedMiner {
 	
 	private JavaRDD<LabeledPoint> buildTrainingData(JavaSparkContext jsc,List<EpisodePattern> bestEpisodes) {
 		List<LabeledPoint> points = new ArrayList<>();
-		positiveExamples.forEach(w -> points.add(createLabeledPoint(w,bestEpisodes,0)));
-		negativeExamples.forEach(w -> points.add(createLabeledPoint(w,bestEpisodes,1)));
-		neutralExamples.forEach(w -> points.add(createLabeledPoint(w,bestEpisodes,2)));
+		upExamples.forEach(w -> points.add(createLabeledPoint(w,bestEpisodes,Change.UP.toDouble())));
+		downExamples.forEach(w -> points.add(createLabeledPoint(w,bestEpisodes,Change.DOWN.toDouble())));
+		neutralExamples.forEach(w -> points.add(createLabeledPoint(w,bestEpisodes,Change.EQUAL.toDouble())));
 		return jsc.parallelize(points);
 
 	}
 
 	private LabeledPoint createLabeledPoint(StreamWindow w, List<EpisodePattern> bestEpisodes,double classLabel) {
-		double[] features = new double[bestEpisodes.size()];
+		Vector features = buildFeatures(w, bestEpisodes);
+		return new LabeledPoint(classLabel,features);
+	}
+
+	private Vector buildFeatures(StreamWindow w, List<EpisodePattern> bestEpisodes) {
+		double[] featuresArray = new double[bestEpisodes.size()];
 		for(int i=0;i<bestEpisodes.size();i++){
 			if(w.containsPattern(bestEpisodes.get(i))){
-				features[i] = 0;
+				featuresArray[i] = 0;
 			} else{
-				features[i] = 1;
+				featuresArray[i] = 1;
 			}
 		}
-		return new LabeledPoint(classLabel,Vectors.dense(features));
+		Vector features = Vectors.dense(featuresArray);
+		return features;
 	}
 
 	private double calcInfoGain(List<Change> classAttribute, EpisodePattern pattern) {
 		List<Boolean> attribute = new ArrayList<>(classAttribute.size());
-		positiveExamples.forEach(w -> attribute.add(w.containsPattern(pattern)));
-		negativeExamples.forEach(w -> attribute.add(w.containsPattern(pattern)));
+		upExamples.forEach(w -> attribute.add(w.containsPattern(pattern)));
+		downExamples.forEach(w -> attribute.add(w.containsPattern(pattern)));
 		neutralExamples.forEach(w -> attribute.add(w.containsPattern(pattern)));
 		assert(classAttribute.size()==attribute.size());
 		return FeatureSelection.calcInfoGain(classAttribute, attribute);
@@ -143,8 +161,8 @@ public class FeatureBasedMiner {
 
 	private List<Change> buildClassAttribute() {
 		List<Change> classAttribute = new ArrayList<>();
-		positiveExamples.forEach(e -> classAttribute.add(Change.UP));
-		negativeExamples.forEach(e -> classAttribute.add(Change.DOWN));
+		upExamples.forEach(e -> classAttribute.add(Change.UP));
+		downExamples.forEach(e -> classAttribute.add(Change.DOWN));
 		neutralExamples.forEach(e -> classAttribute.add(Change.EQUAL));
 		return classAttribute;
 	}

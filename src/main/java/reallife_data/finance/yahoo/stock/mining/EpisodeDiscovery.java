@@ -9,16 +9,16 @@ import episode.finance.EpisodePattern;
 import episode.finance.ParallelEpisodePatternMiner;
 import episode.finance.SerialEpisodePatternMiner;
 import reallife_data.finance.yahoo.stock.data.AnnotatedEventType;
-import reallife_data.finance.yahoo.stock.stream.StreamWindow;
+import reallife_data.finance.yahoo.stock.stream.FixedStreamWindow;
 
 public class EpisodeDiscovery {
 	
-	public Map<EpisodePattern,List<Boolean>>  mineFrequentEpisodes(List<StreamWindow> windows, Set<AnnotatedEventType> eventAlphabet,int s){
+	public Map<EpisodePattern,List<Boolean>>  mineFrequentEpisodes(List<FixedStreamWindow> windows, Set<AnnotatedEventType> eventAlphabet,int s){
 		Map<EpisodePattern,List<Boolean>> frequentPatterns = new HashMap<>();
 		SerialEpisodePatternMiner serialMiner = new SerialEpisodePatternMiner(windows, eventAlphabet);
 		frequentPatterns.putAll(serialMiner.mineFrequentEpisodePatterns(s));
-		ParallelEpisodePatternMiner parallelMiner = new ParallelEpisodePatternMiner(windows, eventAlphabet);
-		frequentPatterns.putAll(parallelMiner.mineFrequentEpisodePatterns(s));
+		//ParallelEpisodePatternMiner parallelMiner = new ParallelEpisodePatternMiner(windows, eventAlphabet);
+		//frequentPatterns.putAll(parallelMiner.mineFrequentEpisodePatterns(s));
 		return frequentPatterns;
 	}	
 	

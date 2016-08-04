@@ -9,16 +9,17 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import reallife_data.finance.yahoo.stock.data.AnnotatedEventType;
+import reallife_data.finance.yahoo.stock.stream.FixedStreamWindow;
 import reallife_data.finance.yahoo.stock.stream.StreamWindow;
 
 public class ParallelEpisodePatternMiner extends EpisodePatternMiner<ParallelEpisodePattern>{
 
-	public ParallelEpisodePatternMiner(List<StreamWindow> precedingTargetWindows, Set<AnnotatedEventType> eventAlphabet){
+	public ParallelEpisodePatternMiner(List<FixedStreamWindow> precedingTargetWindows, Set<AnnotatedEventType> eventAlphabet){
 		super(precedingTargetWindows,eventAlphabet);
 	}
 
 	@Override
-	protected Map<ParallelEpisodePattern, List<Boolean>> countSupport(List<ParallelEpisodePattern> candidates,List<StreamWindow> windows) {
+	protected Map<ParallelEpisodePattern, List<Boolean>> countSupport(List<ParallelEpisodePattern> candidates,List<FixedStreamWindow> windows) {
 		Map<ParallelEpisodePattern,List<Boolean>> frequencies = new HashMap<>();
 		candidates.forEach(e -> frequencies.put(e, new ArrayList<>(windows.size())));
 		for(int i=0;i<windows.size();i++){
@@ -35,8 +36,8 @@ public class ParallelEpisodePatternMiner extends EpisodePatternMiner<ParallelEpi
 	}
 
 	private void processEventArrival(AnnotatedEventType eventType,Map<AnnotatedEventType, Set<SimpleParallelEpisodeRecognitionDFA>> waits,Map<ParallelEpisodePattern, List<Boolean>> frequencies, int windowIndex) {
-		frequencies.values().forEach(list -> list.set(windowIndex, false));
 		if(waits.containsKey(eventType)){
+			frequencies.values().forEach(list -> list.add(windowIndex, false));
 			Set<SimpleParallelEpisodeRecognitionDFA> toRemove = new HashSet<>();
 			for(SimpleParallelEpisodeRecognitionDFA dfa : waits.get(eventType)){
 				assert(dfa.waitsFor(eventType));

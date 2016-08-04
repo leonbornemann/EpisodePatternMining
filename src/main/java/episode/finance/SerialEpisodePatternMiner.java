@@ -10,15 +10,16 @@ import java.util.stream.Collectors;
 
 import reallife_data.finance.yahoo.stock.data.AnnotatedEvent;
 import reallife_data.finance.yahoo.stock.data.AnnotatedEventType;
+import reallife_data.finance.yahoo.stock.stream.FixedStreamWindow;
 import reallife_data.finance.yahoo.stock.stream.StreamWindow;
 
 public class SerialEpisodePatternMiner extends EpisodePatternMiner<SerialEpisodePattern>{
 
-	public SerialEpisodePatternMiner(List<StreamWindow> precedingTargetWindows, Set<AnnotatedEventType> eventAlphabet) {
+	public SerialEpisodePatternMiner(List<FixedStreamWindow> precedingTargetWindows, Set<AnnotatedEventType> eventAlphabet) {
 		super(precedingTargetWindows,eventAlphabet);
 	}
 
-	protected Map<SerialEpisodePattern,List<Boolean>> countSupport(List<SerialEpisodePattern> candidates, List<StreamWindow> windows) {
+	protected Map<SerialEpisodePattern,List<Boolean>> countSupport(List<SerialEpisodePattern> candidates, List<FixedStreamWindow> windows) {
 		Map<SerialEpisodePattern,List<Boolean>> frequencies = new HashMap<>();
 		candidates.forEach(e -> frequencies.put(e, new ArrayList<>(windows.size())));
 		for(int i=0;i<windows.size();i++){
@@ -36,7 +37,7 @@ public class SerialEpisodePatternMiner extends EpisodePatternMiner<SerialEpisode
 	}
 
 	private void processEventArrival(Map<SerialEpisodePattern, List<Boolean>> frequencies,Map<AnnotatedEventType, List<SimpleSerialEpisodeRecognitionDFA>> waits, LocalDateTime ts, List<AnnotatedEvent> events,int windowIndex) {
-		frequencies.values().forEach(list -> list.set(windowIndex, false));
+		frequencies.values().forEach(list -> list.add(windowIndex, false));
 		Map<AnnotatedEventType,List<SimpleSerialEpisodeRecognitionDFA>> bag = new HashMap<>();
 		for(AnnotatedEvent event : events){
 			assert(event.getTimestamp().equals(ts));

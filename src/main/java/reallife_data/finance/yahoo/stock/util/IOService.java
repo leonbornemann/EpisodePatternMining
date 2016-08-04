@@ -16,7 +16,7 @@ public class IOService {
 	
 	public static Set<String> getAllCompanyCodes() throws IOException {
 		//String companyListPath = "resources" + File.separator + "stock_data" + File.separator + "companyInfo" + File.separator + "companyList.csv";
-		String companyListPath = "C:\\Users\\Leon Bornemann\\git\\EpisodePatternMining\\resources\\stock_data\\companyInfo\\companylist.csv";
+		String companyListPath = "resources/stock_data/companyInfo/companylist.csv";
 		BufferedReader br = new BufferedReader(new FileReader(new File(companyListPath)));
 		br.readLine();
 		String line = br.readLine();

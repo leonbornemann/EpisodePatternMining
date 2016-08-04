@@ -26,33 +26,37 @@ public class LowLevelEvent {
 	public static List<LowLevelEvent> readAll(File source) throws IOException {
 		System.out.println("beginning file "+source.getName());
 		BufferedReader br = new BufferedReader(new FileReader(source));
-		List<LowLevelEvent> events = new ArrayList<>();
-		br.readLine();
-		String line = br.readLine();
-		int lineCount = 2;
-		while(line!=null && !line.equals("")){
-			String[] tokens = line.split(",");
-			if(tokens.length!=3){
-				System.out.println(line);
-				System.out.println(lineCount);
-				assert(false);
+		try{
+			List<LowLevelEvent> events = new ArrayList<>();
+			br.readLine();
+			String line = br.readLine();
+			int lineCount = 2;
+			while(line!=null && !line.equals("")){
+				String[] tokens = line.split(",");
+				if(tokens.length!=3){
+					System.out.println(line);
+					System.out.println(lineCount);
+					assert(false);
+				}
+				if(tokens[0].equals("")){
+					System.out.println("empty company at "+lineCount);
+					assert(false);
+				}
+				if(tokens[1].equals("N/A")){
+					//System.out.println("Skipping event of company "+tokens[0] + " at time " + tokens[2] );
+				} else{
+					events.add(new LowLevelEvent(tokens[0], Double.parseDouble(tokens[1]), LocalDateTime.parse(tokens[2], StandardDateTimeFormatter.getStandardDateTimeFormatter())));
+				}
+				if(lineCount % 1000000==0){
+					System.out.println("done with "+lineCount);
+				}
+				lineCount++;
+				line = br.readLine();
 			}
-			if(tokens[0].equals("")){
-				System.out.println("empty company at "+lineCount);
-				assert(false);
-			}
-			if(tokens[1].equals("N/A")){
-				//System.out.println("Skipping event of company "+tokens[0] + " at time " + tokens[2] );
-			} else{
-				events.add(new LowLevelEvent(tokens[0], Double.parseDouble(tokens[1]), LocalDateTime.parse(tokens[2], StandardDateTimeFormatter.getStandardDateTimeFormatter())));
-			}
-			if(lineCount % 1000000==0){
-				System.out.println("done with "+lineCount);
-			}
-			lineCount++;
-			line = br.readLine();
+			return events;
+		} finally{
+			br.close();	
 		}
-		return events;
 	}
 	
 	public String getCompanyId(){

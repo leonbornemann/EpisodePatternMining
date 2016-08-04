@@ -9,14 +9,14 @@ import java.util.List;
 import reallife_data.finance.yahoo.stock.data.AnnotatedEvent;
 import reallife_data.finance.yahoo.stock.data.AnnotatedEventType;
 import reallife_data.finance.yahoo.stock.stream.AnnotatedEventStream;
-import reallife_data.finance.yahoo.stock.stream.StreamWindow;
+import reallife_data.finance.yahoo.stock.stream.FixedStreamWindow;
 
 public class WindowMiner {
 
 
-	private ArrayList<StreamWindow> predictiveWindows;
-	private ArrayList<StreamWindow> inversePredictiveWindows;
-	private ArrayList<StreamWindow> nothingWindows;
+	private ArrayList<FixedStreamWindow> predictiveWindows;
+	private ArrayList<FixedStreamWindow> inversePredictiveWindows;
+	private ArrayList<FixedStreamWindow> nothingWindows;
 
 	public WindowMiner(AnnotatedEventStream stream, AnnotatedEventType toPredict, int m, int d) throws IOException{
 		predictiveWindows = new ArrayList<>();
@@ -47,15 +47,15 @@ public class WindowMiner {
 		}
 	}
 
-	public List<StreamWindow> getNothingWindows() {
+	public List<FixedStreamWindow> getNothingWindows() {
 		return nothingWindows;
 	}
 
-	public List<StreamWindow> getInversePredictiveWindows() {
+	public List<FixedStreamWindow> getInversePredictiveWindows() {
 		return inversePredictiveWindows;
 	}
 
-	public List<StreamWindow> getPredictiveWindows() {
+	public List<FixedStreamWindow> getPredictiveWindows() {
 		return predictiveWindows;
 	}
 }

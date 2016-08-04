@@ -16,7 +16,7 @@ import reallife_data.finance.yahoo.stock.data.AnnotatedEvent;
 import reallife_data.finance.yahoo.stock.data.Change;
 import reallife_data.finance.yahoo.stock.util.StandardDateTimeFormatter;
 
-public class InMemoryAnnotatedEventStream implements AnnotatedEventStream{
+public class InMemoryAnnotatedEventStream extends AbstractAnnotatedEventStream{
 	
 	public static InMemoryAnnotatedEventStream read(File streamFile) throws IOException{
 		List<AnnotatedEvent> events = new ArrayList<>();
@@ -48,9 +48,9 @@ public class InMemoryAnnotatedEventStream implements AnnotatedEventStream{
 	 * @param pos the index of the event from which we want a backwards window
 	 * @return
 	 */
-	public StreamWindow getBackwardsWindow(int d,int pos){
+	public FixedStreamWindow getBackwardsWindow(int d,int pos){
 		if(pos==0){
-			return new StreamWindow(new ArrayList<>());
+			return new FixedStreamWindow(new ArrayList<>());
 		}
 		LocalDateTime endTimestamp = events.get(pos).getTimestamp();
 		int index = pos-1;
@@ -65,7 +65,7 @@ public class InMemoryAnnotatedEventStream implements AnnotatedEventStream{
 			}
 			index--;
 		}
-		return new StreamWindow(window);
+		return new FixedStreamWindow(window);
 	}
 
 	public List<AnnotatedEvent> getEvents() {
@@ -77,7 +77,7 @@ public class InMemoryAnnotatedEventStream implements AnnotatedEventStream{
 	}
 
 	@Override
-	public StreamWindow getBackwardsWindow(int d) {
+	public FixedStreamWindow getBackwardsWindow(int d) {
 		return getBackwardsWindow(d,pos);
 	}
 
@@ -89,5 +89,10 @@ public class InMemoryAnnotatedEventStream implements AnnotatedEventStream{
 	@Override
 	public AnnotatedEvent next() throws IOException {
 		return events.get(pos++);
+	}
+
+	@Override
+	public AnnotatedEvent peek() {
+		return events.get(pos);
 	}
 }

@@ -15,7 +15,7 @@ import episode.finance.SerialEpisodePatternMiner;
 import reallife_data.finance.yahoo.stock.data.AnnotatedEvent;
 import reallife_data.finance.yahoo.stock.data.AnnotatedEventType;
 import reallife_data.finance.yahoo.stock.stream.AnnotatedEventStream;
-import reallife_data.finance.yahoo.stock.stream.StreamWindow;
+import reallife_data.finance.yahoo.stock.stream.FixedStreamWindow;
 
 public class PredictiveMiner {
 
@@ -26,9 +26,9 @@ public class PredictiveMiner {
 	private int s;
 	private int d;
 	private Set<AnnotatedEventType> eventAlphabet;
-	private List<StreamWindow> predictiveWindows;
-	private List<StreamWindow> inversePredictiveWindows;
-	private List<StreamWindow> nothingWindows;
+	private List<FixedStreamWindow> predictiveWindows;
+	private List<FixedStreamWindow> inversePredictiveWindows;
+	private List<FixedStreamWindow> nothingWindows;
 
 	public PredictiveMiner(AnnotatedEventStream stream, AnnotatedEventType toPredict, Set<AnnotatedEventType> eventAlphabet,int m, int s,int n,int d) throws IOException {
 		this.stream = stream;
@@ -71,7 +71,7 @@ public class PredictiveMiner {
 		return mineEpisodes(predictiveWindows,inversePredictiveWindows,nothingWindows);
 	}
 
-	private Map<EpisodePattern, Integer> mineEpisodes(List<StreamWindow> predictiveWindows,List<StreamWindow> inversePredictiveWindows,List<StreamWindow> nothingWindows) {
+	private Map<EpisodePattern, Integer> mineEpisodes(List<FixedStreamWindow> predictiveWindows,List<FixedStreamWindow> inversePredictiveWindows,List<FixedStreamWindow> nothingWindows) {
 		SerialEpisodePatternMiner serialEpisodeMiner = new SerialEpisodePatternMiner(predictiveWindows, eventAlphabet);
 		ParallelEpisodePatternMiner parallelEpisodeMiner = new ParallelEpisodePatternMiner(predictiveWindows, eventAlphabet);
 		Map<EpisodePattern,Integer> initialPredictiveEpisodes = new HashMap<>();

@@ -17,7 +17,7 @@ import reallife_data.finance.yahoo.stock.data.AnnotatedEvent;
 import reallife_data.finance.yahoo.stock.data.Change;
 import reallife_data.finance.yahoo.stock.util.StandardDateTimeFormatter;
 
-public class MultiFileAnnotatedEventStream implements AnnotatedEventStream{
+public class MultiFileAnnotatedEventStream extends AbstractAnnotatedEventStream{
 
 	private List<File> files;
 	private int fileIndex = 0;
@@ -118,7 +118,7 @@ public class MultiFileAnnotatedEventStream implements AnnotatedEventStream{
 	 * @param pos the index of the event from which we want a backwards window
 	 * @return
 	 */
-	public StreamWindow getBackwardsWindow(int d){
+	public FixedStreamWindow getBackwardsWindow(int d){
 		if(d > windowDuration){
 			//TODO: warning?
 		}
@@ -135,7 +135,7 @@ public class MultiFileAnnotatedEventStream implements AnnotatedEventStream{
 				window.add(0, current);
 			}
 		}
-		return new StreamWindow(window);
+		return new FixedStreamWindow(window);
 	}
 
 	private AnnotatedEvent buildCurrent() {
@@ -143,6 +143,15 @@ public class MultiFileAnnotatedEventStream implements AnnotatedEventStream{
 	}
 
 	public StreamWindow getBackwardsWindow() {
-		return new StreamWindow(currentWindow);
+		return new FixedStreamWindow(currentWindow);
+	}
+
+	@Override
+	public AnnotatedEvent peek() {
+		if(hasNext){
+			return buildCurrent();
+		} else{
+			throw new NoSuchElementException();
+		}
 	}
 }

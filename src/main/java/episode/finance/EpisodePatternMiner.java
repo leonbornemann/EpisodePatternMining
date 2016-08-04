@@ -7,14 +7,14 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import reallife_data.finance.yahoo.stock.data.AnnotatedEventType;
-import reallife_data.finance.yahoo.stock.stream.StreamWindow;
+import reallife_data.finance.yahoo.stock.stream.FixedStreamWindow;
 
 public abstract class EpisodePatternMiner<E extends EpisodePattern> {
 
-	private List<StreamWindow> pred;
+	private List<FixedStreamWindow> pred;
 	private EpisodePatternGenerator<E> patternGen;
 
-	public EpisodePatternMiner(List<StreamWindow> precedingTargetWindows, Set<AnnotatedEventType> eventAlphabet){
+	public EpisodePatternMiner(List<FixedStreamWindow> precedingTargetWindows, Set<AnnotatedEventType> eventAlphabet){
 		this.pred = precedingTargetWindows;
 		this.patternGen = createPatternGen(eventAlphabet);
 	}
@@ -44,13 +44,13 @@ public abstract class EpisodePatternMiner<E extends EpisodePattern> {
 		return (int) list.stream().filter(p -> p == true).count();
 	}
 
-	public Map<E,Integer> mineBestEpisodePatterns(int s, int n,List<StreamWindow> inversePred, List<StreamWindow> precedingNothingWindows){
+	public Map<E,Integer> mineBestEpisodePatterns(int s, int n,List<FixedStreamWindow> inversePred, List<FixedStreamWindow> precedingNothingWindows){
 		return getBestPredictors(mineFrequentEpisodePatterns(s),n,inversePred,precedingNothingWindows);
 	}
 
 	protected abstract String getEpisodeTypeName();
 
-	private Map<E,Integer> getBestPredictors(Map<E, List<Boolean>> frequent, int n, List<StreamWindow> inversePred, List<StreamWindow> precedingNothingWindows) {
+	private Map<E,Integer> getBestPredictors(Map<E, List<Boolean>> frequent, int n, List<FixedStreamWindow> inversePred, List<FixedStreamWindow> precedingNothingWindows) {
 		Map<E, List<Boolean>> supportForInverse = countSupport(frequent.keySet().stream().collect(Collectors.toList()), inversePred);
 		Map<E, List<Boolean>> supportForNothing = countSupport(frequent.keySet().stream().collect(Collectors.toList()), precedingNothingWindows);
 		Map<E, Integer> trustScore = frequent.entrySet().stream().collect(Collectors.toMap(e -> e.getKey(),e -> new Integer(countOccurrences(e.getValue()) - countOccurrences(supportForInverse.get(e.getKey())))));
@@ -63,7 +63,7 @@ public abstract class EpisodePatternMiner<E extends EpisodePattern> {
 		return arg2.compareTo(arg1);
 	}
 	
-	protected abstract Map<E, List<Boolean>> countSupport(List<E> candidates,List<StreamWindow> windows);
+	protected abstract Map<E, List<Boolean>> countSupport(List<E> candidates,List<FixedStreamWindow> windows);
 
 	protected abstract EpisodePatternGenerator<E> createPatternGen(Set<AnnotatedEventType> eventAlphabet);
 }

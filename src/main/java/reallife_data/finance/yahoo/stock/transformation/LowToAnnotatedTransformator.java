@@ -2,6 +2,7 @@ package reallife_data.finance.yahoo.stock.transformation;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -17,27 +18,43 @@ public class LowToAnnotatedTransformator {
 	
 	private File outputDir;
 	private File inputDir;
+	private File illegalFormatDir;
 	private double relativeDelta;
 
-	public LowToAnnotatedTransformator(File inputDir, File outputDir, double relativeDelta){
+	public LowToAnnotatedTransformator(File inputDir, File outputDir,File illegalFormatDir, double relativeDelta){
 		this.inputDir = inputDir;
 		this.outputDir = outputDir;
+		this.illegalFormatDir = illegalFormatDir;
 		this.relativeDelta =relativeDelta;
+		
 	}
 	
 	public void transform() throws IOException{
 		List<File> allFiles = Arrays.asList(inputDir.listFiles());
 		for(File file : allFiles){
 			if(file.isFile() && file.getName().endsWith(".csv")){
-				transform(file);
-				System.out.println("done with "+file.getName());
+				String resultFilename = file.getName().substring(0, file.getName().length() - 4) + "_annotated.csv";
+				File outFile = new File(outputDir.getAbsolutePath() + File.separator + resultFilename );
+				if(!outFile.exists()){
+					try{
+						transform(file,outFile);
+						System.out.println("Successfully transformed "+file.getName());
+					} catch(Exception e){
+						System.out.println("error while transforming "+ file.getName());
+						System.out.println("stack trace:");
+						e.printStackTrace();
+						File garbageDst = new File(illegalFormatDir.getAbsolutePath() + File.separator + file.getName());
+						Files.move(file.toPath(), garbageDst.toPath());
+						System.out.println("Moved File: " + file.getName() +" to garbage folder");
+					}
+				} else{
+					System.out.println("skipping "+file.getName()+" because target already exists");
+				}
 			}
 		}
 	}
 
-	private void transform(File source) throws IOException {
-		String resultFilename = source.getName().substring(0, source.getName().length() - 4) + "_annotated.csv";
-		File outFile = new File(outputDir.getAbsolutePath() + File.separator + resultFilename );
+	private void transform(File source, File outFile) throws IOException {
 		List<LowLevelEvent> lowLevelEvents = LowLevelEvent.readAll(source);
 		Map<String,List<LowLevelEvent>> byCompany = lowLevelEvents.stream().collect(Collectors.groupingBy(e -> e.getCompanyId()));
 		Map<String,List<AnnotatedEvent>> annotatedByCompany = byCompany.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> toAnnotated(e.getValue())));
