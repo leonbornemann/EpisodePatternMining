@@ -2,7 +2,6 @@ package reallife_data.finance.yahoo.stock.stream;
 
 import java.time.LocalDateTime;
 
-import episode.finance.ContinousSerialEpisodeRecognitionDFA;
 import episode.finance.ContinousEpisodeRecognitionDFA;
 
 public class PredictorOccuranceState {

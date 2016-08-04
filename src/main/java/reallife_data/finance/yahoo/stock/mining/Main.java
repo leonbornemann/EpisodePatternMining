@@ -8,10 +8,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import episode.finance.EpisodePattern;
-import episode.finance.SerialEpisodePattern;
 import reallife_data.finance.yahoo.stock.data.AnnotatedEventType;
 import reallife_data.finance.yahoo.stock.data.Change;
-import reallife_data.finance.yahoo.stock.stream.AnnotatedEventStream;
 import reallife_data.finance.yahoo.stock.stream.MultiFileAnnotatedEventStream;
 import reallife_data.finance.yahoo.stock.stream.PredictorPerformance;
 import reallife_data.finance.yahoo.stock.stream.StreamMonitor;

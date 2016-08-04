@@ -1,5 +1,9 @@
 package reallife_data.finance.yahoo.stock.download;
 
+import static org.quartz.JobBuilder.newJob;
+import static org.quartz.SimpleScheduleBuilder.simpleSchedule;
+import static org.quartz.TriggerBuilder.newTrigger;
+
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -17,10 +21,6 @@ import org.quartz.impl.StdSchedulerFactory;
 
 import reallife_data.finance.yahoo.stock.util.IOService;
 import reallife_data.finance.yahoo.stock.util.StandardDateTimeFormatter;
-
-import static org.quartz.JobBuilder.*;
-import static org.quartz.TriggerBuilder.*;
-import static org.quartz.SimpleScheduleBuilder.*;
 
 public class SimpleCrawler {
 

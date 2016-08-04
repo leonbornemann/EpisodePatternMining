@@ -10,7 +10,6 @@ import reallife_data.finance.yahoo.stock.data.AnnotatedEventType;
 import reallife_data.finance.yahoo.stock.data.Change;
 import reallife_data.finance.yahoo.stock.mining.PredictiveMiner;
 import reallife_data.finance.yahoo.stock.stream.AnnotatedEventStream;
-import reallife_data.finance.yahoo.stock.stream.InMemoryAnnotatedEventStream;
 import reallife_data.finance.yahoo.stock.stream.PredictorPerformance;
 import reallife_data.finance.yahoo.stock.stream.StreamMonitor;
 import semantic.SemanticKnowledgeCollector;

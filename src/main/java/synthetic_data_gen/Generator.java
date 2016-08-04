@@ -11,11 +11,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import episode.finance.EpisodePattern;
 import episode.finance.SerialEpisodePattern;
-import episode.finance.SimpleEpisodeRecognitionDFA;
 import episode.finance.SimpleSerialEpisodeRecognitionDFA;
 import reallife_data.finance.yahoo.stock.data.AnnotatedEvent;
 import reallife_data.finance.yahoo.stock.data.AnnotatedEventType;

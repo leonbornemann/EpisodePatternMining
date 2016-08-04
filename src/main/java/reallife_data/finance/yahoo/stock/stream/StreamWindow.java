@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 import episode.finance.EpisodePattern;
 import episode.finance.SimpleEpisodeRecognitionDFA;
 import reallife_data.finance.yahoo.stock.data.AnnotatedEvent;
-import reallife_data.finance.yahoo.stock.data.AnnotatedEventType;
 import util.Pair;
 
 public class StreamWindow {

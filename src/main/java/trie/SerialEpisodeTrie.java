@@ -2,12 +2,10 @@ package trie;
 
 import java.util.Iterator;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import episode.basic.EventType;
-import episode.basic.FrequencyListElement;
 import episode.basic.SerialEpisode;
-
-import java.util.Set;
 
 public class SerialEpisodeTrie<T> {
 

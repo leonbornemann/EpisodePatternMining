@@ -1,8 +1,6 @@
 package episode.finance;
 
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -64,6 +62,22 @@ public class SerialEpisodePattern implements EpisodePattern {
 	@Override
 	public boolean containsType(AnnotatedEventType e) {
 		return events.contains(e);
+	}
+	
+	@Override
+	public boolean equals(Object o){
+		if(o instanceof SerialEpisodePattern){
+			return events.equals(((SerialEpisodePattern) o).events);
+		} else if( o instanceof ParallelEpisodePattern){
+			ParallelEpisodePattern other = (ParallelEpisodePattern) o;
+			if(length()==1 && other.length()==1){
+				return events.get(0).equals(other.getEvents().keySet().iterator().next());
+			} else{
+				return false;
+			}
+		} else{
+			return false;
+		}
 	}
 
 }

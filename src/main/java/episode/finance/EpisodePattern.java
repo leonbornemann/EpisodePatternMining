@@ -1,9 +1,7 @@
 package episode.finance;
 
-import java.util.Collection;
 import java.util.Set;
 
-import reallife_data.finance.yahoo.stock.data.AnnotatedEvent;
 import reallife_data.finance.yahoo.stock.data.AnnotatedEventType;
 
 public interface EpisodePattern {

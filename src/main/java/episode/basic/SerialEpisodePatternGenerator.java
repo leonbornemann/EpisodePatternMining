@@ -8,8 +8,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.flink.api.java.tuple.Tuple2;
-
 public class SerialEpisodePatternGenerator {
 
 	protected Set<EventType> eventAlphabet;

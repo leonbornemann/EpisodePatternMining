@@ -8,8 +8,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.flink.api.java.tuple.Tuple2;
-
 import reallife_data.finance.yahoo.stock.data.AnnotatedEventType;
 
 public class SerialEpisodePatternGenerator implements EpisodePatternGenerator<SerialEpisodePattern>{

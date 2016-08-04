@@ -11,12 +11,10 @@ import java.util.Set;
 
 import episode.finance.EpisodePattern;
 import episode.finance.ParallelEpisodePatternMiner;
-import episode.finance.SerialEpisodePattern;
 import episode.finance.SerialEpisodePatternMiner;
 import reallife_data.finance.yahoo.stock.data.AnnotatedEvent;
 import reallife_data.finance.yahoo.stock.data.AnnotatedEventType;
 import reallife_data.finance.yahoo.stock.stream.AnnotatedEventStream;
-import reallife_data.finance.yahoo.stock.stream.MultiFileAnnotatedEventStream;
 import reallife_data.finance.yahoo.stock.stream.StreamWindow;
 
 public class PredictiveMiner {
@@ -68,19 +66,17 @@ public class PredictiveMiner {
 		}
 		//predictiveWindows.forEach(e -> System.out.println(e.getWindowBorders()));
 	}
-	
-	public getFrequentEpisodesInWindows()
-	
+		
 	public Map<EpisodePattern,Integer> getInitialPreditiveEpisodes() throws IOException{
 		return mineEpisodes(predictiveWindows,inversePredictiveWindows,nothingWindows);
 	}
 
 	private Map<EpisodePattern, Integer> mineEpisodes(List<StreamWindow> predictiveWindows,List<StreamWindow> inversePredictiveWindows,List<StreamWindow> nothingWindows) {
-		SerialEpisodePatternMiner serialEpisodeMiner = new SerialEpisodePatternMiner(predictiveWindows, inversePredictiveWindows,nothingWindows, eventAlphabet);
-		ParallelEpisodePatternMiner parallelEpisodeMiner = new ParallelEpisodePatternMiner(predictiveWindows, inversePredictiveWindows,nothingWindows, eventAlphabet);
+		SerialEpisodePatternMiner serialEpisodeMiner = new SerialEpisodePatternMiner(predictiveWindows, eventAlphabet);
+		ParallelEpisodePatternMiner parallelEpisodeMiner = new ParallelEpisodePatternMiner(predictiveWindows, eventAlphabet);
 		Map<EpisodePattern,Integer> initialPredictiveEpisodes = new HashMap<>();
-		initialPredictiveEpisodes.putAll(serialEpisodeMiner.mineBestEpisodePatterns(s, n));
-		initialPredictiveEpisodes.putAll(parallelEpisodeMiner.mineBestEpisodePatterns(s, n));
+		initialPredictiveEpisodes.putAll(serialEpisodeMiner.mineBestEpisodePatterns(s, n, inversePredictiveWindows,nothingWindows));
+		initialPredictiveEpisodes.putAll(parallelEpisodeMiner.mineBestEpisodePatterns(s, n, inversePredictiveWindows,nothingWindows));
 		return initialPredictiveEpisodes;
 	}
 

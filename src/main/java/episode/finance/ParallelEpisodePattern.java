@@ -2,7 +2,6 @@ package episode.finance;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -88,6 +87,23 @@ public class ParallelEpisodePattern implements EpisodePattern{
 	@Override
 	public boolean containsType(AnnotatedEventType e) {
 		return events.keySet().contains(e);
+	}
+	
+	@Override
+	public boolean equals(Object o){
+		if(o instanceof ParallelEpisodePattern){
+			return events.equals(((ParallelEpisodePattern) o).getEvents());
+		} else if( o instanceof SerialEpisodePattern){
+			SerialEpisodePattern other = (SerialEpisodePattern) o;
+			if(length()==1 && other.length()==1){
+				return events.keySet().iterator().next().equals(other.get(0));
+			} else{
+				return false;
+			}
+		} else{
+			//TODO: case that parallel and serial size one can be equal!!
+			return false;
+		}
 	}
 
 }

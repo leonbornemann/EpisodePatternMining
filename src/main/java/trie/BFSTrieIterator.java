@@ -1,15 +1,11 @@
 package trie;
 
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Queue;
-
-import org.apache.commons.collections.iterators.EntrySetMapIterator;
 
 import episode.basic.EventType;
 import episode.basic.SerialEpisode;
