@@ -11,8 +11,8 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import episode.basic.EventType;
-import episode.basic.SerialEpisode;
+import episode.lossy_counting.EventType;
+import episode.lossy_counting.SerialEpisode;
 import trie.SerialEpisodeTrie;
 
 public class TrieTest {

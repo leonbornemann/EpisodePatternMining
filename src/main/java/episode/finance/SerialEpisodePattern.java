@@ -5,7 +5,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import reallife_data.finance.yahoo.stock.data.AnnotatedEventType;
+import episode.finance.recognition.ContinousSerialEpisodeRecognitionDFA;
+import episode.finance.recognition.SimpleEpisodeRecognitionDFA;
+import episode.finance.recognition.SimpleSerialEpisodeRecognitionDFA;
+import prediction.data.AnnotatedEventType;
 
 public class SerialEpisodePattern implements EpisodePattern {
 	

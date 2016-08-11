@@ -9,10 +9,11 @@ import java.util.Arrays;
 import org.junit.Before;
 import org.junit.Test;
 
-import reallife_data.finance.yahoo.stock.data.AnnotatedEvent;
-import reallife_data.finance.yahoo.stock.data.AnnotatedEventType;
-import reallife_data.finance.yahoo.stock.data.Change;
-import reallife_data.finance.yahoo.stock.util.StandardDateTimeFormatter;
+import episode.finance.recognition.ContinousEpisodeRecognitionDFA;
+import prediction.data.AnnotatedEvent;
+import prediction.data.AnnotatedEventType;
+import prediction.data.Change;
+import prediction.util.StandardDateTimeFormatter;
 import util.Pair;
 
 public class ContinousParallelEpisodeRecognitionDFATest {

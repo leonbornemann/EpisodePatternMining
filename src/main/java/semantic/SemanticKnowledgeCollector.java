@@ -10,7 +10,7 @@ import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.ResultSet;
 
-import reallife_data.finance.yahoo.stock.util.IOService;
+import prediction.util.IOService;
 import util.Pair;
 
 public class SemanticKnowledgeCollector {

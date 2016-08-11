@@ -7,7 +7,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import reallife_data.finance.yahoo.stock.data.AnnotatedEventType;
+import episode.finance.recognition.ContinousEpisodeRecognitionDFA;
+import episode.finance.recognition.ContinousParallelEpisodeRecognitionDFA;
+import episode.finance.recognition.SimpleEpisodeRecognitionDFA;
+import episode.finance.recognition.SimpleParallelEpisodeRecognitionDFA;
+import prediction.data.AnnotatedEventType;
 
 public class ParallelEpisodePattern implements EpisodePattern{
 

@@ -4,8 +4,8 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-import reallife_data.finance.yahoo.stock.data.AnnotatedEventType;
-import reallife_data.finance.yahoo.stock.data.Change;
+import prediction.data.AnnotatedEventType;
+import prediction.data.Change;
 
 public class PatternEqualityTest {
 

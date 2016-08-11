@@ -5,10 +5,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.TreeMap;
 
-import episode.basic.EventType;
-import episode.basic.SerialEpisode;
+import episode.lossy_counting.EventType;
+import episode.lossy_counting.SerialEpisode;
+
+import java.util.TreeMap;
 
 public class SerialEpisodeTrieNode<T> {
 

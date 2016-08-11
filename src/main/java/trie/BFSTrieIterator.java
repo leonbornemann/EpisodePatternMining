@@ -4,13 +4,14 @@ import java.util.ArrayDeque;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
+
+import episode.lossy_counting.EventType;
+import episode.lossy_counting.SerialEpisode;
+
 import java.util.NoSuchElementException;
 import java.util.Queue;
 
-import episode.basic.EventType;
-import episode.basic.SerialEpisode;
-
-public class BFSTrieIterator<T> implements Iterator<java.util.Map.Entry<episode.basic.SerialEpisode, T>> {
+public class BFSTrieIterator<T> implements Iterator<java.util.Map.Entry<episode.lossy_counting.SerialEpisode, T>> {
 
 	private SerialEpisodeTrieNode<T> curNode;
 	private List<Entry<EventType,T>> curEntries;

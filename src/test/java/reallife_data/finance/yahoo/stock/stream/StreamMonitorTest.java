@@ -14,10 +14,14 @@ import org.junit.Test;
 
 import episode.finance.EpisodePattern;
 import episode.finance.SerialEpisodePattern;
-import reallife_data.finance.yahoo.stock.data.AnnotatedEvent;
-import reallife_data.finance.yahoo.stock.data.AnnotatedEventType;
-import reallife_data.finance.yahoo.stock.data.Change;
-import reallife_data.finance.yahoo.stock.util.StandardDateTimeFormatter;
+import prediction.data.AnnotatedEvent;
+import prediction.data.AnnotatedEventType;
+import prediction.data.Change;
+import prediction.data.stream.AnnotatedEventStream;
+import prediction.data.stream.InMemoryAnnotatedEventStream;
+import prediction.data.stream.PredictorPerformance;
+import prediction.data.stream.StreamMonitor;
+import prediction.util.StandardDateTimeFormatter;
 
 public class StreamMonitorTest {
 	

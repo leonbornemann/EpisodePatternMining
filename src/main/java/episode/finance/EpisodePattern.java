@@ -2,7 +2,9 @@ package episode.finance;
 
 import java.util.Set;
 
-import reallife_data.finance.yahoo.stock.data.AnnotatedEventType;
+import episode.finance.recognition.ContinousEpisodeRecognitionDFA;
+import episode.finance.recognition.SimpleEpisodeRecognitionDFA;
+import prediction.data.AnnotatedEventType;
 
 public interface EpisodePattern {
 
