@@ -18,7 +18,9 @@ public class SlidableStreamWindow extends AbstractStreamWindow {
 	 * @param e
 	 */
 	public void append(AnnotatedEvent e){
-		assert(window.get(window.size()-1).getTimestamp().compareTo(e.getTimestamp())<=0);
+		if(window.size()!=0){
+			assert(window.get(window.size()-1).getTimestamp().compareTo(e.getTimestamp())<=0);
+		}
 		window.add(e);
 	}
 	

@@ -133,7 +133,7 @@ public class Main {
 		
 		//do first method predictive mining
 		//feature based predictive mining:
-		FeatureBasedPredictor featureBasedPredictor = new FeatureBasedPredictor(winMiner.getPredictiveWindows(), winMiner.getInversePredictiveWindows(), winMiner.getNothingWindows(), eventAlphabet, s);
+		FeatureBasedPredictor featureBasedPredictor = new FeatureBasedPredictor(winMiner.getPredictiveWindows(), winMiner.getInversePredictiveWindows(), winMiner.getNeutralWindows(), eventAlphabet, s);
 		//window Sliding
 		StreamWindowSlider slider = new StreamWindowSlider(stream,d);
 		List<Pair<LocalDateTime,Change>> predictions = new ArrayList<>();

@@ -112,17 +112,17 @@ public class MultiFileAnnotatedEventStream extends AbstractAnnotatedEventStream{
 	}
 	
 	/***
-	 * Returns a window of the stream in the following: Let t be the timestamp of the event at position pos, the window will then contain all events that have timestamps in the interval [t-d,t),
+	 * Returns a window of the stream in the following: Let t be the timestamp of the event at position pos, where pos is the index of the element that was returned by the last call to next(), the window will then contain all events that have timestamps in the interval [t-d,t),
 	 * this means events[pos] is NOT contained in the interval. 
 	 * @param d duration (in seconds)
 	 * @return
 	 */
 	public FixedStreamWindow getBackwardsWindow(int d){
 		if(d > windowDuration){
-			//TODO: warning?
+			assert(false) : "Requested larger backwards window size than the stream stores";
 		}
-		LocalDateTime endTimestamp = currentWindow.get(currentWindow.size()-1).getTimestamp();
-		ListIterator<AnnotatedEvent> it = currentWindow.listIterator(currentWindow.size()-1);
+		LocalDateTime endTimestamp = currentWindow.get(getLastReturnedIndex()).getTimestamp();
+		ListIterator<AnnotatedEvent> it = currentWindow.listIterator(getLastReturnedIndex());
 		List<AnnotatedEvent> window = new ArrayList<>();
 		while(it.hasPrevious()){
 			AnnotatedEvent current = it.previous();
@@ -135,6 +135,10 @@ public class MultiFileAnnotatedEventStream extends AbstractAnnotatedEventStream{
 			}
 		}
 		return new FixedStreamWindow(window);
+	}
+
+	private int getLastReturnedIndex() {
+		return currentWindow.size()-2; //-2 because the last element is the one that the user has not yet seen, but has already been parsed from the file
 	}
 
 	private AnnotatedEvent buildCurrent() {

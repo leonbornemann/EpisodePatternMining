@@ -28,6 +28,7 @@ public class MultiFileAnnotatedEventStreamTest {
 		stream.next();
 		stream.next();
 		stream.next();
+		stream.next();
 		StreamWindow win = stream.getBackwardsWindow(windowDuration);
 		assertEquals(5,win.getEvents().size());
 		stream.next();
