@@ -1,4 +1,4 @@
-package episode.finance;
+package episode.finance.recognition;
 
 import static org.junit.Assert.*;
 

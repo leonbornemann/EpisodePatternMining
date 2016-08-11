@@ -1,4 +1,4 @@
-package TestFlinkProject.main.trie;
+package trie.test;
 
 import static org.junit.Assert.*;
 

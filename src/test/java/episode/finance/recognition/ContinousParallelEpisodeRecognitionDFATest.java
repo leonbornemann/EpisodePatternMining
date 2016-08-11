@@ -1,4 +1,4 @@
-package episode.finance;
+package episode.finance.recognition;
 
 import static org.junit.Assert.*;
 
@@ -9,6 +9,7 @@ import java.util.Arrays;
 import org.junit.Before;
 import org.junit.Test;
 
+import episode.finance.ParallelEpisodePattern;
 import episode.finance.recognition.ContinousEpisodeRecognitionDFA;
 import prediction.data.AnnotatedEvent;
 import prediction.data.AnnotatedEventType;

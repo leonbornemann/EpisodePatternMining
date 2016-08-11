@@ -1,4 +1,4 @@
-package reallife_data.finance.yahoo.stock.stream;
+package prediction.data.stream.test;
 
 import static org.junit.Assert.assertEquals;
 
