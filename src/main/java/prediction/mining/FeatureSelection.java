@@ -30,8 +30,8 @@ public class FeatureSelection {
 
 		/***
 		 * Calculates the information gain for a numeric attribute, given it's classes
-		 * @param numericAttribute
-		 * @param classIds
+		 * @param attribute a boolean attribute
+		 * @param classIds the class distribution (either positive, neutral or negative)
 		 * @return
 		 */
 		public static double calcInfoGain(List<Change> classAttribute,List<Boolean> attribute) {

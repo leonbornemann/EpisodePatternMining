@@ -115,7 +115,6 @@ public class MultiFileAnnotatedEventStream extends AbstractAnnotatedEventStream{
 	 * Returns a window of the stream in the following: Let t be the timestamp of the event at position pos, the window will then contain all events that have timestamps in the interval [t-d,t),
 	 * this means events[pos] is NOT contained in the interval. 
 	 * @param d duration (in seconds)
-	 * @param pos the index of the event from which we want a backwards window
 	 * @return
 	 */
 	public FixedStreamWindow getBackwardsWindow(int d){
@@ -143,7 +142,7 @@ public class MultiFileAnnotatedEventStream extends AbstractAnnotatedEventStream{
 	}
 
 	public StreamWindow getBackwardsWindow() {
-		return new FixedStreamWindow(currentWindow);
+		return getBackwardsWindow(windowDuration);
 	}
 
 	@Override

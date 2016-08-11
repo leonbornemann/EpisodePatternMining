@@ -35,5 +35,10 @@ public abstract class AbstractStreamWindow implements StreamWindow {
 		}
 		return false;
 	}
+	
+	@Override
+	public String toString(){
+		return window.toString();
+	}
 
 }
