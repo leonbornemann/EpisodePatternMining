@@ -32,7 +32,7 @@ public class StreamWindowSlider {
 		List<AnnotatedEvent> toAdd = stream.getAllEventsOfCurrentTimestamp();
 		toAdd.forEach(e -> slidingWindow.append(e));
 		List<AnnotatedEvent> droppedOut = new ArrayList<>();
-		while(slidingWindow.windowDuration() >= windowSize){
+		while(slidingWindow.windowDuration() > windowSize){
 			droppedOut.add(slidingWindow.removeStart());
 		}	
 		return droppedOut;
@@ -44,6 +44,7 @@ public class StreamWindowSlider {
 		while(stream.hasNext()){
 			if(begin==null){
 				begin = stream.next();
+				slidingWindow.append(begin);
 			} else if (ChronoUnit.SECONDS.between(begin.getTimestamp(),stream.peek().getTimestamp())<=windowSize){
 				slidingWindow.append(stream.next());
 			} else{

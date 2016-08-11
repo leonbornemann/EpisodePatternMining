@@ -3,25 +3,18 @@ package prediction.data.stream.test;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
 
 import episode.finance.EpisodePattern;
 import episode.finance.SerialEpisodePattern;
-import prediction.data.AnnotatedEvent;
 import prediction.data.AnnotatedEventType;
 import prediction.data.Change;
 import prediction.data.stream.AnnotatedEventStream;
-import prediction.data.stream.InMemoryAnnotatedEventStream;
 import prediction.data.stream.PredictorPerformance;
 import prediction.data.stream.StreamMonitor;
-import prediction.util.StandardDateTimeFormatter;
 
 public class StreamMonitorTest {
 	
@@ -43,7 +36,7 @@ public class StreamMonitorTest {
 		Map<EpisodePattern, Integer> predictors = new HashMap<>();
 		predictors.put(episode3, 0);
 		int d = 5;
-		AnnotatedEventStream stream = buildStream(1,
+		AnnotatedEventStream stream = TestUtil.buildStream(1,
 				A,B,C,F,E,E, //true positive
 				A,B,C,E,E,F, //true positive
 				A,E,B,E,C,F, //true positive
@@ -65,7 +58,7 @@ public class StreamMonitorTest {
 		predictors.put(episode3, 0);
 		predictors.put(episode2, 0);
 		int d = 5;
-		AnnotatedEventStream stream = buildStream(1,
+		AnnotatedEventStream stream = TestUtil.buildStream(1,
 				A,B,C,D,E,F, //both should fire
 				A,D,E,E,E,F, //A->D should fire
 				A,B,C,E,E,F); //A->B->C should fire
@@ -78,17 +71,6 @@ public class StreamMonitorTest {
 		assertEquals(2.0/3.0,results.get(episode2).getRecall(),Double.MIN_VALUE);
 		assertEquals(2.0/2.0,results.get(episode3).getPrecision(),Double.MIN_VALUE);
 		assertEquals(2.0/2.0,results.get(episode2).getPrecision(),Double.MIN_VALUE);
-	}
-
-
-	private AnnotatedEventStream buildStream(int stepLengthInSeconds, AnnotatedEventType ...eventTypes ) {
-		LocalDateTime currentTime = LocalDateTime.parse("2001-01-01 10:00:00",StandardDateTimeFormatter.getStandardDateTimeFormatter());
-		List<AnnotatedEvent> events = new ArrayList<>();
-		for(int i=0;i<eventTypes.length;i++){
-			currentTime = currentTime.plus(1, ChronoUnit.SECONDS);
-			events.add(new AnnotatedEvent(eventTypes[i].getCompanyID(),eventTypes[i].getChange(),currentTime));
-		}
-		return new InMemoryAnnotatedEventStream(events);
 	}
 
 }
