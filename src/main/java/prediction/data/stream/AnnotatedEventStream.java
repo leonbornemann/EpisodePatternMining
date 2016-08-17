@@ -15,5 +15,10 @@ public interface AnnotatedEventStream {
 
 	public AnnotatedEvent peek();
 
+	/***
+	 * Moves the stream forward and returns all events that have the same timestamp as the one shown by peek()
+	 * @return
+	 * @throws IOException
+	 */
 	public List<AnnotatedEvent> getAllEventsOfCurrentTimestamp() throws IOException;
 }

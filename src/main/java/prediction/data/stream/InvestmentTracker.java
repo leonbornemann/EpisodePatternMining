@@ -6,12 +6,14 @@ public class InvestmentTracker {
 	private double price;
 	private int numStocks;
 	private double moneyAmount;
+	private double startingInvestment;
 
 	public InvestmentTracker(double relativeDelta) {
 		this.relativeDelta = relativeDelta;
 		price = 100.0; //arbitrary 
 		numStocks = 10;
 		moneyAmount = 0.0;
+		startingInvestment = netWorth();
 	}
 
 	public double netWorth(){
@@ -42,5 +44,9 @@ public class InvestmentTracker {
 
 	public double getPrice() {
 		return price;
+	}
+	
+	public double rateOfReturn(){
+		return (netWorth()-startingInvestment)/startingInvestment;
 	}
 }

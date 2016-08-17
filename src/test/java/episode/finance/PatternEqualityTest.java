@@ -23,6 +23,7 @@ public class PatternEqualityTest {
 		SerialEpisodePattern pattern4 = new SerialEpisodePattern(A,A,C,B);
 		SerialEpisodePattern pattern5 = new SerialEpisodePattern(A,A,B);
 		assertEquals(pattern1, pattern2);
+		assertEquals(pattern1.hashCode(),pattern2.hashCode());
 		assertFalse(pattern1.equals(pattern3));
 		assertFalse(pattern1.equals(pattern4));
 		assertFalse(pattern1.equals(pattern5));
@@ -37,7 +38,9 @@ public class PatternEqualityTest {
 		ParallelEpisodePattern pattern5 = new ParallelEpisodePattern(A,A,B);
 		ParallelEpisodePattern pattern6 = new ParallelEpisodePattern(A,A,A,B,C);
 		assertEquals(pattern1, pattern2);
+		assertEquals(pattern1.hashCode(),pattern2.hashCode());
 		assertEquals(pattern1, pattern3);
+		assertEquals(pattern1.hashCode(),pattern3.hashCode());
 		assertFalse(pattern1.equals(pattern4));
 		assertFalse(pattern1.equals(pattern5));
 		assertFalse(pattern1.equals(pattern6));
@@ -57,7 +60,9 @@ public class PatternEqualityTest {
 		SerialEpisodePattern pattern3 = new SerialEpisodePattern(A);
 		SerialEpisodePattern pattern4 = new SerialEpisodePattern(B);
 		assertEquals(pattern1, pattern3);
+		assertEquals(pattern1.hashCode(),pattern3.hashCode());
 		assertEquals(pattern2, pattern4);
+		assertEquals(pattern2.hashCode(),pattern4.hashCode());
 		assertFalse(pattern1.equals(pattern2));
 		assertFalse(pattern1.equals(pattern4));
 		assertFalse(pattern2.equals(pattern3));

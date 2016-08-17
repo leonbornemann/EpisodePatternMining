@@ -17,8 +17,8 @@ public class EpisodeDiscovery {
 		Map<EpisodePattern,List<Boolean>> frequentPatterns = new HashMap<>();
 		SerialEpisodePatternMiner serialMiner = new SerialEpisodePatternMiner(windows, eventAlphabet);
 		frequentPatterns.putAll(serialMiner.mineFrequentEpisodePatterns(s));
-		//ParallelEpisodePatternMiner parallelMiner = new ParallelEpisodePatternMiner(windows, eventAlphabet);
-		//frequentPatterns.putAll(parallelMiner.mineFrequentEpisodePatterns(s));
+		ParallelEpisodePatternMiner parallelMiner = new ParallelEpisodePatternMiner(windows, eventAlphabet);
+		frequentPatterns.putAll(parallelMiner.mineFrequentEpisodePatterns(s));
 		return frequentPatterns;
 	}	
 	

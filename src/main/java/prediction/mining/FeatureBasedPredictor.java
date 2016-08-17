@@ -1,5 +1,12 @@
 package prediction.mining;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -24,7 +31,7 @@ import prediction.data.stream.FixedStreamWindow;
 import prediction.data.stream.StreamWindow;
 import util.Pair;
 
-public class FeatureBasedPredictor {
+public class FeatureBasedPredictor implements PredictiveModel {
 	
 	private static String sparkLaptopPath = "C:\\Users\\LeonBornemann\\Documents\\Uni\\Master thesis\\spark-2.0.0-bin-hadoop2.7\\";
 
@@ -46,7 +53,32 @@ public class FeatureBasedPredictor {
 		//feature selection via information gain:
 		bestEpisodes = selectBest(allFrequent);
 		//use apache spark's mlib to train random forest
-		
+		buildModel();
+	}
+	
+	public void saveModel(File file) throws FileNotFoundException, IOException{
+		ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(file));
+		out.writeObject(bestEpisodes);
+		out.writeObject(model);
+		out.close();
+	}
+	
+	/***
+	 * loads the model from a file
+	 * @param file
+	 * @throws IOException 
+	 * @throws FileNotFoundException 
+	 * @throws ClassNotFoundException 
+	 */
+	@SuppressWarnings("unchecked")
+	public FeatureBasedPredictor(File file) throws FileNotFoundException, IOException, ClassNotFoundException{
+		ObjectInputStream in = new ObjectInputStream(new FileInputStream(file));
+		bestEpisodes =  (List<EpisodePattern>) in.readObject();
+		model = (RandomForestModel) in.readObject();
+		in.close();
+	}
+
+	private void buildModel() {
 		SparkConf sparkConf = new SparkConf().setAppName("JavaRandomForestClassificationExample").setMaster("local");
 		JavaSparkContext jsc = new JavaSparkContext(sparkConf);
 		JavaRDD<LabeledPoint> trainingData = buildTrainingData(jsc,bestEpisodes);
@@ -69,21 +101,6 @@ public class FeatureBasedPredictor {
 		model = RandomForest.trainClassifier(trainingData, numClasses,
 				  categoricalFeaturesInfo, numTrees, featureSubsetStrategy, impurity, maxDepth, maxBins,
 				  seed);
-		/*
-		List<LabeledPoint> test = testData.collect();
-		double correct = 0;
-		double incorrect = 0;
-		for(int i=0;i<test.size();i++){
-			double predicted = model.predict(test.get(i).features());
-			if(predicted==test.get(i).label()){
-				System.out.println("zing");
-				correct++;
-			}else{
-				System.out.println("Möp");
-				incorrect++;
-			}
-		}
-		System.out.println(correct / (incorrect+correct) );*/
 	}
 	
 	public Change predict(StreamWindow window){

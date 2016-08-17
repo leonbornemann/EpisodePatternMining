@@ -1,12 +1,18 @@
 package prediction.data;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
 import prediction.util.IOService;
 
-public class AnnotatedEventType implements Comparable<AnnotatedEventType>{
+public class AnnotatedEventType implements Comparable<AnnotatedEventType>,Serializable{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	public static Set<AnnotatedEventType> loadEventAlphabet(Set<String> allCompanyIDS) throws IOException{
 		Set<AnnotatedEventType> eventAlphabet = new HashSet<>();

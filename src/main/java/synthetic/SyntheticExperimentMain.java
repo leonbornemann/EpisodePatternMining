@@ -12,6 +12,7 @@ import prediction.data.stream.AnnotatedEventStream;
 import prediction.data.stream.PredictorPerformance;
 import prediction.data.stream.StreamMonitor;
 import prediction.mining.PredictiveMiner;
+import prediction.mining.WindowMiner;
 import semantic.SemanticKnowledgeCollector;
 import synthetic.datagen.Generator;
 import synthetic.datagen.NoiseKind;
@@ -33,7 +34,8 @@ public class SyntheticExperimentMain {
 		}
 		//DIRTY DIRTY COPY:
 		int d = 1000;
-		PredictiveMiner miner = new PredictiveMiner(stream,A,eventAlphabet,100,15,20,d);
+		WindowMiner winMiner = new WindowMiner(stream, A, 100, d);
+		PredictiveMiner miner = new PredictiveMiner(winMiner, eventAlphabet,15,20);
 		Map<EpisodePattern, Integer> predictors = miner.getInitialPreditiveEpisodes();
 		Map<EpisodePattern, Integer> inversePredictors = miner.getInitialInversePreditiveEpisodes();
 		//printTrustScores(predictors);

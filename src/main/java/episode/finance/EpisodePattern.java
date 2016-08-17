@@ -1,12 +1,13 @@
 package episode.finance;
 
+import java.io.Serializable;
 import java.util.Set;
 
 import episode.finance.recognition.ContinousEpisodeRecognitionDFA;
 import episode.finance.recognition.SimpleEpisodeRecognitionDFA;
 import prediction.data.AnnotatedEventType;
 
-public interface EpisodePattern {
+public interface EpisodePattern extends Serializable{
 
 	public int length();
 		

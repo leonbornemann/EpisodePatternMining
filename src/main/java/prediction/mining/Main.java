@@ -2,10 +2,14 @@ package prediction.mining;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -39,10 +43,15 @@ public class Main {
 	private static File streamDirLaptop = new File("C:\\Users\\LeonBornemann\\Documents\\Uni\\Master thesis\\data\\Annotated Data\\");
 	
 	private static File streamDirDesktop = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Data\\");
+	
+	private static File featurebasedPredictorFile = new File("resources/saved program states/featureBasedModel.object");
+	public static final File predictorsFile = new File("resources/saved program states/predictors.map");
+	public static final File inversePredictorsFile = new File("resources/saved program states/inversePredictors.map");
 
-	public static void main(String[] args) throws IOException {
+
+	public static void main(String[] args) throws IOException, ClassNotFoundException {
 		//singleStream();
-		//multiStream();
+		multiStream();
 		evalFeatureBased();
 	}
 
@@ -52,7 +61,7 @@ public class Main {
 		InvestmentTracker tracker = new InvestmentTracker(0.001);
 		int predIndex = 0;
 		int targetMovementIndex = 0;
-		System.out.println(tracker.netWorth());
+		System.out.println("starting price: " + tracker.netWorth());
 		while(true){
 			if(predIndex==predictions.size() && targetMovementIndex == targetMovement.size()){
 				break;
@@ -82,9 +91,10 @@ public class Main {
 		}
 		long upCount = targetMovement.stream().map(e -> e.getSecond()).filter(e -> e==Change.UP).count();
 		long downCount = targetMovement.stream().map(e -> e.getSecond()).filter(e -> e==Change.DOWN).count();
-		System.out.println(upCount);
-		System.out.println(downCount);
-		System.out.println(tracker.netWorth());
+		System.out.println("Num upwards movements: " + upCount);
+		System.out.println("Num downwards movements: " + downCount);
+		System.out.println("Ending price: " + tracker.netWorth());
+		System.out.println("rate of return: " + tracker.rateOfReturn());
 	}
 
 	private static void processPredictionEvent(InvestmentTracker tracker, Pair<LocalDateTime, Change> predEventPair) {
@@ -107,7 +117,7 @@ public class Main {
 		}
 	}
 
-	private static void multiStream() throws IOException {
+	private static void multiStream() throws IOException, ClassNotFoundException {
 		//parameters:
 		int d = 180;
 		int m = 100;
@@ -118,23 +128,34 @@ public class Main {
 
 		//setup stream:
 		System.out.println(annotatedCompanyCodes.size());
-		MultiFileAnnotatedEventStream stream = new MultiFileAnnotatedEventStream(Arrays.stream(streamDirLaptop.listFiles()).sorted().collect(Collectors.toList()),d,e -> annotatedCompanyCodes.contains(e.getEventType().getCompanyID()));
-		featureBasedPrediction(d, m, s, toPredict, eventAlphabet, stream);
-		
-		//firstNaiveStrategy(d, s, eventAlphabet, stream);
+		MultiFileAnnotatedEventStream stream = new MultiFileAnnotatedEventStream(Arrays.stream(streamDirLaptop.listFiles()).sorted().collect(Collectors.toList()),d*2,e -> annotatedCompanyCodes.contains(e.getEventType().getCompanyID()));
+		System.out.println("beginning to mine windows");
+		WindowMiner winMiner = new WindowMiner(stream,toPredict,m,d);
+		System.out.println("done mining windows");
+		//featureBasedPrediction(d, s, toPredict, eventAlphabet, stream,winMiner);
+		firstNaiveStrategy(d, s, eventAlphabet, stream,toPredict, winMiner);
 	}
 
-	private static void featureBasedPrediction(int d, int m, int s, AnnotatedEventType toPredict,
-			Set<AnnotatedEventType> eventAlphabet, MultiFileAnnotatedEventStream stream) throws IOException {
-		//mine relevant windows:
-		WindowMiner winMiner = new WindowMiner(stream,toPredict,m,d);
+	private static void featureBasedPrediction(int d, int s, AnnotatedEventType toPredict,
+			Set<AnnotatedEventType> eventAlphabet, MultiFileAnnotatedEventStream stream,WindowMiner winMiner) throws IOException, ClassNotFoundException {
 		
 		//find frequent Episodes
 		
 		//do first method predictive mining
 		//feature based predictive mining:
-		FeatureBasedPredictor featureBasedPredictor = new FeatureBasedPredictor(winMiner.getPredictiveWindows(), winMiner.getInversePredictiveWindows(), winMiner.getNeutralWindows(), eventAlphabet, s);
+		FeatureBasedPredictor featureBasedPredictor;
+		if(featurebasedPredictorFile.exists()){
+			featureBasedPredictor = new FeatureBasedPredictor(featurebasedPredictorFile);
+		} else{
+			featureBasedPredictor = new FeatureBasedPredictor(winMiner.getPredictiveWindows(), winMiner.getInversePredictiveWindows(), winMiner.getNeutralWindows(), eventAlphabet, s);
+			featureBasedPredictor.saveModel(featurebasedPredictorFile);
+		}
 		//window Sliding
+		applyPredictor(d, toPredict, stream, featureBasedPredictor);
+	}
+
+	private static void applyPredictor(int d, AnnotatedEventType toPredict, MultiFileAnnotatedEventStream stream,
+			PredictiveModel featureBasedPredictor) throws IOException {
 		StreamWindowSlider slider = new StreamWindowSlider(stream,d);
 		List<Pair<LocalDateTime,Change>> predictions = new ArrayList<>();
 		List<Pair<LocalDateTime,Change>> targetMovement = new ArrayList<>();
@@ -174,19 +195,49 @@ public class Main {
 	}
 
 	private static void firstNaiveStrategy(int d, int s, Set<AnnotatedEventType> eventAlphabet,
-			MultiFileAnnotatedEventStream stream) throws IOException {
-		PredictiveMiner miner = new PredictiveMiner(stream,new AnnotatedEventType(APPLE, Change.UP),eventAlphabet,100,s,20,d);
-		Map<EpisodePattern, Integer> predictors = miner.getInitialPreditiveEpisodes();
-		Map<EpisodePattern, Integer> inversePredictors = miner.getInitialInversePreditiveEpisodes();
-		StreamMonitor monitor = new StreamMonitor(predictors,inversePredictors, stream, new AnnotatedEventType(APPLE, Change.UP), d,new File("resources/logs/performanceLog.txt"));
+			MultiFileAnnotatedEventStream stream, AnnotatedEventType toPredict, WindowMiner winMiner) throws IOException, ClassNotFoundException {
+		int n=20;
+		PredictiveMiner miner = new PredictiveMiner(winMiner,eventAlphabet,s,n);
+		Map<EpisodePattern, Integer> predictors;
+		Map<EpisodePattern, Integer> inversePredictors;
+		if(predictorsFile.exists()){
+			predictors = loadEpisodeMap(predictorsFile);
+		} else{
+			predictors = miner.getInitialPreditiveEpisodes();
+			serializeEpisodeMap(predictors,predictorsFile);
+		}
+		if(inversePredictorsFile.exists()){
+			inversePredictors = loadEpisodeMap(inversePredictorsFile);
+		} else{
+			inversePredictors = miner.getInitialInversePreditiveEpisodes();
+			serializeEpisodeMap(inversePredictors,inversePredictorsFile);
+		}
+		PredictiveEpisodeModel model = new PredictiveEpisodeModel(predictors,inversePredictors);
+		applyPredictor(d,toPredict,stream,model);
+		
+		/*StreamMonitor monitor = new StreamMonitor(predictors,inversePredictors, stream, toPredict, d,new File("resources/logs/performanceLog.txt"));
 		System.out.println(monitor.getInvestmentTracker().netWorth());
 		System.out.println(monitor.getInvestmentTracker().getPrice());
 		monitor.monitor();
 		Map<EpisodePattern, PredictorPerformance> trustScores = monitor.getCurrentTrustScores();
 		printTrustScores(trustScores);
 		System.out.println(monitor.getInvestmentTracker().netWorth());
-		System.out.println(monitor.getInvestmentTracker().getPrice());
+		System.out.println(monitor.getInvestmentTracker().getPrice());*/
 	}
+
+	public static Map<EpisodePattern, Integer> loadEpisodeMap(File file) throws FileNotFoundException, IOException, ClassNotFoundException {
+		ObjectInputStream in  = new ObjectInputStream(new FileInputStream(file));
+		@SuppressWarnings("unchecked")
+		Map<EpisodePattern, Integer> episodeMap = (Map<EpisodePattern, Integer>) in.readObject();
+		in.close();
+		return episodeMap;
+	}
+
+	public static void serializeEpisodeMap(Map<EpisodePattern, Integer> predictors, File file) throws FileNotFoundException, IOException {
+		ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(file));
+		out.writeObject(predictors);
+		out.close();
+	}	
 
 	private static void printTrustScores(Map<EpisodePattern, PredictorPerformance> trustScores) {
 		trustScores.forEach( (k,v) -> System.out.println("found predictor " +k+" with Trust score: "+v));

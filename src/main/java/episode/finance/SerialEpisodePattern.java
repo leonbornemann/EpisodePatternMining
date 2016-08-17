@@ -12,6 +12,10 @@ import prediction.data.AnnotatedEventType;
 
 public class SerialEpisodePattern implements EpisodePattern {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private List<AnnotatedEventType> events;
 	
 	public SerialEpisodePattern(AnnotatedEventType... events) {
@@ -65,6 +69,15 @@ public class SerialEpisodePattern implements EpisodePattern {
 	@Override
 	public boolean containsType(AnnotatedEventType e) {
 		return events.contains(e);
+	}
+	
+	@Override
+	public int hashCode(){
+		int code = 0;
+		for(int i=0;i<events.size();i++){
+			code += events.get(i).hashCode();
+		}
+		return code;
 	}
 	
 	@Override

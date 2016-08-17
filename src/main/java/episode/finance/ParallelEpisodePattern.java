@@ -15,6 +15,10 @@ import prediction.data.AnnotatedEventType;
 
 public class ParallelEpisodePattern implements EpisodePattern{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private Map<AnnotatedEventType,Integer> events;
 	
 	public ParallelEpisodePattern(Map<AnnotatedEventType,Integer> events) {
@@ -105,9 +109,17 @@ public class ParallelEpisodePattern implements EpisodePattern{
 				return false;
 			}
 		} else{
-			//TODO: case that parallel and serial size one can be equal!!
 			return false;
 		}
+	}
+	
+	@Override
+	public int hashCode(){
+		int code = 0;
+		for (AnnotatedEventType elem : events.keySet()) {
+			code += elem.hashCode()*events.get(elem);
+		}
+		return code;
 	}
 
 }
