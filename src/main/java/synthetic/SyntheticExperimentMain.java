@@ -36,8 +36,8 @@ public class SyntheticExperimentMain {
 		int d = 1000;
 		WindowMiner winMiner = new WindowMiner(stream, A, 100, d);
 		PredictiveMiner miner = new PredictiveMiner(winMiner, eventAlphabet,15,20);
-		Map<EpisodePattern, Integer> predictors = miner.getInitialPreditiveEpisodes();
-		Map<EpisodePattern, Integer> inversePredictors = miner.getInitialInversePreditiveEpisodes();
+		Map<EpisodePattern, Double> predictors = miner.getInitialPreditiveEpisodes();
+		Map<EpisodePattern, Double> inversePredictors = miner.getInitialInversePreditiveEpisodes();
 		//printTrustScores(predictors);
 		//printTrustScores(inversePredictors);
 		StreamMonitor monitor = new StreamMonitor(predictors,inversePredictors, stream, A, d,new File("resources/logs/performanceLog.txt"));

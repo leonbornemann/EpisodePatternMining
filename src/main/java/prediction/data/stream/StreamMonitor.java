@@ -36,11 +36,11 @@ public class StreamMonitor {
 	private Map<EpisodePattern, ContinousEpisodeRecognitionDFA> automata = new HashMap<>();
 	private Map<EpisodePattern, ContinousEpisodeRecognitionDFA> inverseAutomata = new HashMap<>();
 	
-	public StreamMonitor(Map<EpisodePattern, Integer> predictors,Map<EpisodePattern, Integer> inversePredictors, AnnotatedEventStream stream, AnnotatedEventType toPredict, int episodeDuration){
+	public StreamMonitor(Map<EpisodePattern, Double> predictors,Map<EpisodePattern, Double> inversePredictors, AnnotatedEventStream stream, AnnotatedEventType toPredict, int episodeDuration){
 		this(predictors,inversePredictors,stream,toPredict,episodeDuration,null);
 	}
 	
-	public StreamMonitor(Map<EpisodePattern, Integer> predictors,Map<EpisodePattern, Integer> inversePredictors, AnnotatedEventStream stream, AnnotatedEventType toPredict, int episodeDuration, File performanceLog) {
+	public StreamMonitor(Map<EpisodePattern, Double> predictors,Map<EpisodePattern, Double> inversePredictors, AnnotatedEventStream stream, AnnotatedEventType toPredict, int episodeDuration, File performanceLog) {
 		for(EpisodePattern pattern : predictors.keySet()){
 			trustScores.put(pattern, new PredictorPerformance()); //TODO: are predictors now passed with PredictorPreformances?
 			automata.put(pattern,pattern.getContinousDFA());

@@ -3,6 +3,7 @@ package episode.finance.mining;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -45,22 +46,28 @@ public abstract class EpisodePatternMiner<E extends EpisodePattern> {
 		return (int) list.stream().filter(p -> p == true).count();
 	}
 
-	public Map<E,Integer> mineBestEpisodePatterns(int s, int n,List<FixedStreamWindow> inversePred, List<FixedStreamWindow> precedingNothingWindows){
+	public Map<E,Double> mineBestEpisodePatterns(int s, int n,List<FixedStreamWindow> inversePred, List<FixedStreamWindow> precedingNothingWindows){
 		return getBestPredictors(mineFrequentEpisodePatterns(s),n,inversePred,precedingNothingWindows);
 	}
 
 	protected abstract String getEpisodeTypeName();
 
-	private Map<E,Integer> getBestPredictors(Map<E, List<Boolean>> frequent, int n, List<FixedStreamWindow> inversePred, List<FixedStreamWindow> precedingNothingWindows) {
+	private Map<E,Double> getBestPredictors(Map<E, List<Boolean>> frequent, int n, List<FixedStreamWindow> inversePred, List<FixedStreamWindow> precedingNothingWindows) {
 		Map<E, List<Boolean>> supportForInverse = countSupport(frequent.keySet().stream().collect(Collectors.toList()), inversePred);
-		Map<E, List<Boolean>> supportForNothing = countSupport(frequent.keySet().stream().collect(Collectors.toList()), precedingNothingWindows);
-		Map<E, Integer> trustScore = frequent.entrySet().stream().collect(Collectors.toMap(e -> e.getKey(),e -> new Integer(countOccurrences(e.getValue()) - countOccurrences(supportForInverse.get(e.getKey())))));
-		Map<E,Integer> best = trustScore.entrySet().stream().sorted((e1,e2) -> ascending(e1.getValue(),e2.getValue())).limit(n).collect(Collectors.toMap( e -> e.getKey(), e -> e.getValue()));
+		//Map<E, List<Boolean>> supportForNothing = countSupport(frequent.keySet().stream().collect(Collectors.toList()), precedingNothingWindows);
+		Map<E, Double> confidence = frequent.entrySet().stream().collect(Collectors.toMap(e -> e.getKey(),e -> calcConfidence(supportForInverse, e)));
+		Map<E,Double> best = confidence.entrySet().stream().sorted((e1,e2) -> ascending(e1.getValue(),e2.getValue())).limit(n).collect(Collectors.toMap( e -> e.getKey(), e -> e.getValue()));
 		return best;
 	}
 
+	private double calcConfidence(Map<E, List<Boolean>> supportForInverse, Entry<E, List<Boolean>> e) {
+		int support = countOccurrences(e.getValue());
+		int inverseSupport = countOccurrences(supportForInverse.get(e.getKey()));
+		return support / (double) (inverseSupport+support);
+	}
 
-	private int ascending(Integer arg1, Integer arg2) {
+
+	private int ascending(Double arg1, Double arg2) {
 		return arg2.compareTo(arg1);
 	}
 	

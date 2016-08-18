@@ -198,8 +198,8 @@ public class Main {
 			MultiFileAnnotatedEventStream stream, AnnotatedEventType toPredict, WindowMiner winMiner) throws IOException, ClassNotFoundException {
 		int n=20;
 		PredictiveMiner miner = new PredictiveMiner(winMiner,eventAlphabet,s,n);
-		Map<EpisodePattern, Integer> predictors;
-		Map<EpisodePattern, Integer> inversePredictors;
+		Map<EpisodePattern, Double> predictors;
+		Map<EpisodePattern, Double> inversePredictors;
 		if(predictorsFile.exists()){
 			predictors = loadEpisodeMap(predictorsFile);
 		} else{
@@ -225,15 +225,15 @@ public class Main {
 		System.out.println(monitor.getInvestmentTracker().getPrice());*/
 	}
 
-	public static Map<EpisodePattern, Integer> loadEpisodeMap(File file) throws FileNotFoundException, IOException, ClassNotFoundException {
+	public static Map<EpisodePattern, Double> loadEpisodeMap(File file) throws FileNotFoundException, IOException, ClassNotFoundException {
 		ObjectInputStream in  = new ObjectInputStream(new FileInputStream(file));
 		@SuppressWarnings("unchecked")
-		Map<EpisodePattern, Integer> episodeMap = (Map<EpisodePattern, Integer>) in.readObject();
+		Map<EpisodePattern, Double> episodeMap = (Map<EpisodePattern, Double>) in.readObject();
 		in.close();
 		return episodeMap;
 	}
 
-	public static void serializeEpisodeMap(Map<EpisodePattern, Integer> predictors, File file) throws FileNotFoundException, IOException {
+	public static void serializeEpisodeMap(Map<EpisodePattern, Double> predictors, File file) throws FileNotFoundException, IOException {
 		ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(file));
 		out.writeObject(predictors);
 		out.close();

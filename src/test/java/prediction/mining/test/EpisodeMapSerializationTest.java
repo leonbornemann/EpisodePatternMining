@@ -27,13 +27,13 @@ public class EpisodeMapSerializationTest {
 	
 	@Test
 	public void test() throws FileNotFoundException, IOException, ClassNotFoundException {
-		Map<EpisodePattern,Integer> map = new HashMap<>();
-		map.put(new SerialEpisodePattern(A,A,B,C), 1337);
-		map.put(new ParallelEpisodePattern(A,A,B,B,C,D), 42);
-		map.put(new ParallelEpisodePattern(A,A,B,C), 133742);
+		Map<EpisodePattern,Double> map = new HashMap<>();
+		map.put(new SerialEpisodePattern(A,A,B,C), 1337.0);
+		map.put(new ParallelEpisodePattern(A,A,B,B,C,D), 42.0);
+		map.put(new ParallelEpisodePattern(A,A,B,C), 133742.0);
 		File file = new File("resources/testdata/serialized Episodes/test.map");
 		Main.serializeEpisodeMap(map, file);
-		Map<EpisodePattern, Integer> newMap = Main.loadEpisodeMap(file);
+		Map<EpisodePattern, Double> newMap = Main.loadEpisodeMap(file);
 		assertEquals(map,newMap);
 	}
 

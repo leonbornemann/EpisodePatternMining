@@ -33,8 +33,8 @@ public class StreamMonitorTest {
 	
 	@Test
 	public void singlePredictor() throws IOException {
-		Map<EpisodePattern, Integer> predictors = new HashMap<>();
-		predictors.put(episode3, 0);
+		Map<EpisodePattern, Double> predictors = new HashMap<>();
+		predictors.put(episode3, 0.0);
 		int d = 5;
 		AnnotatedEventStream stream = TestUtil.buildStream(1,
 				A,B,C,F,E,E, //true positive
@@ -54,9 +54,9 @@ public class StreamMonitorTest {
 	
 	@Test
 	public void multi() throws IOException {
-		Map<EpisodePattern, Integer> predictors = new HashMap<>();
-		predictors.put(episode3, 0);
-		predictors.put(episode2, 0);
+		Map<EpisodePattern, Double> predictors = new HashMap<>();
+		predictors.put(episode3, 0.0);
+		predictors.put(episode2, 0.0);
 		int d = 5;
 		AnnotatedEventStream stream = TestUtil.buildStream(1,
 				A,B,C,D,E,F, //both should fire

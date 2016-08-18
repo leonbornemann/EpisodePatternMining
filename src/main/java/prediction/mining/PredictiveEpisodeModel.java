@@ -8,10 +8,10 @@ import prediction.data.stream.StreamWindow;
 
 public class PredictiveEpisodeModel implements PredictiveModel {
 
-	private Map<EpisodePattern, Integer> predictors;
-	private Map<EpisodePattern, Integer> inversePredictors;
+	private Map<EpisodePattern, Double> predictors;
+	private Map<EpisodePattern, Double> inversePredictors;
 
-	public PredictiveEpisodeModel(Map<EpisodePattern, Integer> predictors,Map<EpisodePattern, Integer> inversePredictors) {
+	public PredictiveEpisodeModel(Map<EpisodePattern, Double> predictors,Map<EpisodePattern, Double> inversePredictors) {
 		this.predictors = predictors;
 		this.inversePredictors = inversePredictors;
 	}
