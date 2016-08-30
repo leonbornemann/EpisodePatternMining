@@ -12,9 +12,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -27,7 +27,6 @@ import prediction.data.Change;
 import prediction.data.stream.InvestmentTracker;
 import prediction.data.stream.MultiFileAnnotatedEventStream;
 import prediction.data.stream.PredictorPerformance;
-import prediction.data.stream.StreamMonitor;
 import prediction.data.stream.StreamWindow;
 import prediction.data.stream.StreamWindowSlider;
 import prediction.util.StandardDateTimeFormatter;
@@ -51,13 +50,74 @@ public class Main {
 
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
 		//singleStream();
-		multiStream();
-		evalFeatureBased();
+		int d = 180;
+		//new PredictorPerformance().printConfusionMatrix();
+		multiStream(d);
+		eval(d);
 	}
 
-	private static void evalFeatureBased() throws IOException {
+	private static void eval(int d) throws IOException {
 		List<Pair<LocalDateTime, Change>> predictions = deserializePairList(predictionsTargetFile);
 		List<Pair<LocalDateTime, Change>> targetMovement = deserializePairList(targetMovementTargetFile);
+		evalRateOfReturn(predictions, targetMovement);
+		evalMetrics(predictions,targetMovement,d);
+	}
+
+	private static void evalMetrics(List<Pair<LocalDateTime, Change>> predictions,List<Pair<LocalDateTime, Change>> targetMovement, int d) {
+		PredictorPerformance perf = new PredictorPerformance();
+		for (int i = 0; i < predictions.size(); i++) {
+			Pair<LocalDateTime, Change> curPrediction = predictions.get(i);
+			Change actualValue = getActualValue(curPrediction.getFirst(),targetMovement,d);
+			perf.addTestExample(curPrediction.getSecond(), actualValue);
+		}
+		System.out.println("Values for Equal:");
+		System.out.println("Precision: "+ perf.getPrecision(Change.EQUAL));
+		System.out.println("Recall: "+ perf.getRecall(Change.EQUAL));
+		//System.out.println("Accuracy: "+ perf.getAccuracy(Change.EQUAL));
+		System.out.println("Values for DOWN:");
+		System.out.println("Precision: "+ perf.getPrecision(Change.DOWN));
+		System.out.println("Recall: "+ perf.getRecall(Change.DOWN));
+		//System.out.println("Accuracy: "+ perf.getAccuracy(Change.DOWN));
+		System.out.println("Values for UP:");
+		System.out.println("Precision: "+ perf.getPrecision(Change.UP));
+		System.out.println("Recall: "+ perf.getRecall(Change.UP));
+		perf.printConfusionMatrix();
+		//System.out.println("Accuracy: "+ perf.getAccuracy(Change.UP));
+
+	}
+
+	private static Change getActualValue(LocalDateTime predictionTime, List<Pair<LocalDateTime, Change>> targetMovement,int d) {
+		int i=0;
+		Pair<LocalDateTime, Change> curElem = targetMovement.get(i);
+		while(curElem.getFirst().compareTo(predictionTime)<=0 && i<targetMovement.size()){
+			curElem = targetMovement.get(i);
+			i++;
+		}
+		if(i==targetMovement.size()){
+			return Change.EQUAL;
+		} else{
+			int change = 0;
+			while(curElem.getFirst().compareTo(predictionTime.plus(d,ChronoUnit.SECONDS))  <= 0 && i<targetMovement.size()){
+				curElem = targetMovement.get(i);
+				if(curElem.getSecond()==Change.UP){
+					change++;
+				} else if(curElem.getSecond()==Change.DOWN){
+					change--;
+				}
+				i++;
+			}
+			if(change>0){
+				return Change.UP;
+			} else if(change<0){
+				return Change.DOWN;
+			} else{
+				return Change.EQUAL;
+			}
+		}
+	}
+
+	private static void evalRateOfReturn(List<Pair<LocalDateTime, Change>> predictions,
+			List<Pair<LocalDateTime, Change>> targetMovement) {
 		InvestmentTracker tracker = new InvestmentTracker(0.001);
 		int predIndex = 0;
 		int targetMovementIndex = 0;
@@ -117,9 +177,8 @@ public class Main {
 		}
 	}
 
-	private static void multiStream() throws IOException, ClassNotFoundException {
+	private static void multiStream(int d) throws IOException, ClassNotFoundException {
 		//parameters:
-		int d = 180;
 		int m = 100;
 		int s=15;
 		AnnotatedEventType toPredict = new AnnotatedEventType(APPLE, Change.UP);
@@ -239,10 +298,6 @@ public class Main {
 		out.close();
 	}	
 
-	private static void printTrustScores(Map<EpisodePattern, PredictorPerformance> trustScores) {
-		trustScores.forEach( (k,v) -> System.out.println("found predictor " +k+" with Trust score: "+v));
-		trustScores.forEach( (k,v) -> System.out.println("found predictor " +k+" with Precision: "+v.getPrecision() + " and Recall: " + v.getRecall() + " and accuracy: " + v.getAccuracy()));
-	}
 
 	/*private static void singleStream() throws IOException {
 		File testDay = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Data\\NASDAQ_2016-05-09_annotated.csv");

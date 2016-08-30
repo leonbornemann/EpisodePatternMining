@@ -1,6 +1,5 @@
 package synthetic;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
@@ -10,7 +9,6 @@ import prediction.data.AnnotatedEventType;
 import prediction.data.Change;
 import prediction.data.stream.AnnotatedEventStream;
 import prediction.data.stream.PredictorPerformance;
-import prediction.data.stream.StreamMonitor;
 import prediction.mining.PredictiveMiner;
 import prediction.mining.WindowMiner;
 import semantic.SemanticKnowledgeCollector;
@@ -40,14 +38,7 @@ public class SyntheticExperimentMain {
 		Map<EpisodePattern, Double> inversePredictors = miner.getInitialInversePreditiveEpisodes();
 		//printTrustScores(predictors);
 		//printTrustScores(inversePredictors);
-		StreamMonitor monitor = new StreamMonitor(predictors,inversePredictors, stream, A, d,new File("resources/logs/performanceLog.txt"));
-		System.out.println(monitor.getInvestmentTracker().netWorth());
-		monitor.monitor();
-		Map<EpisodePattern, PredictorPerformance> trustScores = monitor.getCurrentTrustScores();
-		Map<EpisodePattern, PredictorPerformance> inverseTrustScores = monitor.getCurrentInverseTrustScores();
-		printTrustScores(trustScores);
-		System.out.println(monitor.getInvestmentTracker().netWorth());
-		System.out.println(monitor.getInvestmentTracker().getPrice());
+		//TODO: rework this, removed stream monitor here
 	}
 	
 	private static void printTrustScores(Map<EpisodePattern, PredictorPerformance> trustScores) {

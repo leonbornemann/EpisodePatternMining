@@ -66,7 +66,6 @@ public abstract class EpisodePatternMiner<E extends EpisodePattern> {
 		return support / (double) (inverseSupport+support);
 	}
 
-
 	private int ascending(Double arg1, Double arg2) {
 		return arg2.compareTo(arg1);
 	}
