@@ -50,7 +50,7 @@ public class Main {
 
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
 		//singleStream();
-		int d = 180;
+		int d = 90;
 		//new PredictorPerformance().printConfusionMatrix();
 		multiStream(d);
 		eval(d);
@@ -180,14 +180,14 @@ public class Main {
 	private static void multiStream(int d) throws IOException, ClassNotFoundException {
 		//parameters:
 		int m = 100;
-		int s=15;
+		int s=55;
 		AnnotatedEventType toPredict = new AnnotatedEventType(APPLE, Change.UP);
 		Set<String> annotatedCompanyCodes = new SemanticKnowledgeCollector().getAnnotatedCompanyCodes();
 		Set<AnnotatedEventType> eventAlphabet = AnnotatedEventType.loadEventAlphabet(annotatedCompanyCodes);
 
 		//setup stream:
 		System.out.println(annotatedCompanyCodes.size());
-		MultiFileAnnotatedEventStream stream = new MultiFileAnnotatedEventStream(Arrays.stream(streamDirLaptop.listFiles()).sorted().collect(Collectors.toList()),d*2,e -> annotatedCompanyCodes.contains(e.getEventType().getCompanyID()));
+		MultiFileAnnotatedEventStream stream = new MultiFileAnnotatedEventStream(Arrays.stream(streamDirDesktop.listFiles()).sorted().collect(Collectors.toList()),d*2,e -> annotatedCompanyCodes.contains(e.getEventType().getCompanyID()));
 		System.out.println("beginning to mine windows");
 		WindowMiner winMiner = new WindowMiner(stream,toPredict,m,d);
 		System.out.println("done mining windows");

@@ -20,13 +20,20 @@ public class LowToAnnotatedTransformator {
 	private File inputDir;
 	private File illegalFormatDir;
 	private double relativeDelta;
+	private boolean aggregate = false;
 
 	public LowToAnnotatedTransformator(File inputDir, File outputDir,File illegalFormatDir, double relativeDelta){
 		this.inputDir = inputDir;
 		this.outputDir = outputDir;
 		this.illegalFormatDir = illegalFormatDir;
 		this.relativeDelta =relativeDelta;
-		
+		this.aggregate  = true;
+	}
+	
+	public LowToAnnotatedTransformator(File inputDir, File outputDir,File illegalFormatDir){
+		this.inputDir = inputDir;
+		this.outputDir = outputDir;
+		this.illegalFormatDir = illegalFormatDir;
 	}
 	
 	public void transform() throws IOException{
@@ -39,7 +46,7 @@ public class LowToAnnotatedTransformator {
 					try{
 						transform(file,outFile);
 						System.out.println("Successfully transformed "+file.getName());
-					} catch(Exception e){
+					} catch(Throwable e){
 						System.out.println("error while transforming "+ file.getName());
 						System.out.println("stack trace:");
 						e.printStackTrace();
@@ -67,6 +74,34 @@ public class LowToAnnotatedTransformator {
 		if(lowLevelEvents.isEmpty()){
 			return new ArrayList<>();
 		}
+		if(aggregate){
+			return aggregateToAnnotated(lowLevelEvents);
+		} else{
+			return transformToAnnotated(lowLevelEvents);
+		}
+	}
+
+	//TODO: refactor!
+	private List<AnnotatedEvent> transformToAnnotated(List<LowLevelEvent> lowLevelEvents) {
+		List<AnnotatedEvent> annotatedEvents = new ArrayList<>();
+		double referenceValue = lowLevelEvents.get(0).getValue();
+		for(int i=1;i<lowLevelEvents.size();i++){
+			LowLevelEvent now = lowLevelEvents.get(i);
+			Change change;
+			if(now.getValue() > referenceValue){
+				change = Change.UP;
+				referenceValue = now.getValue();
+				annotatedEvents.add(new AnnotatedEvent(now.getCompanyId(), change, now.getTimestamp()));
+			} else if(now.getValue() <referenceValue){
+				change = Change.DOWN;
+				referenceValue = now.getValue();
+				annotatedEvents.add(new AnnotatedEvent(now.getCompanyId(), change, now.getTimestamp()));
+			} 
+		}
+		return annotatedEvents;
+	}
+
+	private List<AnnotatedEvent> aggregateToAnnotated(List<LowLevelEvent> lowLevelEvents) {
 		List<AnnotatedEvent> annotatedEvents = new ArrayList<>();
 		double referenceValue = lowLevelEvents.get(0).getValue();
 		for(int i=1;i<lowLevelEvents.size();i++){
@@ -85,7 +120,6 @@ public class LowToAnnotatedTransformator {
 				//change = Change.EQUAL; //TODO: should this be an event?
 				//annotatedEvents.add(new AnnotatedEvent(now.getCompanyId(), change, now.getTimestamp()));
 			}
-			
 		}
 		return annotatedEvents;
 	}

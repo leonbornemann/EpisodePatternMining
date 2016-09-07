@@ -11,10 +11,11 @@ public class TransformationMain {
 	
 	private static String dataBaseLocation = "D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Low Level Data\\";
 	private static String target = "D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Data\\";
+	private static String illegalFormatDir = "D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Illegally Formatted";
 	
 	public static void main(String[] args) throws IOException {
-		laptop();
-		//desktop();
+		//laptop();
+		desktop();
 	}
 
 	private static void laptop() throws IOException {
@@ -22,8 +23,8 @@ public class TransformationMain {
 		transformer.transform();
 	}
 
-	/*private static void desktop() throws IOException {
-		LowToAnnotatedTransformator transformer = new LowToAnnotatedTransformator(new File(dataBaseLocation),new File(target),0.001);
+	private static void desktop() throws IOException {
+		LowToAnnotatedTransformator transformer = new LowToAnnotatedTransformator(new File(dataBaseLocation),new File(target),new File(illegalFormatDir));
 		transformer.transform();
-	}*/
+	}
 }
