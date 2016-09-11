@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -14,6 +15,7 @@ import java.util.stream.Collectors;
 
 import prediction.data.Change;
 import prediction.data.LowLevelEvent;
+import prediction.data.stream.PredictorPerformance;
 import prediction.util.StandardDateTimeFormatter;
 import util.Pair;
 
@@ -21,8 +23,10 @@ public class NoAggregationEvaluator extends Evaluator{
 
 	private File lowLevelStreamDirDesktop;
 	private String targetCompanyID;
+	private int d;
 
 	public void eval(int d, File predictionsTargetFile, File lowLevelStreamDirDesktop, String targetCompanyID) throws IOException {
+		this.d= d;
 		this.targetCompanyID = "\""+targetCompanyID+"\"";
 		this.lowLevelStreamDirDesktop = lowLevelStreamDirDesktop;
 		List<Pair<LocalDateTime, Change>> predictions = deserializePairList(predictionsTargetFile);
@@ -31,19 +35,106 @@ public class NoAggregationEvaluator extends Evaluator{
 		Map<LocalDate,String> filenames = byDay.keySet().stream().collect(Collectors.toMap(k -> k, k -> "NASDAQ_" + k.format(StandardDateTimeFormatter.getStandardDateFormatter()) + ".csv"));
 		for (String filename : filenames.values()) {
 			File file = buildFile(filename,lowLevelStreamDirDesktop);
-			System.out.println(file.getAbsolutePath());
-			System.out.println(file.exists());
 			assert(file.exists());
 		}
+		evalMetrics(byDay,filenames);
 		evalRateOfReturn(byDay,filenames);
 	}
 	
+	private void evalMetrics(Map<LocalDate, List<Pair<LocalDateTime, Change>>> byDay, Map<LocalDate, String> filenames){
+		PredictorPerformance perf = new PredictorPerformance();
+		byDay.keySet().stream().sorted().forEachOrdered(day -> evalMetricsForDay(byDay.get(day),filenames.get(day),perf));
+
+		
+		System.out.println("Values for Equal:");
+		System.out.println("Precision: "+ perf.getPrecision(Change.EQUAL));
+		System.out.println("Recall: "+ perf.getRecall(Change.EQUAL));
+		//System.out.println("Accuracy: "+ perf.getAccuracy(Change.EQUAL));
+		System.out.println("Values for DOWN:");
+		System.out.println("Precision: "+ perf.getPrecision(Change.DOWN));
+		System.out.println("Recall: "+ perf.getRecall(Change.DOWN));
+		//System.out.println("Accuracy: "+ perf.getAccuracy(Change.DOWN));
+		System.out.println("Values for UP:");
+		System.out.println("Precision: "+ perf.getPrecision(Change.UP));
+		System.out.println("Recall: "+ perf.getRecall(Change.UP));
+		perf.printConfusionMatrix();
+	}
+	
+
+	private void evalMetricsForDay(List<Pair<LocalDateTime, Change>> predictions, String filename, PredictorPerformance perf) {
+		try{
+			List<Pair<LocalDateTime, Double>> targetMovement = getTargetPriceMovement(filename);
+			for (int i = 0; i < predictions.size(); i++) {
+				Pair<LocalDateTime, Change> curPrediction = predictions.get(i);
+				Change actualValue = getActualValue(curPrediction.getFirst(),targetMovement);
+				perf.addTestExample(curPrediction.getSecond(), actualValue);
+			}
+		} catch(IOException e){
+			throw new AssertionError();
+		}
+	}
+
+	private Change getActualValue(LocalDateTime predictionTime, List<Pair<LocalDateTime, Double>> targetMovement) {
+		int i=0;
+		Pair<LocalDateTime, Double> curElem = targetMovement.get(i);
+		while(curElem.getFirst().compareTo(predictionTime)<=0 && i<targetMovement.size()){
+			curElem = targetMovement.get(i);
+			i++;
+		}
+		if(i==targetMovement.size()){
+			return Change.EQUAL;
+		} else{
+			double initial = targetMovement.get(i-1).getSecond();
+			double end = targetMovement.get(i).getSecond();
+			while(curElem.getFirst().compareTo(predictionTime.plus(d,ChronoUnit.SECONDS))  <= 0 && i<targetMovement.size()){
+				curElem = targetMovement.get(i);
+				end = curElem.getSecond();
+				i++;
+			}
+			if(end>initial){
+				return Change.UP;
+			} else if(initial>end){
+				return Change.DOWN;
+			} else{
+				return Change.EQUAL;
+			}
+		}
+	}
+	
+	private Change getActualValue(LocalDateTime predictionTime, List<Pair<LocalDateTime, Change>> targetMovement,int d) {
+		int i=0;
+		Pair<LocalDateTime, Change> curElem = targetMovement.get(i);
+		while(curElem.getFirst().compareTo(predictionTime)<=0 && i<targetMovement.size()){
+			curElem = targetMovement.get(i);
+			i++;
+		}
+		if(i==targetMovement.size()){
+			return Change.EQUAL;
+		} else{
+			int change = 0;
+			while(curElem.getFirst().compareTo(predictionTime.plus(d,ChronoUnit.SECONDS))  <= 0 && i<targetMovement.size()){
+				curElem = targetMovement.get(i);
+				if(curElem.getSecond()==Change.UP){
+					change++;
+				} else if(curElem.getSecond()==Change.DOWN){
+					change--;
+				}
+				i++;
+			}
+			if(change>0){
+				return Change.UP;
+			} else if(change<0){
+				return Change.DOWN;
+			} else{
+				return Change.EQUAL;
+			}
+		}
+	}
 
 	private List<Pair<LocalDateTime, Double>> getTargetPriceMovement(String filename) throws IOException {
 		File file = buildFile(filename, lowLevelStreamDirDesktop);
-		List<LowLevelEvent> a = LowLevelEvent.readAll(file);
-		Set<String> allCompanies = a.stream().map(e -> e.getCompanyId()).collect(Collectors.toSet());
-		return a.stream()
+		List<LowLevelEvent> events= LowLevelEvent.readAll(file);
+		return events.stream()
 			.filter(e -> e.getCompanyId().equals(targetCompanyID))
 			.sorted(LowLevelEvent::temporalOrder)
 			.map(e -> new Pair<>(e.getTimestamp(),e.getValue()))
