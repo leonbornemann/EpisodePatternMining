@@ -59,6 +59,10 @@ public class LowLevelEvent {
 		}
 	}
 	
+	public int temporalOrder(LowLevelEvent other){
+		return timestamp.compareTo(other.timestamp);
+	}
+	
 	public String getCompanyId(){
 		return companyId;
 	}

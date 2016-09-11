@@ -14,7 +14,7 @@ import java.util.Set;
 
 import episode.finance.EpisodePattern;
 import episode.finance.SerialEpisodePattern;
-import episode.finance.recognition.SimpleSerialEpisodeRecognitionDFA;
+import episode.finance.recognition.SimpleSerialEpisodeIdentifierRecognitionDFA;
 import prediction.data.AnnotatedEvent;
 import prediction.data.AnnotatedEventType;
 import prediction.data.stream.AnnotatedEventStream;
@@ -48,7 +48,7 @@ public class Generator {
 	private ArrayList<Double> weights;
 	private ArrayList<SerialEpisodePattern> sourceEpisodes;
 	private ArrayList<AnnotatedEvent> stream;
-	private Map<SerialEpisodePattern,SimpleSerialEpisodeRecognitionDFA> embedStatus = new HashMap<>();
+	private Map<SerialEpisodePattern,SimpleSerialEpisodeIdentifierRecognitionDFA> embedStatus = new HashMap<>();
 	private Map<SerialEpisodePattern, LocalDateTime> lastTimeStamps = new HashMap<>();
 	private AnnotatedEventType toPredict;
 	
@@ -83,7 +83,7 @@ public class Generator {
 
 	private void generateStream() {
 		stream = new ArrayList<>();
-		sourceEpisodes.forEach(e -> embedStatus.put(e, (SimpleSerialEpisodeRecognitionDFA) e.getSimpleRecognitionDFA()));
+		sourceEpisodes.forEach(e -> embedStatus.put(e, (SimpleSerialEpisodeIdentifierRecognitionDFA) e.getSimpleRecognitionDFA()));
 		LocalDateTime timestamp = LocalDateTime.parse("2001-01-01 10:00:00",StandardDateTimeFormatter.getStandardDateTimeFormatter());
 		while(stream.size() < T){
 			if(noiseEvent()){
@@ -125,7 +125,7 @@ public class Generator {
 	}
 
 	private void embedNextEvent(LocalDateTime timestamp, SerialEpisodePattern chosen) {
-		SimpleSerialEpisodeRecognitionDFA dfa = embedStatus.get(chosen);
+		SimpleSerialEpisodeIdentifierRecognitionDFA dfa = embedStatus.get(chosen);
 		AnnotatedEventType nextEvent = dfa.peek();
 		dfa.processEvent(nextEvent);
 		if(dfa.isDone()){

@@ -1,6 +1,7 @@
 package episode.finance;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Set;
 
 import episode.finance.recognition.ContinousEpisodeRecognitionDFA;
@@ -18,5 +19,7 @@ public interface EpisodePattern extends Serializable{
 	public Set<AnnotatedEventType> getAllContainedTypes();
 
 	public boolean containsType(AnnotatedEventType e);
+
+	public List<AnnotatedEventType> getCanonicalListRepresentation();
 	
 }

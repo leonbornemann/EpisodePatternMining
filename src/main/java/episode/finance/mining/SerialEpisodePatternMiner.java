@@ -3,13 +3,18 @@ package episode.finance.mining;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import episode.finance.EpisodePattern;
 import episode.finance.SerialEpisodePattern;
-import episode.finance.recognition.SimpleSerialEpisodeRecognitionDFA;
+import episode.finance.recognition.SimpleParallelEpisodeIdentifierRecognitionDFA;
+import episode.finance.recognition.SimpleSerialEpisodeIdentifierRecognitionDFA;
+import episode.finance.storage.EpisodeIdentifier;
+import episode.finance.storage.EpisodeTrie;
 import prediction.data.AnnotatedEvent;
 import prediction.data.AnnotatedEventType;
 import prediction.data.stream.FixedStreamWindow;
@@ -20,44 +25,57 @@ public class SerialEpisodePatternMiner extends EpisodePatternMiner<SerialEpisode
 	public SerialEpisodePatternMiner(List<FixedStreamWindow> precedingTargetWindows, Set<AnnotatedEventType> eventAlphabet) {
 		super(precedingTargetWindows,eventAlphabet);
 	}
-
-	protected Map<SerialEpisodePattern,List<Boolean>> countSupport(List<SerialEpisodePattern> candidates, List<FixedStreamWindow> windows) {
-		Map<SerialEpisodePattern,List<Boolean>> frequencies = new HashMap<>();
-		candidates.forEach(e -> frequencies.put(e, new ArrayList<>(windows.size())));
+	
+	@Override
+	protected void addSupportToTrie(Iterator<EpisodeIdentifier<List<Boolean>>> candidates,List<FixedStreamWindow> windows) {
+		List<SimpleSerialEpisodeIdentifierRecognitionDFA<List<Boolean>>> dfas = new ArrayList<>();
+		while (candidates.hasNext()) {
+			EpisodeIdentifier<List<Boolean>> episodeIdentifier = candidates.next();
+			episodeIdentifier.setAssociatedValue(new ArrayList<>(windows.size()));
+			dfas.add(new SimpleSerialEpisodeIdentifierRecognitionDFA<>(episodeIdentifier));
+		}
 		for(int i=0;i<windows.size();i++){
 			StreamWindow window = windows.get(i);
-			List<SimpleSerialEpisodeRecognitionDFA> dfas = candidates.stream().map(e -> e.getSimpleDFA()).collect(Collectors.toList());
-			Map<AnnotatedEventType, List<SimpleSerialEpisodeRecognitionDFA>> waits = dfas.stream().collect(Collectors.groupingBy(SimpleSerialEpisodeRecognitionDFA::peek));
+			Map<AnnotatedEventType, List<SimpleSerialEpisodeIdentifierRecognitionDFA<List<Boolean>>>> waits = dfas.stream().collect(Collectors.groupingBy(SimpleSerialEpisodeIdentifierRecognitionDFA::peek));
 			Map<LocalDateTime, List<AnnotatedEvent>> byTimestamp = window.getEventTypesByTimestamp();
 			final int windowIndex = i;
-			byTimestamp.keySet().stream().sorted().forEachOrdered(ts -> processEventArrival(frequencies,waits,ts,byTimestamp.get(ts),windowIndex));
+			byTimestamp.keySet().stream().sorted().forEachOrdered(ts -> processEventArrival(waits,ts,byTimestamp.get(ts),windowIndex));
 			/*for(LocalDateTime ts: byTimestamp.keySet()){
 				processEventArrival(frequencies, waits, event);
 			}*/
+			dfas.forEach(a -> a.reset());
 		}
-		return frequencies;
+		for (SimpleSerialEpisodeIdentifierRecognitionDFA<List<Boolean>> dfa : dfas) {
+			assert(dfa.getEpisodePattern().getAssociatedValue().size()==windows.size());
+		}
 	}
 
-	private void processEventArrival(Map<SerialEpisodePattern, List<Boolean>> frequencies,Map<AnnotatedEventType, List<SimpleSerialEpisodeRecognitionDFA>> waits, LocalDateTime ts, List<AnnotatedEvent> events,int windowIndex) {
-		frequencies.values().forEach(list -> list.add(windowIndex, false));
-		Map<AnnotatedEventType,List<SimpleSerialEpisodeRecognitionDFA>> bag = new HashMap<>();
+	private void processEventArrival(Map<AnnotatedEventType, List<SimpleSerialEpisodeIdentifierRecognitionDFA<List<Boolean>>>> waits, LocalDateTime ts, List<AnnotatedEvent> events,int windowIndex) {
+		//add a default false value to the current index in the list, if it does not already exist
+		waits.values().forEach(
+				dfaSet -> dfaSet.stream().map(dfa -> dfa.getEpisodePattern().getAssociatedValue())
+				.filter(list -> list.size()<windowIndex+1)
+				.forEach(list -> list.add(windowIndex, false))
+		);
+		Map<AnnotatedEventType,List<SimpleSerialEpisodeIdentifierRecognitionDFA<List<Boolean>>>> bag = new HashMap<>();
 		for(AnnotatedEvent event : events){
 			assert(event.getTimestamp().equals(ts));
 			AnnotatedEventType curEvent = event.getEventType();
 			if(waits.containsKey(curEvent)){
-				for(SimpleSerialEpisodeRecognitionDFA dfa : waits.get(curEvent)){
+				for(SimpleSerialEpisodeIdentifierRecognitionDFA<List<Boolean>> dfa : waits.get(curEvent)){
 					assert(dfa.waitsFor(curEvent));
 					dfa.processEvent(curEvent);
 					if(dfa.isDone()){
-						List<Boolean> occurrenceList = frequencies.get(dfa.getEpisodePattern());
+						List<Boolean> occurrenceList = dfa.getEpisodePattern().getAssociatedValue();
 						assert(occurrenceList.get(windowIndex)==false);
+						assert(occurrenceList.size()==windowIndex+1);
 						occurrenceList.set(windowIndex,true);
 					} else {
 						AnnotatedEventType nextEvent = dfa.peek();
 						if(bag.containsKey(nextEvent)){
 							bag.get(nextEvent).add(dfa);
 						} else{
-							List<SimpleSerialEpisodeRecognitionDFA> newList = new ArrayList<>();
+							List<SimpleSerialEpisodeIdentifierRecognitionDFA<List<Boolean>>> newList = new ArrayList<>();
 							newList.add(dfa);
 							bag.put(nextEvent,newList);
 						}
@@ -69,7 +87,7 @@ public class SerialEpisodePatternMiner extends EpisodePatternMiner<SerialEpisode
 		bag.forEach((k,v) -> addTo(waits,k,v));
 	}
 
-	private void addTo(Map<AnnotatedEventType, List<SimpleSerialEpisodeRecognitionDFA>> waits, AnnotatedEventType k,List<SimpleSerialEpisodeRecognitionDFA> v) {
+	private void addTo(Map<AnnotatedEventType, List<SimpleSerialEpisodeIdentifierRecognitionDFA<List<Boolean>>>> waits, AnnotatedEventType k,List<SimpleSerialEpisodeIdentifierRecognitionDFA<List<Boolean>>> v) {
 		if(waits.containsKey(k)){
 			waits.get(k).addAll(v);
 		} else{
@@ -85,6 +103,11 @@ public class SerialEpisodePatternMiner extends EpisodePatternMiner<SerialEpisode
 	@Override
 	protected String getEpisodeTypeName() {
 		return "Serial Episodes";
+	}
+
+	@Override
+	protected SerialEpisodePattern buildPattern(List<AnnotatedEventType> canonicalEpisodeRepresentation) {
+		return new SerialEpisodePattern(canonicalEpisodeRepresentation);
 	}
 
 }

@@ -1,18 +1,16 @@
-package prediction.data.stream;
+package prediction.evaluation;
 
-public class InvestmentTracker {
-
-	private double relativeDelta;
+public class InverstmentTracker {
+	
 	private double price;
 	private int numStocks;
 	private double moneyAmount;
 	private double startingInvestment;
 
-	public InvestmentTracker(double relativeDelta) {
-		this.relativeDelta = relativeDelta;
-		price = 100.0; //arbitrary 
+	public InverstmentTracker(double initialPrice) {
+		price = initialPrice; //arbitrary 
 		numStocks = 10;
-		moneyAmount = 0.0;
+		moneyAmount = 0;
 		startingInvestment = netWorth();
 	}
 
@@ -20,12 +18,8 @@ public class InvestmentTracker {
 		return moneyAmount + numStocks*price;
 	}
 	
-	public void up() {
-		price = price +price*relativeDelta;
-	}
-
-	public void down() {
-		price = price - price*relativeDelta;
+	public void setPrice(double price) {
+		this.price = price;
 	}
 
 	public void buyIfPossible() {

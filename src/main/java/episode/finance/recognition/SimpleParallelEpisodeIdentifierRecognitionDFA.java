@@ -4,21 +4,23 @@ import java.util.HashMap;
 import java.util.Set;
 
 import episode.finance.ParallelEpisodePattern;
+import episode.finance.storage.EpisodeIdentifier;
 import prediction.data.AnnotatedEventType;
 
-public class SimpleParallelEpisodeRecognitionDFA implements SimpleEpisodeRecognitionDFA {
+public class SimpleParallelEpisodeIdentifierRecognitionDFA<T> implements SimpleEpisodeRecognitionDFA<T> {
 
 	private HashMap<AnnotatedEventType,Integer> remaining;
-	private ParallelEpisodePattern parallelEpisodePattern;
+	private EpisodeIdentifier<T> identifier;
 
-	public SimpleParallelEpisodeRecognitionDFA(ParallelEpisodePattern parallelEpisodePattern) {
-		this.parallelEpisodePattern = parallelEpisodePattern;
+	
+	public SimpleParallelEpisodeIdentifierRecognitionDFA(EpisodeIdentifier<T> identifier) {
+		this.identifier = identifier;
 		reset();
 	}
 
 	@Override
 	public void reset() {
-		remaining = new HashMap<>(parallelEpisodePattern.getEvents());
+		remaining = new HashMap<>(new ParallelEpisodePattern(identifier.getCanonicalEpisodeRepresentation()).getEvents());
 	}
 
 	@Override
@@ -49,8 +51,8 @@ public class SimpleParallelEpisodeRecognitionDFA implements SimpleEpisodeRecogni
 	}
 
 	@Override
-	public ParallelEpisodePattern getEpisodePattern() {
-		return parallelEpisodePattern;
+	public EpisodeIdentifier<T> getEpisodePattern() {
+		return identifier;
 	}
 
 }

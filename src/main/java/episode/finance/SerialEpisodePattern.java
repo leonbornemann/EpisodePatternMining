@@ -1,5 +1,6 @@
 package episode.finance;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -7,7 +8,9 @@ import java.util.Set;
 
 import episode.finance.recognition.ContinousSerialEpisodeRecognitionDFA;
 import episode.finance.recognition.SimpleEpisodeRecognitionDFA;
-import episode.finance.recognition.SimpleSerialEpisodeRecognitionDFA;
+import episode.finance.recognition.SimpleParallelEpisodeIdentifierRecognitionDFA;
+import episode.finance.recognition.SimpleSerialEpisodeIdentifierRecognitionDFA;
+import episode.finance.storage.EpisodeTrie;
 import prediction.data.AnnotatedEventType;
 
 public class SerialEpisodePattern implements EpisodePattern {
@@ -17,6 +20,7 @@ public class SerialEpisodePattern implements EpisodePattern {
 	 */
 	private static final long serialVersionUID = 1L;
 	private List<AnnotatedEventType> events;
+	private EpisodeTrie<Object> trieForSelf;
 	
 	public SerialEpisodePattern(AnnotatedEventType... events) {
 		this.events =Arrays.asList(events);
@@ -43,8 +47,12 @@ public class SerialEpisodePattern implements EpisodePattern {
 		events.add(annotatedEventType);
 	}
 
-	public SimpleSerialEpisodeRecognitionDFA getSimpleDFA() {
-		return new SimpleSerialEpisodeRecognitionDFA(this);
+	public SimpleSerialEpisodeIdentifierRecognitionDFA<?> getSimpleDFA() {
+		if(trieForSelf==null){
+			trieForSelf = new EpisodeTrie<Object>();
+			trieForSelf.setValue(this, null);
+		}
+		return new SimpleSerialEpisodeIdentifierRecognitionDFA<>(trieForSelf.bfsIterator().next());
 	}
 	
 	public ContinousSerialEpisodeRecognitionDFA getContinousDFA(){
@@ -57,8 +65,8 @@ public class SerialEpisodePattern implements EpisodePattern {
 	}
 
 	@Override
-	public SimpleEpisodeRecognitionDFA getSimpleRecognitionDFA() {
-		return new SimpleSerialEpisodeRecognitionDFA(this);
+	public SimpleEpisodeRecognitionDFA<?> getSimpleRecognitionDFA() {
+		return getSimpleDFA();
 	}
 
 	@Override
@@ -94,6 +102,11 @@ public class SerialEpisodePattern implements EpisodePattern {
 		} else{
 			return false;
 		}
+	}
+
+	@Override
+	public List<AnnotatedEventType> getCanonicalListRepresentation() {
+		return new ArrayList<>(events);
 	}
 
 }

@@ -3,15 +3,19 @@ package episode.finance.mining;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import episode.finance.ParallelEpisodePattern;
 import episode.finance.SerialEpisodePattern;
+import episode.finance.storage.EpisodeIdentifier;
+import episode.finance.storage.EpisodeTrie;
 import prediction.data.AnnotatedEventType;
 
-public class SerialEpisodePatternGenerator implements EpisodePatternGenerator<SerialEpisodePattern>{
+public class SerialEpisodePatternGenerator extends EpisodePatternGenerator<SerialEpisodePattern>{
 
 	protected Set<AnnotatedEventType> eventAlphabet;
 
@@ -19,43 +23,7 @@ public class SerialEpisodePatternGenerator implements EpisodePatternGenerator<Se
 		this.eventAlphabet = eventAlphabet;
 	}
 
-	/***
-	 * Given the frequent Episodes of length k, this will output all possible candidate episodes of size k+1 that may be frequent
-	 * @param frequentLengthK a list of frequent epsiodes (must all have the same size)
-	 * @return
-	 */
-	public List<SerialEpisodePattern> generateNewCandidates(List<SerialEpisodePattern> frequentLengthK) {
-		int episodeLength = frequentLengthK.get(0).length();
-		System.out.println("found " + frequentLengthK.size() +" candidates for length " +episodeLength);
-		System.out.println("generating candidates for length " +(episodeLength+1));
-		if(episodeLength==1){
-			return generateCandidates(new ArrayList<>(),frequentLengthK.stream().map(e -> e.get(0) ).collect(Collectors.toList()));
-		}
-		Map<List<AnnotatedEventType>,List<AnnotatedEventType>> blocks = new HashMap<>();
-		for(SerialEpisodePattern curEpisode : frequentLengthK){
-			assert(episodeLength == curEpisode.length());
-			List<AnnotatedEventType> block = curEpisode.subList(0,episodeLength-1);
-			AnnotatedEventType lastEvent = curEpisode.get(episodeLength-1);
-			if(blocks.containsKey(block)){
-				assert(!blocks.get(block).contains(lastEvent));
-				blocks.get(block).add(lastEvent);
-			} else{
-				List<AnnotatedEventType> endings = new ArrayList<>();
-				endings.add(lastEvent);
-				blocks.put(block,endings);
-			}
-		}
-		List<SerialEpisodePattern> candidates = new ArrayList<>();
-		blocks.forEach( (k,v) -> candidates.addAll(generateCandidates(k,v)));
-		candidates.forEach(e -> assertLengthEquals(e,episodeLength+1));
-		return candidates;
-	}
-
-	private void assertLengthEquals(SerialEpisodePattern e, int expectedLength) {
-		assert(e.length()==expectedLength);
-	}
-
-	private List<SerialEpisodePattern> generateCandidates(List<AnnotatedEventType> block, List<AnnotatedEventType> endings) {
+	protected List<SerialEpisodePattern> generateCandidates(List<AnnotatedEventType> block, List<AnnotatedEventType> endings) {
 		assert(new HashSet<>(endings).size()==endings.size());
 		List<SerialEpisodePattern> candidates = new ArrayList<>();
 		for(int i=0;i<endings.size();i++){
@@ -77,5 +45,11 @@ public class SerialEpisodePatternGenerator implements EpisodePatternGenerator<Se
 
 	public List<SerialEpisodePattern> generateSize1Candidates() {
 		return eventAlphabet.stream().map(e -> new SerialEpisodePattern(e)).collect(Collectors.toList());
+	}
+
+	protected void addToTrie(SerialEpisodePattern e, EpisodeTrie<List<Boolean>> frequentTrie) {
+		assert(!frequentTrie.hasValue(e));
+		//TODO: assert size?
+		frequentTrie.setValue(e, null);
 	}
 }

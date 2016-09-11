@@ -10,7 +10,8 @@ import java.util.Set;
 import episode.finance.recognition.ContinousEpisodeRecognitionDFA;
 import episode.finance.recognition.ContinousParallelEpisodeRecognitionDFA;
 import episode.finance.recognition.SimpleEpisodeRecognitionDFA;
-import episode.finance.recognition.SimpleParallelEpisodeRecognitionDFA;
+import episode.finance.recognition.SimpleParallelEpisodeIdentifierRecognitionDFA;
+import episode.finance.storage.EpisodeTrie;
 import prediction.data.AnnotatedEventType;
 
 public class ParallelEpisodePattern implements EpisodePattern{
@@ -20,6 +21,7 @@ public class ParallelEpisodePattern implements EpisodePattern{
 	 */
 	private static final long serialVersionUID = 1L;
 	private Map<AnnotatedEventType,Integer> events;
+	private EpisodeTrie<?> trieForSelf = null;
 	
 	public ParallelEpisodePattern(Map<AnnotatedEventType,Integer> events) {
 		this.events =events;
@@ -65,12 +67,16 @@ public class ParallelEpisodePattern implements EpisodePattern{
 	}
 
 	@Override
-	public SimpleEpisodeRecognitionDFA getSimpleRecognitionDFA() {
+	public SimpleEpisodeRecognitionDFA<?> getSimpleRecognitionDFA() {
 		return getSimpleDFA();
 	}
 
-	public SimpleParallelEpisodeRecognitionDFA getSimpleDFA(){
-		return new SimpleParallelEpisodeRecognitionDFA(this);
+	public SimpleParallelEpisodeIdentifierRecognitionDFA<?> getSimpleDFA(){
+		if(trieForSelf==null){
+			trieForSelf = new EpisodeTrie<Object>();
+			trieForSelf.setValue(this, null);
+		}
+		return new SimpleParallelEpisodeIdentifierRecognitionDFA<>(trieForSelf.bfsIterator().next());
 	}
 
 	public Map<AnnotatedEventType,Integer> getEvents() {

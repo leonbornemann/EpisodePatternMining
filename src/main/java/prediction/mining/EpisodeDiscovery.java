@@ -14,12 +14,13 @@ import prediction.data.stream.FixedStreamWindow;
 public class EpisodeDiscovery {
 	
 	public Map<EpisodePattern,List<Boolean>>  mineFrequentEpisodes(List<FixedStreamWindow> windows, Set<AnnotatedEventType> eventAlphabet,int s){
-		Map<EpisodePattern,List<Boolean>> frequentPatterns = new HashMap<>();
-		SerialEpisodePatternMiner serialMiner = new SerialEpisodePatternMiner(windows, eventAlphabet);
-		frequentPatterns.putAll(serialMiner.mineFrequentEpisodePatterns(s));
-		ParallelEpisodePatternMiner parallelMiner = new ParallelEpisodePatternMiner(windows, eventAlphabet);
-		frequentPatterns.putAll(parallelMiner.mineFrequentEpisodePatterns(s));
-		return frequentPatterns;
+//		Map<EpisodePattern,List<Boolean>> frequentPatterns = new HashMap<>();
+//		SerialEpisodePatternMiner serialMiner = new SerialEpisodePatternMiner(windows, eventAlphabet);
+//		frequentPatterns.putAll(serialMiner.mineFrequentEpisodePatterns(s));
+//		ParallelEpisodePatternMiner parallelMiner = new ParallelEpisodePatternMiner(windows, eventAlphabet);
+//		frequentPatterns.putAll(parallelMiner.mineFrequentEpisodePatterns(s));
+//		return frequentPatterns; TODOOOOOO
+		return null;
 	}	
 	
 }
