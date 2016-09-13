@@ -37,15 +37,35 @@ public class NoAggregationEvaluator extends Evaluator{
 			File file = buildFile(filename,lowLevelStreamDirDesktop);
 			assert(file.exists());
 		}
-		evalMetrics(byDay,filenames);
-		evalRateOfReturn(byDay,filenames);
+		//evalMetrics(byDay,filenames);
+		evalMetricsAndRateOfReturn(byDay,filenames);
 	}
 	
-	private void evalMetrics(Map<LocalDate, List<Pair<LocalDateTime, Change>>> byDay, Map<LocalDate, String> filenames){
-		PredictorPerformance perf = new PredictorPerformance();
-		byDay.keySet().stream().sorted().forEachOrdered(day -> evalMetricsForDay(byDay.get(day),filenames.get(day),perf));
+	private void evalMetricsAndRateOfReturn(Map<LocalDate, List<Pair<LocalDateTime, Change>>> byDay,
+			Map<LocalDate, String> filenames) throws IOException {
+		PredictorPerformance totalPerformance = new PredictorPerformance();
+		double thisDayStartingPrice = 93.57; //TODO: get the starting price from somewhere
+		InvestmentTracker tracker = new InvestmentTracker(thisDayStartingPrice);
+		double startingInvestment = tracker.netWorth();
+		for(LocalDate day : byDay.keySet().stream().sorted().collect(Collectors.toList())){
+			PredictorPerformance thisDayPerformance = new PredictorPerformance();
+			List<Pair<LocalDateTime, Double>> targetMovement = getTargetPriceMovement(filenames.get(day));
+			evalMetricsForDay(byDay.get(day),targetMovement,thisDayPerformance);
+			totalPerformance.addAllExamples(thisDayPerformance);
+			evalRateOfReturnForDay(byDay.get(day),targetMovement,tracker);
+			//TODO: save return of investment for this day
+			System.out.println("--------------------------------------------------------------------");
+			System.out.println("Results for day " + day.format(StandardDateTimeFormatter.getStandardDateFormatter()));
+			print(thisDayPerformance);
+			System.out.println("Return of investment: " + tracker.rateOfReturn());
+			System.out.println("--------------------------------------------------------------------");
+			tracker = new InvestmentTracker(tracker.getPrice(), tracker.netWorth());
+		}
+		print(totalPerformance);
+		System.out.println("total return of investment: " + tracker.rateOfReturn(startingInvestment));
+	}
 
-		
+	private void print(PredictorPerformance perf) {
 		System.out.println("Values for Equal:");
 		System.out.println("Precision: "+ perf.getPrecision(Change.EQUAL));
 		System.out.println("Recall: "+ perf.getRecall(Change.EQUAL));
@@ -58,19 +78,13 @@ public class NoAggregationEvaluator extends Evaluator{
 		System.out.println("Precision: "+ perf.getPrecision(Change.UP));
 		System.out.println("Recall: "+ perf.getRecall(Change.UP));
 		perf.printConfusionMatrix();
-	}
-	
+	}	
 
-	private void evalMetricsForDay(List<Pair<LocalDateTime, Change>> predictions, String filename, PredictorPerformance perf) {
-		try{
-			List<Pair<LocalDateTime, Double>> targetMovement = getTargetPriceMovement(filename);
-			for (int i = 0; i < predictions.size(); i++) {
-				Pair<LocalDateTime, Change> curPrediction = predictions.get(i);
-				Change actualValue = getActualValue(curPrediction.getFirst(),targetMovement);
-				perf.addTestExample(curPrediction.getSecond(), actualValue);
-			}
-		} catch(IOException e){
-			throw new AssertionError();
+	private void evalMetricsForDay(List<Pair<LocalDateTime, Change>> predictions, List<Pair<LocalDateTime, Double>> targetMovement, PredictorPerformance perf) {
+		for (int i = 0; i < predictions.size(); i++) {
+			Pair<LocalDateTime, Change> curPrediction = predictions.get(i);
+			Change actualValue = getActualValue(curPrediction.getFirst(),targetMovement);
+			perf.addTestExample(curPrediction.getSecond(), actualValue);
 		}
 	}
 
@@ -100,36 +114,6 @@ public class NoAggregationEvaluator extends Evaluator{
 			}
 		}
 	}
-	
-	private Change getActualValue(LocalDateTime predictionTime, List<Pair<LocalDateTime, Change>> targetMovement,int d) {
-		int i=0;
-		Pair<LocalDateTime, Change> curElem = targetMovement.get(i);
-		while(curElem.getFirst().compareTo(predictionTime)<=0 && i<targetMovement.size()){
-			curElem = targetMovement.get(i);
-			i++;
-		}
-		if(i==targetMovement.size()){
-			return Change.EQUAL;
-		} else{
-			int change = 0;
-			while(curElem.getFirst().compareTo(predictionTime.plus(d,ChronoUnit.SECONDS))  <= 0 && i<targetMovement.size()){
-				curElem = targetMovement.get(i);
-				if(curElem.getSecond()==Change.UP){
-					change++;
-				} else if(curElem.getSecond()==Change.DOWN){
-					change--;
-				}
-				i++;
-			}
-			if(change>0){
-				return Change.UP;
-			} else if(change<0){
-				return Change.DOWN;
-			} else{
-				return Change.EQUAL;
-			}
-		}
-	}
 
 	private List<Pair<LocalDateTime, Double>> getTargetPriceMovement(String filename) throws IOException {
 		File file = buildFile(filename, lowLevelStreamDirDesktop);
@@ -141,54 +125,39 @@ public class NoAggregationEvaluator extends Evaluator{
 			.collect(Collectors.toList());
 	}
 
-	private void evalRateOfReturn(Map<LocalDate, List<Pair<LocalDateTime, Change>>> byDay,Map<LocalDate, String> filenames) throws IOException {
-		InverstmentTracker tracker = new InverstmentTracker(93.24);
-		System.out.println("starting price: " + tracker.netWorth());
-		byDay.keySet().stream().sorted().forEachOrdered(day -> evalRateOfReturnForDay(byDay.get(day),filenames.get(day),tracker));
-		System.out.println("Ending price: " + tracker.netWorth());
-		System.out.println("rate of return: " + tracker.rateOfReturn());
-	}
-
-	private void evalRateOfReturnForDay(List<Pair<LocalDateTime, Change>> pred,String filenameForThisDay, InverstmentTracker tracker) {
-		try {
-			Collections.sort(pred, (a,b) -> a.getFirst().compareTo(b.getFirst()));
-			List<Pair<LocalDateTime, Double>> targetMovement;
-			targetMovement = getTargetPriceMovement(filenameForThisDay);
-			Collections.sort(targetMovement, (a,b) -> a.getFirst().compareTo(b.getFirst()));
-			int predIndex = 0;
-			int targetMovementIndex = 0;
-			while(true){
-				if(predIndex==pred.size() && targetMovementIndex == targetMovement.size()){
-					break;
-				} else if(predIndex==pred.size()){
-					Pair<LocalDateTime, Double> targetMovementEventPair = targetMovement.get(targetMovementIndex);
-					processTargetMovement(tracker, targetMovementEventPair);
-					targetMovementIndex++;
-				} else if(targetMovementIndex == targetMovement.size()){
+	private void evalRateOfReturnForDay(List<Pair<LocalDateTime, Change>> pred,List<Pair<LocalDateTime, Double>> targetMovement, InvestmentTracker tracker) {
+		Collections.sort(pred, (a,b) -> a.getFirst().compareTo(b.getFirst()));
+		Collections.sort(targetMovement, (a,b) -> a.getFirst().compareTo(b.getFirst()));
+		int predIndex = 0;
+		int targetMovementIndex = 0;
+		while(true){
+			if(predIndex==pred.size() && targetMovementIndex == targetMovement.size()){
+				break;
+			} else if(predIndex==pred.size()){
+				Pair<LocalDateTime, Double> targetMovementEventPair = targetMovement.get(targetMovementIndex);
+				processTargetMovement(tracker, targetMovementEventPair);
+				targetMovementIndex++;
+			} else if(targetMovementIndex == targetMovement.size()){
+				Pair<LocalDateTime, Change> predEventPair = pred.get(predIndex);
+				processPredictionEvent(tracker, predEventPair);
+				predIndex++;
+			} else{
+				LocalDateTime predElement = pred.get(predIndex).getFirst();
+				LocalDateTime targetElement = targetMovement.get(targetMovementIndex).getFirst();
+				if(predElement.compareTo(targetElement)<0){
+					//process predElement
 					Pair<LocalDateTime, Change> predEventPair = pred.get(predIndex);
 					processPredictionEvent(tracker, predEventPair);
 					predIndex++;
 				} else{
-					LocalDateTime predElement = pred.get(predIndex).getFirst();
-					LocalDateTime targetElement = targetMovement.get(targetMovementIndex).getFirst();
-					if(predElement.compareTo(targetElement)<0){
-						//process predElement
-						Pair<LocalDateTime, Change> predEventPair = pred.get(predIndex);
-						processPredictionEvent(tracker, predEventPair);
-						predIndex++;
-					} else{
-						//process targetElement
-						Pair<LocalDateTime, Double> targetMovementEventPair = targetMovement.get(targetMovementIndex);
-						processTargetMovement(tracker, targetMovementEventPair);
-						targetMovementIndex++;
-					}
+					//process targetElement
+					Pair<LocalDateTime, Double> targetMovementEventPair = targetMovement.get(targetMovementIndex);
+					processTargetMovement(tracker, targetMovementEventPair);
+					targetMovementIndex++;
 				}
 			}
-		} catch (IOException e) {
-			throw new AssertionError(e);
 		}
-		//System.out.println("Ending price: " + tracker.netWorth());
-		//System.out.println("rate of return: " + tracker.rateOfReturn());
+		tracker.sellIfPossible();
 	}
 
 	private double getInitialPrice(Map<LocalDate, List<Pair<LocalDateTime, Double>>> targetPriceMovement) {
@@ -197,7 +166,7 @@ public class NoAggregationEvaluator extends Evaluator{
 		return targetPriceMovement.get(firstDate).stream().iterator().next().getSecond();
 	}
 
-	private void processPredictionEvent(InverstmentTracker tracker, Pair<LocalDateTime, Change> predEventPair) {
+	private void processPredictionEvent(InvestmentTracker tracker, Pair<LocalDateTime, Change> predEventPair) {
 		if(predEventPair.getSecond()==Change.UP){
 			tracker.buyIfPossible();
 		} else if(predEventPair.getSecond()==Change.DOWN){
@@ -207,7 +176,7 @@ public class NoAggregationEvaluator extends Evaluator{
 		}
 	}
 
-	private void processTargetMovement(InverstmentTracker tracker,Pair<LocalDateTime, Double> targetMovement) {
+	private void processTargetMovement(InvestmentTracker tracker,Pair<LocalDateTime, Double> targetMovement) {
 		tracker.setPrice(targetMovement.getSecond());
 	}
 

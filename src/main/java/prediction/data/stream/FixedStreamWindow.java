@@ -49,5 +49,9 @@ public class FixedStreamWindow extends AbstractStreamWindow {
 		}
 		return new FixedStreamWindow(newWindow);
 	}
+
+	public boolean isEmpty() {
+		return window.isEmpty();
+	}
 	
 }

@@ -40,4 +40,12 @@ public class PredictorPerformance {
 		System.out.println("\t DOWN \t " + confusionMatrix[2][0] + " \t " + confusionMatrix[2][1]+ " \t " + confusionMatrix[2][2]);
 	}
 
+	public void addAllExamples(PredictorPerformance thisDayPerformance) {
+		for (int i = 0; i < confusionMatrix.length; i++) {
+			for (int j = 0; j < confusionMatrix[0].length; j++) {
+				confusionMatrix[i][j] += thisDayPerformance.confusionMatrix[i][j];
+			}
+		}
+	}
+
 }

@@ -1,16 +1,23 @@
 package prediction.evaluation;
 
-public class InverstmentTracker {
+public class InvestmentTracker {
 	
 	private double price;
 	private int numStocks;
 	private double moneyAmount;
 	private double startingInvestment;
 
-	public InverstmentTracker(double initialPrice) {
+	public InvestmentTracker(double initialPrice) {
 		price = initialPrice; //arbitrary 
 		numStocks = 10;
 		moneyAmount = 0;
+		startingInvestment = netWorth();
+	}
+	
+	public InvestmentTracker(double initalPrice,double money){
+		price = initalPrice;
+		numStocks = 0;
+		moneyAmount = money;
 		startingInvestment = netWorth();
 	}
 
@@ -41,6 +48,10 @@ public class InverstmentTracker {
 	}
 	
 	public double rateOfReturn(){
+		return (netWorth()-startingInvestment)/startingInvestment;
+	}
+
+	public double rateOfReturn(double startingInvestment) {
 		return (netWorth()-startingInvestment)/startingInvestment;
 	}
 }

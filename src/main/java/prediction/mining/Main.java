@@ -24,6 +24,7 @@ import episode.finance.EpisodePattern;
 import prediction.data.AnnotatedEvent;
 import prediction.data.AnnotatedEventType;
 import prediction.data.Change;
+import prediction.data.stream.FixedStreamWindow;
 import prediction.data.stream.MultiFileAnnotatedEventStream;
 import prediction.data.stream.PredictorPerformance;
 import prediction.data.stream.StreamWindow;
@@ -37,37 +38,32 @@ import util.Pair;
 
 public class Main {
 
-	private static final String APPLE = "AAPL"; //TODO: make these enums?
-	private static File predictionsTargetFile = new File("resources/results/FeatureBased/predictions.csv");
-	private static File targetMovementTargetFile = new File("resources/results/FeatureBased/targetMovement.csv");
-	
 	private static File streamDirLaptop = new File("C:\\Users\\LeonBornemann\\Documents\\Uni\\Master thesis\\data\\Annotated Data\\");
 	
 	private static File streamDirDesktop = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Data\\");
 	private static File lowLevelStreamDirDesktop = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Low Level Data\\");
 	
 	private static File featurebasedPredictorFile = new File("resources/saved program states/featureBasedModel.object");
-	public static final File predictorsFile = new File("resources/saved program states/predictors.map");
-	public static final File inversePredictorsFile = new File("resources/saved program states/inversePredictors.map");
-
 
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
 		//singleStream();
 		int d = 90;
 		//new PredictorPerformance().printConfusionMatrix();
-		//multiStream(d);
-		NoAggregationEvaluator evaluator = new NoAggregationEvaluator();
-		evaluator.eval(d,predictionsTargetFile,lowLevelStreamDirDesktop,APPLE);
-//		AggregatedEvaluator evaluator = new AggregatedEvaluator();
-//		evaluator.eval(d,predictionsTargetFile,targetMovementTargetFile);
+		Set<String> annotatedCompanyCodes = new SemanticKnowledgeCollector().getAnnotatedCompanyCodes();
+		Set<AnnotatedEventType> eventAlphabet = AnnotatedEventType.loadEventAlphabet(annotatedCompanyCodes);
+		for(AnnotatedEventType toPredict : eventAlphabet.stream().filter(e -> e.getChange()==Change.UP).collect(Collectors.toList())){
+			multiStream(d,toPredict);
+		}
+		//NoAggregationEvaluator evaluator = new NoAggregationEvaluator();
+		//evaluator.eval(d,predictionsTargetFile,lowLevelStreamDirDesktop,APPLE);
 	}
 
 
-	private static void multiStream(int d) throws IOException, ClassNotFoundException {
+	private static void multiStream(int d,AnnotatedEventType toPredict) throws IOException, ClassNotFoundException {
+		System.out.println("beginning company " + toPredict.getCompanyID());
 		//parameters:
 		int m = 100;
 		int s=75;
-		AnnotatedEventType toPredict = new AnnotatedEventType(APPLE, Change.UP);
 		Set<String> annotatedCompanyCodes = new SemanticKnowledgeCollector().getAnnotatedCompanyCodes();
 		Set<AnnotatedEventType> eventAlphabet = AnnotatedEventType.loadEventAlphabet(annotatedCompanyCodes);
 
@@ -77,8 +73,18 @@ public class Main {
 		System.out.println("beginning to mine windows");
 		WindowMiner winMiner = new WindowMiner(stream,toPredict,m,d);
 		System.out.println("done mining windows");
+		printWindows(winMiner.getPredictiveWindows());
+		printWindows(winMiner.getInversePredictiveWindows());
+		
 		//featureBasedPrediction(d, s, toPredict, eventAlphabet, stream,winMiner);
 		firstNaiveStrategy(d, s, eventAlphabet, stream,toPredict, winMiner);
+	}
+
+
+	private static void printWindows(List<FixedStreamWindow> windows) {
+		windows.stream().
+			sorted((a,b) -> a.getWindowBorders().getFirst().compareTo(b.getWindowBorders().getFirst())).
+			forEachOrdered(w -> System.out.println(w.getWindowBorders()));
 	}
 
 	private static void featureBasedPrediction(int d, int s, AnnotatedEventType toPredict,
@@ -113,9 +119,21 @@ public class Main {
 			droppedOut.stream().filter(e -> e.getEventType().getCompanyID().equals(toPredict.getCompanyID())).forEach(e -> targetMovement.add(new Pair<>(e.getTimestamp(),e.getEventType().getChange())));
 		} while(slider.canSlide());
 		//serialize results
-		serializePairList(predictions,predictionsTargetFile);
-		serializePairList(targetMovement,targetMovementTargetFile);
+		serializePairList(predictions,buildPredictionsTargetFile(toPredict));
+		serializePairList(targetMovement,buildTargetMovementFile(toPredict));
 	}
+
+	private static File buildTargetMovementFile(AnnotatedEventType toPredict) {
+		File companyDir = getOrCreateCompanyDir(toPredict);
+		return new File(companyDir.getAbsolutePath() + File.separator + "targetMovement.csv");
+	}
+
+
+	private static File buildPredictionsTargetFile(AnnotatedEventType toPredict) {
+		File companyDir = getOrCreateCompanyDir(toPredict);
+		return new File(companyDir.getAbsolutePath() + File.separator + "predictions.csv");
+	}
+
 
 	private static void serializePairList(List<Pair<LocalDateTime, Change>> predictions,File file) throws IOException {
 		PrintWriter pr = new PrintWriter(new FileWriter(file));
@@ -128,6 +146,8 @@ public class Main {
 	private static void firstNaiveStrategy(int d, int s, Set<AnnotatedEventType> eventAlphabet,
 			MultiFileAnnotatedEventStream stream, AnnotatedEventType toPredict, WindowMiner winMiner) throws IOException, ClassNotFoundException {
 		int n=20;
+		File predictorsFile = buildPredictorsFilePath(toPredict);
+		File inversePredictorsFile = buildInversePredictorsFilePath(toPredict);
 		PredictiveMiner miner = new PredictiveMiner(winMiner,eventAlphabet,s,n);
 		Map<EpisodePattern, Double> predictors;
 		Map<EpisodePattern, Double> inversePredictors;
@@ -143,18 +163,47 @@ public class Main {
 			inversePredictors = miner.getInitialInversePreditiveEpisodes();
 			serializeEpisodeMap(inversePredictors,inversePredictorsFile);
 		}
+		predictors.keySet().stream().forEach(p -> System.out.println("found predictor" + p + "with " + predictors.get(p) + " confidence" ));
+		System.out.println("inverse");
+		inversePredictors.keySet().stream().forEach(p -> System.out.println("found predictor" + p + "with " + inversePredictors.get(p) + " confidence" ));
+
 		PredictiveEpisodeModel model = new PredictiveEpisodeModel(predictors,inversePredictors);
 		applyPredictor(d,toPredict,stream,model);
-		
-		/*StreamMonitor monitor = new StreamMonitor(predictors,inversePredictors, stream, toPredict, d,new File("resources/logs/performanceLog.txt"));
-		System.out.println(monitor.getInvestmentTracker().netWorth());
-		System.out.println(monitor.getInvestmentTracker().getPrice());
-		monitor.monitor();
-		Map<EpisodePattern, PredictorPerformance> trustScores = monitor.getCurrentTrustScores();
-		printTrustScores(trustScores);
-		System.out.println(monitor.getInvestmentTracker().netWorth());
-		System.out.println(monitor.getInvestmentTracker().getPrice());*/
 	}
+
+	private static File buildInversePredictorsFilePath(AnnotatedEventType toPredict) {
+		File companyDir = getOrCreateCompanyDir(toPredict);
+		File programStateDir = getOrCreateProgramStateDir(companyDir);
+		return new File(programStateDir.getAbsolutePath() + File.separator + "inversePredictors.map");
+	}
+
+
+	private static File buildPredictorsFilePath(AnnotatedEventType toPredict) {
+		File companyDir = getOrCreateCompanyDir(toPredict);
+		File programStateDir = getOrCreateProgramStateDir(companyDir);
+		return new File(programStateDir.getAbsolutePath() + File.separator + "predictors.map");
+	}
+
+
+	private static File getOrCreateProgramStateDir(File companyDir) {
+		String basePath = companyDir.getAbsolutePath();
+		File programStateDir = new File(basePath + File.separator +"program state" + File.separator );
+		if(!programStateDir.exists()){
+			programStateDir.mkdirs();
+		}
+		return programStateDir;
+	}
+
+
+	private static File getOrCreateCompanyDir(AnnotatedEventType toPredict) {
+		String basePath = "resources/results/";
+		File companyDir = new File(basePath + toPredict.getCompanyID() + "/");
+		if(!companyDir.exists()){
+			companyDir.mkdirs();
+		}
+		return companyDir;
+	}
+
 
 	public static Map<EpisodePattern, Double> loadEpisodeMap(File file) throws FileNotFoundException, IOException, ClassNotFoundException {
 		ObjectInputStream in  = new ObjectInputStream(new FileInputStream(file));

@@ -39,16 +39,23 @@ public class WindowMiner {
 				lastUsedTime = currentTime;
 			}
 			if(predictiveWindows.size()!=numWindows && current.getEventType().equals(toPredict)){
-				predictiveWindows.add(stream.getBackwardsWindow(windowDuration));
-				lastUsedTime = current.getTimestamp();
+				FixedStreamWindow backwardsWindow = stream.getBackwardsWindow(windowDuration);
+				if(!backwardsWindow.isEmpty()){
+					predictiveWindows.add(backwardsWindow);
+					lastUsedTime = current.getTimestamp();
+				}
 			} else if(inversePredictiveWindows.size()!=numWindows && current.getEventType().equals(toPredict.getInverseEvent())){
-				inversePredictiveWindows.add(stream.getBackwardsWindow(windowDuration));
-				lastUsedTime = current.getTimestamp();
-			} else if(nothingWindows.size()!=numWindows && ChronoUnit.SECONDS.between(lastUsedTime, currentTime) >=windowDuration*2){ //TODO: fix this, should be 2*d and window should start in the middle
+				FixedStreamWindow backwardsWindow = stream.getBackwardsWindow(windowDuration);
+				if(!backwardsWindow.isEmpty()){
+					inversePredictiveWindows.add(backwardsWindow);
+					lastUsedTime = current.getTimestamp();
+				}
+			} else if(nothingWindows.size()!=numWindows && ChronoUnit.SECONDS.between(lastUsedTime, currentTime) >=windowDuration*2){ 
 				lastUsedTime = current.getTimestamp();
 				FixedStreamWindow largeWindow = stream.getBackwardsWindow(windowDuration*2);
 				nothingWindows.add(largeWindow.getSubWindow(0,windowDuration));
 			}
+		
 			//TODO: get a window of size m where neither happens!
 			if(predictiveWindows.size()==numWindows && inversePredictiveWindows.size() == numWindows && nothingWindows.size()==numWindows){
 				break;
