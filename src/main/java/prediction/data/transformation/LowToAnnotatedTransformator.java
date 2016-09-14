@@ -2,6 +2,7 @@ package prediction.data.transformation;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,14 +20,14 @@ public class LowToAnnotatedTransformator {
 	private File outputDir;
 	private File inputDir;
 	private File illegalFormatDir;
-	private double relativeDelta;
+	private BigDecimal relativeDelta;
 	private boolean aggregate = false;
 
-	public LowToAnnotatedTransformator(File inputDir, File outputDir,File illegalFormatDir, double relativeDelta){
+	public LowToAnnotatedTransformator(File inputDir, File outputDir,File illegalFormatDir, BigDecimal relativeDelta){
 		this.inputDir = inputDir;
 		this.outputDir = outputDir;
 		this.illegalFormatDir = illegalFormatDir;
-		this.relativeDelta =relativeDelta;
+		this.relativeDelta = relativeDelta;
 		this.aggregate  = true;
 	}
 	
@@ -84,15 +85,15 @@ public class LowToAnnotatedTransformator {
 	//TODO: refactor!
 	private List<AnnotatedEvent> transformToAnnotated(List<LowLevelEvent> lowLevelEvents) {
 		List<AnnotatedEvent> annotatedEvents = new ArrayList<>();
-		double referenceValue = lowLevelEvents.get(0).getValue();
+		BigDecimal referenceValue = lowLevelEvents.get(0).getValue();
 		for(int i=1;i<lowLevelEvents.size();i++){
 			LowLevelEvent now = lowLevelEvents.get(i);
 			Change change;
-			if(now.getValue() > referenceValue){
+			if(now.getValue().compareTo(referenceValue) >0  ){
 				change = Change.UP;
 				referenceValue = now.getValue();
 				annotatedEvents.add(new AnnotatedEvent(now.getCompanyId(), change, now.getTimestamp()));
-			} else if(now.getValue() <referenceValue){
+			} else if(now.getValue().compareTo(referenceValue) <0){
 				change = Change.DOWN;
 				referenceValue = now.getValue();
 				annotatedEvents.add(new AnnotatedEvent(now.getCompanyId(), change, now.getTimestamp()));
@@ -103,15 +104,17 @@ public class LowToAnnotatedTransformator {
 
 	private List<AnnotatedEvent> aggregateToAnnotated(List<LowLevelEvent> lowLevelEvents) {
 		List<AnnotatedEvent> annotatedEvents = new ArrayList<>();
-		double referenceValue = lowLevelEvents.get(0).getValue();
+		BigDecimal referenceValue = lowLevelEvents.get(0).getValue();
 		for(int i=1;i<lowLevelEvents.size();i++){
 			LowLevelEvent now = lowLevelEvents.get(i);
 			Change change;
-			if(now.getValue() >= referenceValue + referenceValue*relativeDelta){
+			BigDecimal positiveBorderValue = referenceValue.add(referenceValue.multiply(relativeDelta));
+			BigDecimal negativeBorderValue = referenceValue.subtract(referenceValue.multiply(relativeDelta));
+			if(now.getValue().compareTo(positiveBorderValue) >= 0){
 				change = Change.UP;
 				referenceValue = now.getValue();
 				annotatedEvents.add(new AnnotatedEvent(now.getCompanyId(), change, now.getTimestamp()));
-			} else if(now.getValue() <= referenceValue - referenceValue*relativeDelta){
+			} else if(now.getValue().compareTo(negativeBorderValue) <= 0){
 				change = Change.DOWN;
 				referenceValue = now.getValue();
 				annotatedEvents.add(new AnnotatedEvent(now.getCompanyId(), change, now.getTimestamp()));

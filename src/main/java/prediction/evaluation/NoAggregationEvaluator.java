@@ -2,6 +2,7 @@ package prediction.evaluation;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -44,12 +45,12 @@ public class NoAggregationEvaluator extends Evaluator{
 			Map<LocalDate, String> filenames, File evaluationResultFile) throws IOException {
 		EvaluationResult result = new EvaluationResult();
 		PredictorPerformance totalPerformance = new PredictorPerformance();
-		double thisDayStartingPrice = 93.57; //TODO: get the starting price from somewhere
+		BigDecimal thisDayStartingPrice = new BigDecimal(93.57); //TODO: get the starting price from somewhere
 		InvestmentTracker tracker = new InvestmentTracker(thisDayStartingPrice);
-		double startingInvestment = tracker.netWorth();
+		BigDecimal startingInvestment = tracker.netWorth();
 		for(LocalDate day : byDay.keySet().stream().sorted().collect(Collectors.toList())){
 			PredictorPerformance thisDayPerformance = new PredictorPerformance();
-			List<Pair<LocalDateTime, Double>> targetMovement = getTargetPriceMovement(filenames.get(day));
+			List<Pair<LocalDateTime, BigDecimal>> targetMovement = getTargetPriceMovement(filenames.get(day));
 			evalMetricsForDay(byDay.get(day),targetMovement,thisDayPerformance);
 			totalPerformance.addAllExamples(thisDayPerformance);
 			evalRateOfReturnForDay(byDay.get(day),targetMovement,tracker);
@@ -84,7 +85,7 @@ public class NoAggregationEvaluator extends Evaluator{
 		perf.printConfusionMatrix();
 	}	
 
-	private void evalMetricsForDay(List<Pair<LocalDateTime, Change>> predictions, List<Pair<LocalDateTime, Double>> targetMovement, PredictorPerformance perf) {
+	private void evalMetricsForDay(List<Pair<LocalDateTime, Change>> predictions, List<Pair<LocalDateTime, BigDecimal>> targetMovement, PredictorPerformance perf) {
 		for (int i = 0; i < predictions.size(); i++) {
 			Pair<LocalDateTime, Change> curPrediction = predictions.get(i);
 			Change actualValue = getActualValue(curPrediction.getFirst(),targetMovement);
@@ -92,9 +93,9 @@ public class NoAggregationEvaluator extends Evaluator{
 		}
 	}
 
-	private Change getActualValue(LocalDateTime predictionTime, List<Pair<LocalDateTime, Double>> targetMovement) {
+	private Change getActualValue(LocalDateTime predictionTime, List<Pair<LocalDateTime, BigDecimal>> targetMovement) {
 		int i=0;
-		Pair<LocalDateTime, Double> curElem = targetMovement.get(i);
+		Pair<LocalDateTime, BigDecimal> curElem = targetMovement.get(i);
 		while(curElem.getFirst().compareTo(predictionTime)<=0 && i<targetMovement.size()){
 			curElem = targetMovement.get(i);
 			i++;
@@ -102,16 +103,16 @@ public class NoAggregationEvaluator extends Evaluator{
 		if(i==targetMovement.size()){
 			return Change.EQUAL;
 		} else{
-			double initial = targetMovement.get(i-1).getSecond();
-			double end = targetMovement.get(i).getSecond();
+			BigDecimal initial = targetMovement.get(i-1).getSecond();
+			BigDecimal end = targetMovement.get(i).getSecond();
 			while(curElem.getFirst().compareTo(predictionTime.plus(d,ChronoUnit.SECONDS))  <= 0 && i<targetMovement.size()){
 				curElem = targetMovement.get(i);
 				end = curElem.getSecond();
 				i++;
 			}
-			if(end>initial){
+			if(end.compareTo(initial) > 0){
 				return Change.UP;
-			} else if(initial>end){
+			} else if(initial.compareTo(end)>0){
 				return Change.DOWN;
 			} else{
 				return Change.EQUAL;
@@ -119,7 +120,7 @@ public class NoAggregationEvaluator extends Evaluator{
 		}
 	}
 
-	private List<Pair<LocalDateTime, Double>> getTargetPriceMovement(String filename) throws IOException {
+	private List<Pair<LocalDateTime, BigDecimal>> getTargetPriceMovement(String filename) throws IOException {
 		File file = buildFile(filename, lowLevelStreamDirDesktop);
 		List<LowLevelEvent> events= LowLevelEvent.readAll(file);
 		return events.stream()
@@ -129,7 +130,7 @@ public class NoAggregationEvaluator extends Evaluator{
 			.collect(Collectors.toList());
 	}
 
-	private void evalRateOfReturnForDay(List<Pair<LocalDateTime, Change>> pred,List<Pair<LocalDateTime, Double>> targetMovement, InvestmentTracker tracker) {
+	private void evalRateOfReturnForDay(List<Pair<LocalDateTime, Change>> pred,List<Pair<LocalDateTime, BigDecimal>> targetMovement, InvestmentTracker tracker) {
 		Collections.sort(pred, (a,b) -> a.getFirst().compareTo(b.getFirst()));
 		Collections.sort(targetMovement, (a,b) -> a.getFirst().compareTo(b.getFirst()));
 		int predIndex = 0;
@@ -138,7 +139,7 @@ public class NoAggregationEvaluator extends Evaluator{
 			if(predIndex==pred.size() && targetMovementIndex == targetMovement.size()){
 				break;
 			} else if(predIndex==pred.size()){
-				Pair<LocalDateTime, Double> targetMovementEventPair = targetMovement.get(targetMovementIndex);
+				Pair<LocalDateTime, BigDecimal> targetMovementEventPair = targetMovement.get(targetMovementIndex);
 				processTargetMovement(tracker, targetMovementEventPair);
 				targetMovementIndex++;
 			} else if(targetMovementIndex == targetMovement.size()){
@@ -155,7 +156,7 @@ public class NoAggregationEvaluator extends Evaluator{
 					predIndex++;
 				} else{
 					//process targetElement
-					Pair<LocalDateTime, Double> targetMovementEventPair = targetMovement.get(targetMovementIndex);
+					Pair<LocalDateTime, BigDecimal> targetMovementEventPair = targetMovement.get(targetMovementIndex);
 					processTargetMovement(tracker, targetMovementEventPair);
 					targetMovementIndex++;
 				}
@@ -180,7 +181,7 @@ public class NoAggregationEvaluator extends Evaluator{
 		}
 	}
 
-	private void processTargetMovement(InvestmentTracker tracker,Pair<LocalDateTime, Double> targetMovement) {
+	private void processTargetMovement(InvestmentTracker tracker,Pair<LocalDateTime, BigDecimal> targetMovement) {
 		tracker.setPrice(targetMovement.getSecond());
 	}
 

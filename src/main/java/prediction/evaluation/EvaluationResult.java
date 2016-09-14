@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,11 +22,11 @@ public class EvaluationResult implements Serializable{
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	private Map<LocalDate,Double> returnsByDay = new HashMap<>();
+	private Map<LocalDate,BigDecimal> returnsByDay = new HashMap<>();
 	private Map<LocalDate,PredictorPerformance> performanceByDay = new HashMap<>();
-	private double totalReturn;
+	private BigDecimal totalReturn;
 	
-	public void putReturnOfInvestment(LocalDate day, double rateOfReturn) {
+	public void putReturnOfInvestment(LocalDate day, BigDecimal rateOfReturn) {
 		returnsByDay.put(day, rateOfReturn);
 	}
 
@@ -33,7 +34,7 @@ public class EvaluationResult implements Serializable{
 		performanceByDay.put(day, perf);
 	}
 
-	public void setTotalReturnOfInvestment(double rateOfReturn) {
+	public void setTotalReturnOfInvestment(BigDecimal rateOfReturn) {
 		totalReturn = rateOfReturn;
 	}
 
@@ -59,12 +60,12 @@ public class EvaluationResult implements Serializable{
 		return episodeMap;
 	}
 
-	public double getTotalReturn() {
+	public BigDecimal getTotalReturn() {
 		return totalReturn;
 	}
 
-	public double getSummedReturn() {
-		return returnsByDay.values().stream().mapToDouble(d -> d.doubleValue()).sum();
+	public BigDecimal getSummedReturn() {
+		return returnsByDay.values().stream().reduce((a,b)->a.add(b)).get();
 	}
 	
 	public PredictorPerformance getTotalPerformance(){

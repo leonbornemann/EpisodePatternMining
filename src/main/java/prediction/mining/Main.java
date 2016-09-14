@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -49,6 +50,7 @@ public class Main {
 	private static File featurebasedPredictorFile = new File("resources/saved program states/featureBasedModel.object");
 
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
+		System.out.println(new BigDecimal("33.82"));
 		//singleStream();
 		int d = 90;
 		//new PredictorPerformance().printConfusionMatrix();
@@ -57,13 +59,13 @@ public class Main {
 //		for(AnnotatedEventType toPredict : eventAlphabet.stream().filter(e -> e.getChange()==Change.UP).collect(Collectors.toList())){
 //			multiStream(d,toPredict);
 //		}
-		//NoAggregationEvaluator evaluator = new NoAggregationEvaluator();
-		//evaluator.eval(d,buildPredictionsTargetFile(APPLE),lowLevelStreamDirDesktop,APPLE.getCompanyID(),getEvaluationResultFile(APPLE));
+		NoAggregationEvaluator evaluator = new NoAggregationEvaluator();
+		evaluator.eval(d,buildPredictionsTargetFile(APPLE),lowLevelStreamDirDesktop,APPLE.getCompanyID(),getEvaluationResultFile(APPLE));
 		EvaluationResult result = EvaluationResult.deserialize(getEvaluationResultFile(APPLE));
 		//System.out.println(result.getTotalReturn());
 		System.out.println("Results for Method PERMS: ");
 		System.out.println();
-		System.out.println("Total Return of Investment [%]: " + result.getSummedReturn()*100);
+		System.out.println("Total Return of Investment [%]: " + result.getSummedReturn().multiply(new BigDecimal(100)));
 		System.out.println("Confusion Matrix:");
 		result.getTotalPerformance().printConfusionMatrix();
 		System.out.println();

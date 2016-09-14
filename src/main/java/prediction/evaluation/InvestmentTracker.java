@@ -1,57 +1,61 @@
 package prediction.evaluation;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 public class InvestmentTracker {
 	
-	private double price;
-	private int numStocks;
-	private double moneyAmount;
-	private double startingInvestment;
+	private BigDecimal price;
+	private BigDecimal numStocks;
+	private BigDecimal moneyAmount;
+	private BigDecimal startingInvestment;
+	private int roundingScale = 100;
 
-	public InvestmentTracker(double initialPrice) {
-		price = initialPrice; //arbitrary 
-		numStocks = 10;
-		moneyAmount = 0;
+	public InvestmentTracker(BigDecimal initialPrice) {
+		price = initialPrice;
+		numStocks = BigDecimal.TEN;
+		moneyAmount = BigDecimal.ZERO;
 		startingInvestment = netWorth();
 	}
 	
-	public InvestmentTracker(double initalPrice,double money){
+	public InvestmentTracker(BigDecimal initalPrice,BigDecimal money){
 		price = initalPrice;
-		numStocks = 0;
+		numStocks = BigDecimal.ZERO;
 		moneyAmount = money;
 		startingInvestment = netWorth();
 	}
 
-	public double netWorth(){
-		return moneyAmount + numStocks*price;
+	public BigDecimal netWorth(){
+		return moneyAmount.add(price.multiply(numStocks));
 	}
 	
-	public void setPrice(double price) {
+	public void setPrice(BigDecimal price) {
 		this.price = price;
 	}
 
 	public void buyIfPossible() {
-		if(numStocks==0){
-			numStocks = 10;
-			moneyAmount -= numStocks*price;
+		if(numStocks.equals(BigDecimal.ZERO)){
+			numStocks = BigDecimal.TEN;
+			moneyAmount = moneyAmount.subtract(numStocks.multiply(price));
 		}
 	}
 
 	public void sellIfPossible(){
-		if(numStocks==10){
-			moneyAmount += numStocks*price;
-			numStocks=0;
+		if(numStocks.equals(BigDecimal.TEN)){
+			moneyAmount = moneyAmount.add(numStocks.multiply(price));
+			numStocks=BigDecimal.ZERO;
 		}
 	}
 
-	public double getPrice() {
+	public BigDecimal getPrice() {
 		return price;
 	}
 	
-	public double rateOfReturn(){
-		return (netWorth()-startingInvestment)/startingInvestment;
+	public BigDecimal rateOfReturn(){
+		return (netWorth().subtract(startingInvestment)).divide(startingInvestment,roundingScale ,RoundingMode.FLOOR);
 	}
 
-	public double rateOfReturn(double startingInvestment) {
-		return (netWorth()-startingInvestment)/startingInvestment;
+	public BigDecimal rateOfReturn(BigDecimal startingInvestment) {
+		return (netWorth().subtract(startingInvestment)).divide(startingInvestment,roundingScale ,RoundingMode.FLOOR);
 	}
 }

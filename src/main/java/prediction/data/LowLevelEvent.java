@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,10 +14,10 @@ import prediction.util.StandardDateTimeFormatter;
 public class LowLevelEvent {
 
 	private String companyId;
-	private double stockValue;
+	private BigDecimal stockValue;
 	private LocalDateTime timestamp;
 	
-	public LowLevelEvent(String companyId, double stockValue, LocalDateTime timestamp) {
+	public LowLevelEvent(String companyId, BigDecimal stockValue, LocalDateTime timestamp) {
 		super();
 		this.companyId = companyId;
 		this.stockValue = stockValue;
@@ -45,7 +46,7 @@ public class LowLevelEvent {
 				if(tokens[1].equals("N/A")){
 					//System.out.println("Skipping event of company "+tokens[0] + " at time " + tokens[2] );
 				} else{
-					events.add(new LowLevelEvent(tokens[0], Double.parseDouble(tokens[1]), LocalDateTime.parse(tokens[2], StandardDateTimeFormatter.getStandardDateTimeFormatter())));
+					events.add(new LowLevelEvent(tokens[0], new BigDecimal(tokens[1]), LocalDateTime.parse(tokens[2], StandardDateTimeFormatter.getStandardDateTimeFormatter())));
 				}
 				if(lineCount % 1000000==0){
 					System.out.println("done with "+lineCount);
@@ -67,7 +68,7 @@ public class LowLevelEvent {
 		return companyId;
 	}
 
-	public double getValue() {
+	public BigDecimal getValue() {
 		return stockValue;
 	}
 

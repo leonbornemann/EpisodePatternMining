@@ -2,6 +2,7 @@ package prediction.data.transformation;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 
 public class TransformationMain {
 
@@ -19,7 +20,7 @@ public class TransformationMain {
 	}
 
 	private static void laptop() throws IOException {
-		LowToAnnotatedTransformator transformer = new LowToAnnotatedTransformator(new File(databaseLocationLaptop),new File(targetLaptop),new File(illegalFormatDirLaptop),0.001);
+		LowToAnnotatedTransformator transformer = new LowToAnnotatedTransformator(new File(databaseLocationLaptop),new File(targetLaptop),new File(illegalFormatDirLaptop),new BigDecimal("0.001"));
 		transformer.transform();
 	}
 
