@@ -1,19 +1,17 @@
 package prediction.mining;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -27,13 +25,12 @@ import prediction.data.AnnotatedEventType;
 import prediction.data.Change;
 import prediction.data.stream.FixedStreamWindow;
 import prediction.data.stream.MultiFileAnnotatedEventStream;
-import prediction.data.stream.PredictorPerformance;
 import prediction.data.stream.StreamWindow;
 import prediction.data.stream.StreamWindowSlider;
-import prediction.evaluation.AggregatedEvaluator;
+import prediction.evaluation.EvaluationFiles;
 import prediction.evaluation.EvaluationResult;
 import prediction.evaluation.NoAggregationEvaluator;
-import prediction.evaluation.PercentageBasedInvestmentTracker;
+import prediction.util.IOService;
 import prediction.util.StandardDateTimeFormatter;
 import semantic.SemanticKnowledgeCollector;
 import util.Pair;
@@ -50,39 +47,48 @@ public class Main {
 	private static File featurebasedPredictorFile = new File("resources/saved program states/featureBasedModel.object");
 
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
-		System.out.println(new BigDecimal("33.82"));
 		//singleStream();
 		int d = 90;
 		//new PredictorPerformance().printConfusionMatrix();
-//		Set<String> annotatedCompanyCodes = new SemanticKnowledgeCollector().getAnnotatedCompanyCodes();
+		Set<String> annotatedCompanyCodes = new SemanticKnowledgeCollector().getAnnotatedCompanyCodes();
 //		Set<AnnotatedEventType> eventAlphabet = AnnotatedEventType.loadEventAlphabet(annotatedCompanyCodes);
 //		for(AnnotatedEventType toPredict : eventAlphabet.stream().filter(e -> e.getChange()==Change.UP).collect(Collectors.toList())){
 //			multiStream(d,toPredict);
 //		}
-		NoAggregationEvaluator evaluator = new NoAggregationEvaluator();
-		evaluator.eval(d,buildPredictionsTargetFile(APPLE),lowLevelStreamDirDesktop,APPLE.getCompanyID(),getEvaluationResultFile(APPLE));
-		EvaluationResult result = EvaluationResult.deserialize(getEvaluationResultFile(APPLE));
-		//System.out.println(result.getTotalReturn());
-		System.out.println("Results for Method PERMS: ");
-		System.out.println();
-		System.out.println("Total Return of Investment [%]: " + result.getSummedReturn().multiply(new BigDecimal(100)));
-		System.out.println("Confusion Matrix:");
-		result.getTotalPerformance().printConfusionMatrix();
-		System.out.println();
-		System.out.println("Precision for Up Movement: " +result.getTotalPerformance().getPrecision(Change.UP));
-		System.out.println("Precision for Down Movement: " +result.getTotalPerformance().getPrecision(Change.DOWN));
-		System.out.println();
-		System.out.println("Precision values when ignoring Examples that were for Equal:");
-		System.out.println();
-		System.out.println("Precision for Up Movement: " +result.getTotalPerformance().getEqualIgnoredPrecision(Change.UP));
-		System.out.println("Precision for Down Movement: " +result.getTotalPerformance().getEqualIgnoredPrecision(Change.DOWN));
-		//System.out.println(result.getTotalPerformance().getNumClassifiedExamples());
-	}
-
-	private static File getEvaluationResultFile(AnnotatedEventType e) {
-		File comp = getOrCreateCompanyDir(e);
-		File programState = getOrCreateProgramStateDir(comp);
-		return new File(programState.getAbsolutePath() + File.separator + "evaluationResult.obj");
+		//NoAggregationEvaluator evaluator = new NoAggregationEvaluator(d,lowLevelStreamDirDesktop);
+		//List<EvaluationFiles> evaluationFiles = annotatedCompanyCodes.stream().map(id -> new EvaluationFiles(id, IOService.buildPredictionsTargetFile(id),IOService.getEvaluationResultFile(id))).collect(Collectors.toList());
+		//evaluator.eval(evaluationFiles);
+		BigDecimal avg = BigDecimal.ZERO;
+		for (String id : annotatedCompanyCodes) {
+			EvaluationResult a = EvaluationResult.deserialize(IOService.getEvaluationResultFile(id));
+			System.out.println("-----------------------------------------------------------------------------");
+			System.out.println("results for " + id);
+			System.out.println("total Return: " + a.getSummedReturn());
+			avg = avg.add(a.getSummedReturn());
+			System.out.println("Up-Precision: " + a.getTotalPerformance().getPrecision(Change.UP));
+			System.out.println("DOWN-Precision: " + a.getTotalPerformance().getPrecision(Change.DOWN));
+			System.out.println("Up-Precision without equal: " + a.getTotalPerformance().getEqualIgnoredPrecision(Change.UP));
+			System.out.println("DOWN-Precision without equal: " + a.getTotalPerformance().getEqualIgnoredPrecision(Change.DOWN));
+			a.getTotalPerformance().printConfusionMatrix();
+			System.out.println("-----------------------------------------------------------------------------");
+		}
+		System.out.println("avg Return: " + avg.divide(new BigDecimal(annotatedCompanyCodes.size()),100,RoundingMode.FLOOR));
+//		EvaluationResult result = EvaluationResult.deserialize(IOService.getEvaluationResultFile(APPLE.getCompanyID()));
+//		//System.out.println(result.getTotalReturn());
+//		System.out.println("Results for Method PERMS: ");
+//		System.out.println();
+//		System.out.println("Total Return of Investment [%]: " + result.getSummedReturn().multiply(new BigDecimal(100)));
+//		System.out.println("Confusion Matrix:");
+//		result.getTotalPerformance().printConfusionMatrix();
+//		System.out.println();
+//		System.out.println("Precision for Up Movement: " +result.getTotalPerformance().getPrecision(Change.UP));
+//		System.out.println("Precision for Down Movement: " +result.getTotalPerformance().getPrecision(Change.DOWN));
+//		System.out.println();
+//		System.out.println("Precision values when ignoring Examples that were for Equal:");
+//		System.out.println();
+//		System.out.println("Precision for Up Movement: " +result.getTotalPerformance().getEqualIgnoredPrecision(Change.UP));
+//		System.out.println("Precision for Down Movement: " +result.getTotalPerformance().getEqualIgnoredPrecision(Change.DOWN));
+//		//System.out.println(result.getTotalPerformance().getNumClassifiedExamples());
 	}
 
 	private static void multiStream(int d,AnnotatedEventType toPredict) throws IOException, ClassNotFoundException {
@@ -145,21 +151,9 @@ public class Main {
 			droppedOut.stream().filter(e -> e.getEventType().getCompanyID().equals(toPredict.getCompanyID())).forEach(e -> targetMovement.add(new Pair<>(e.getTimestamp(),e.getEventType().getChange())));
 		} while(slider.canSlide());
 		//serialize results
-		serializePairList(predictions,buildPredictionsTargetFile(toPredict));
-		serializePairList(targetMovement,buildTargetMovementFile(toPredict));
+		serializePairList(predictions,IOService.buildPredictionsTargetFile(toPredict.getCompanyID()));
+		serializePairList(targetMovement,IOService.buildTargetMovementFile(toPredict.getCompanyID()));
 	}
-
-	private static File buildTargetMovementFile(AnnotatedEventType toPredict) {
-		File companyDir = getOrCreateCompanyDir(toPredict);
-		return new File(companyDir.getAbsolutePath() + File.separator + "targetMovement.csv");
-	}
-
-
-	private static File buildPredictionsTargetFile(AnnotatedEventType toPredict) {
-		File companyDir = getOrCreateCompanyDir(toPredict);
-		return new File(companyDir.getAbsolutePath() + File.separator + "predictions.csv");
-	}
-
 
 	private static void serializePairList(List<Pair<LocalDateTime, Change>> predictions,File file) throws IOException {
 		PrintWriter pr = new PrintWriter(new FileWriter(file));
@@ -172,22 +166,22 @@ public class Main {
 	private static void firstNaiveStrategy(int d, int s, Set<AnnotatedEventType> eventAlphabet,
 			MultiFileAnnotatedEventStream stream, AnnotatedEventType toPredict, WindowMiner winMiner) throws IOException, ClassNotFoundException {
 		int n=20;
-		File predictorsFile = buildPredictorsFilePath(toPredict);
-		File inversePredictorsFile = buildInversePredictorsFilePath(toPredict);
+		File predictorsFile = IOService.buildPredictorsFilePath(toPredict.getCompanyID());
+		File inversePredictorsFile = IOService.buildInversePredictorsFilePath(toPredict.getCompanyID());
 		PredictiveMiner miner = new PredictiveMiner(winMiner,eventAlphabet,s,n);
 		Map<EpisodePattern, Double> predictors;
 		Map<EpisodePattern, Double> inversePredictors;
 		if(predictorsFile.exists()){
-			predictors = loadEpisodeMap(predictorsFile);
+			predictors = IOService.loadEpisodeMap(predictorsFile);
 		} else{
 			predictors = miner.getInitialPreditiveEpisodes();
-			serializeEpisodeMap(predictors,predictorsFile);
+			IOService.serializeEpisodeMap(predictors,predictorsFile);
 		}
 		if(inversePredictorsFile.exists()){
-			inversePredictors = loadEpisodeMap(inversePredictorsFile);
+			inversePredictors = IOService.loadEpisodeMap(inversePredictorsFile);
 		} else{
 			inversePredictors = miner.getInitialInversePreditiveEpisodes();
-			serializeEpisodeMap(inversePredictors,inversePredictorsFile);
+			IOService.serializeEpisodeMap(inversePredictors,inversePredictorsFile);
 		}
 		predictors.keySet().stream().forEach(p -> System.out.println("found predictor" + p + "with " + predictors.get(p) + " confidence" ));
 		System.out.println("inverse");
@@ -196,55 +190,6 @@ public class Main {
 		PredictiveEpisodeModel model = new PredictiveEpisodeModel(predictors,inversePredictors);
 		applyPredictor(d,toPredict,stream,model);
 	}
-
-	private static File buildInversePredictorsFilePath(AnnotatedEventType toPredict) {
-		File companyDir = getOrCreateCompanyDir(toPredict);
-		File programStateDir = getOrCreateProgramStateDir(companyDir);
-		return new File(programStateDir.getAbsolutePath() + File.separator + "inversePredictors.map");
-	}
-
-
-	private static File buildPredictorsFilePath(AnnotatedEventType toPredict) {
-		File companyDir = getOrCreateCompanyDir(toPredict);
-		File programStateDir = getOrCreateProgramStateDir(companyDir);
-		return new File(programStateDir.getAbsolutePath() + File.separator + "predictors.map");
-	}
-
-
-	private static File getOrCreateProgramStateDir(File companyDir) {
-		String basePath = companyDir.getAbsolutePath();
-		File programStateDir = new File(basePath + File.separator +"program state" + File.separator );
-		if(!programStateDir.exists()){
-			programStateDir.mkdirs();
-		}
-		return programStateDir;
-	}
-
-
-	private static File getOrCreateCompanyDir(AnnotatedEventType toPredict) {
-		String basePath = "resources/results/";
-		File companyDir = new File(basePath + toPredict.getCompanyID() + "/");
-		if(!companyDir.exists()){
-			companyDir.mkdirs();
-		}
-		return companyDir;
-	}
-
-
-	public static Map<EpisodePattern, Double> loadEpisodeMap(File file) throws FileNotFoundException, IOException, ClassNotFoundException {
-		ObjectInputStream in  = new ObjectInputStream(new FileInputStream(file));
-		@SuppressWarnings("unchecked")
-		Map<EpisodePattern, Double> episodeMap = (Map<EpisodePattern, Double>) in.readObject();
-		in.close();
-		return episodeMap;
-	}
-
-	public static void serializeEpisodeMap(Map<EpisodePattern, Double> predictors, File file) throws FileNotFoundException, IOException {
-		ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(file));
-		out.writeObject(predictors);
-		out.close();
-	}	
-
 
 	/*private static void singleStream() throws IOException {
 		File testDay = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Data\\NASDAQ_2016-05-09_annotated.csv");

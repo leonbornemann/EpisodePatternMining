@@ -16,6 +16,7 @@ import episode.finance.SerialEpisodePattern;
 import prediction.data.AnnotatedEventType;
 import prediction.data.Change;
 import prediction.mining.Main;
+import prediction.util.IOService;
 
 public class EpisodeMapSerializationTest {
 
@@ -32,8 +33,8 @@ public class EpisodeMapSerializationTest {
 		map.put(new ParallelEpisodePattern(A,A,B,B,C,D), 42.0);
 		map.put(new ParallelEpisodePattern(A,A,B,C), 133742.0);
 		File file = new File("resources/testdata/serialized Episodes/test.map");
-		Main.serializeEpisodeMap(map, file);
-		Map<EpisodePattern, Double> newMap = Main.loadEpisodeMap(file);
+		IOService.serializeEpisodeMap(map, file);
+		Map<EpisodePattern, Double> newMap = IOService.loadEpisodeMap(file);
 		assertEquals(map,newMap);
 	}
 

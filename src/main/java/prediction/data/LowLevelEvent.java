@@ -76,4 +76,45 @@ public class LowLevelEvent {
 		return timestamp;
 	}
 
+	/***
+	 * opens the target file, reads the starting price for the target company and returns it.
+	 * @param filename
+	 * @param companyID
+	 * @return
+	 * @throws IOException 
+	 */
+	public static BigDecimal getStartingPrice(File source, String companyID) throws IOException {
+		BufferedReader br = new BufferedReader(new FileReader(source));
+		try{
+			br.readLine();
+			String line = br.readLine();
+			int lineCount = 2;
+			while(line!=null && !line.equals("")){
+				String[] tokens = line.split(",");
+				if(tokens.length!=3){
+					System.out.println(line);
+					System.out.println(lineCount);
+					assert(false);
+				}
+				if(tokens[0].equals("")){
+					System.out.println("empty company at "+lineCount);
+					assert(false);
+				}
+				if(tokens[1].equals("N/A")){
+					//System.out.println("Skipping event of company "+tokens[0] + " at time " + tokens[2] );
+				} else{
+					LowLevelEvent curEvent = new LowLevelEvent(tokens[0], new BigDecimal(tokens[1]), LocalDateTime.parse(tokens[2], StandardDateTimeFormatter.getStandardDateTimeFormatter()));
+					if(curEvent.getCompanyId().equals(companyID)){
+						return curEvent.getValue();
+					}
+				}
+				lineCount++;
+				line = br.readLine();
+			}
+			return null;
+		} finally{
+			br.close();	
+		}
+	}
+
 }

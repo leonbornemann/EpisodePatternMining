@@ -10,7 +10,9 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import episode.finance.EpisodePattern;
@@ -25,6 +27,7 @@ public class EvaluationResult implements Serializable{
 	private Map<LocalDate,BigDecimal> returnsByDay = new HashMap<>();
 	private Map<LocalDate,PredictorPerformance> performanceByDay = new HashMap<>();
 	private BigDecimal totalReturn;
+	private List<String> warnings = new ArrayList<>();
 	
 	public void putReturnOfInvestment(LocalDate day, BigDecimal rateOfReturn) {
 		returnsByDay.put(day, rateOfReturn);
@@ -71,6 +74,11 @@ public class EvaluationResult implements Serializable{
 	public PredictorPerformance getTotalPerformance(){
 		return new PredictorPerformance(performanceByDay.values());
 	}
+
+	public void addWarning(String string) {
+		warnings.add(string);
+	}
+
 	
 
 }
