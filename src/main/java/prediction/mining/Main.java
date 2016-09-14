@@ -30,6 +30,7 @@ import prediction.data.stream.PredictorPerformance;
 import prediction.data.stream.StreamWindow;
 import prediction.data.stream.StreamWindowSlider;
 import prediction.evaluation.AggregatedEvaluator;
+import prediction.evaluation.EvaluationResult;
 import prediction.evaluation.NoAggregationEvaluator;
 import prediction.evaluation.PercentageBasedInvestmentTracker;
 import prediction.util.StandardDateTimeFormatter;
@@ -37,6 +38,8 @@ import semantic.SemanticKnowledgeCollector;
 import util.Pair;
 
 public class Main {
+
+	private static final AnnotatedEventType APPLE = new AnnotatedEventType("AAPL", Change.UP);
 
 	private static File streamDirLaptop = new File("C:\\Users\\LeonBornemann\\Documents\\Uni\\Master thesis\\data\\Annotated Data\\");
 	
@@ -49,15 +52,36 @@ public class Main {
 		//singleStream();
 		int d = 90;
 		//new PredictorPerformance().printConfusionMatrix();
-		Set<String> annotatedCompanyCodes = new SemanticKnowledgeCollector().getAnnotatedCompanyCodes();
-		Set<AnnotatedEventType> eventAlphabet = AnnotatedEventType.loadEventAlphabet(annotatedCompanyCodes);
-		for(AnnotatedEventType toPredict : eventAlphabet.stream().filter(e -> e.getChange()==Change.UP).collect(Collectors.toList())){
-			multiStream(d,toPredict);
-		}
+//		Set<String> annotatedCompanyCodes = new SemanticKnowledgeCollector().getAnnotatedCompanyCodes();
+//		Set<AnnotatedEventType> eventAlphabet = AnnotatedEventType.loadEventAlphabet(annotatedCompanyCodes);
+//		for(AnnotatedEventType toPredict : eventAlphabet.stream().filter(e -> e.getChange()==Change.UP).collect(Collectors.toList())){
+//			multiStream(d,toPredict);
+//		}
 		//NoAggregationEvaluator evaluator = new NoAggregationEvaluator();
-		//evaluator.eval(d,predictionsTargetFile,lowLevelStreamDirDesktop,APPLE);
+		//evaluator.eval(d,buildPredictionsTargetFile(APPLE),lowLevelStreamDirDesktop,APPLE.getCompanyID(),getEvaluationResultFile(APPLE));
+		EvaluationResult result = EvaluationResult.deserialize(getEvaluationResultFile(APPLE));
+		//System.out.println(result.getTotalReturn());
+		System.out.println("Results for Method PERMS: ");
+		System.out.println();
+		System.out.println("Total Return of Investment [%]: " + result.getSummedReturn()*100);
+		System.out.println("Confusion Matrix:");
+		result.getTotalPerformance().printConfusionMatrix();
+		System.out.println();
+		System.out.println("Precision for Up Movement: " +result.getTotalPerformance().getPrecision(Change.UP));
+		System.out.println("Precision for Down Movement: " +result.getTotalPerformance().getPrecision(Change.DOWN));
+		System.out.println();
+		System.out.println("Precision values when ignoring Examples that were for Equal:");
+		System.out.println();
+		System.out.println("Precision for Up Movement: " +result.getTotalPerformance().getEqualIgnoredPrecision(Change.UP));
+		System.out.println("Precision for Down Movement: " +result.getTotalPerformance().getEqualIgnoredPrecision(Change.DOWN));
+		//System.out.println(result.getTotalPerformance().getNumClassifiedExamples());
 	}
 
+	private static File getEvaluationResultFile(AnnotatedEventType e) {
+		File comp = getOrCreateCompanyDir(e);
+		File programState = getOrCreateProgramStateDir(comp);
+		return new File(programState.getAbsolutePath() + File.separator + "evaluationResult.obj");
+	}
 
 	private static void multiStream(int d,AnnotatedEventType toPredict) throws IOException, ClassNotFoundException {
 		System.out.println("beginning company " + toPredict.getCompanyID());

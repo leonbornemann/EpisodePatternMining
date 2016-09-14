@@ -25,7 +25,7 @@ public class NoAggregationEvaluator extends Evaluator{
 	private String targetCompanyID;
 	private int d;
 
-	public void eval(int d, File predictionsTargetFile, File lowLevelStreamDirDesktop, String targetCompanyID) throws IOException {
+	public void eval(int d, File predictionsTargetFile, File lowLevelStreamDirDesktop, String targetCompanyID, File evaluationResultFile) throws IOException {
 		this.d= d;
 		this.targetCompanyID = "\""+targetCompanyID+"\"";
 		this.lowLevelStreamDirDesktop = lowLevelStreamDirDesktop;
@@ -37,12 +37,12 @@ public class NoAggregationEvaluator extends Evaluator{
 			File file = buildFile(filename,lowLevelStreamDirDesktop);
 			assert(file.exists());
 		}
-		//evalMetrics(byDay,filenames);
-		evalMetricsAndRateOfReturn(byDay,filenames);
+		evalMetricsAndRateOfReturn(byDay,filenames,evaluationResultFile);
 	}
 	
 	private void evalMetricsAndRateOfReturn(Map<LocalDate, List<Pair<LocalDateTime, Change>>> byDay,
-			Map<LocalDate, String> filenames) throws IOException {
+			Map<LocalDate, String> filenames, File evaluationResultFile) throws IOException {
+		EvaluationResult result = new EvaluationResult();
 		PredictorPerformance totalPerformance = new PredictorPerformance();
 		double thisDayStartingPrice = 93.57; //TODO: get the starting price from somewhere
 		InvestmentTracker tracker = new InvestmentTracker(thisDayStartingPrice);
@@ -58,11 +58,15 @@ public class NoAggregationEvaluator extends Evaluator{
 			System.out.println("Results for day " + day.format(StandardDateTimeFormatter.getStandardDateFormatter()));
 			print(thisDayPerformance);
 			System.out.println("Return of investment: " + tracker.rateOfReturn());
+			result.putReturnOfInvestment(day,tracker.rateOfReturn());
+			result.putMetricPerformance(day,thisDayPerformance);
 			System.out.println("--------------------------------------------------------------------");
 			tracker = new InvestmentTracker(tracker.getPrice(), tracker.netWorth());
 		}
+		result.setTotalReturnOfInvestment(tracker.rateOfReturn(startingInvestment));
 		print(totalPerformance);
 		System.out.println("total return of investment: " + tracker.rateOfReturn(startingInvestment));
+		result.serialize(evaluationResultFile);
 	}
 
 	private void print(PredictorPerformance perf) {

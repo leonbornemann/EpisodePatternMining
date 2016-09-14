@@ -1,9 +1,16 @@
 package prediction.data.stream;
 
+import java.io.Serializable;
+import java.util.Collection;
+
 import prediction.data.Change;
 
-public class PredictorPerformance {
+public class PredictorPerformance implements Serializable{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private int[][] confusionMatrix = new int[3][3];
 	
 	private int toIndex(Change change){
@@ -14,6 +21,14 @@ public class PredictorPerformance {
 		} else{
 			return 2;
 		}
+	}
+	
+	public PredictorPerformance(){
+		
+	}
+	
+	public PredictorPerformance(Collection<PredictorPerformance> collection ){
+		collection.forEach(perf ->this.addAllExamples(perf));
 	}
 	
 	public void addTestExample(Change predicted, Change actual){
@@ -32,6 +47,18 @@ public class PredictorPerformance {
 		return (double) confusionMatrix[i][i] / (confusionMatrix[i][0] + confusionMatrix[i][1] + confusionMatrix[i][2] );
 	}
 	
+	public double getEqualIgnoredRecall(Change change){
+		assert(change != Change.EQUAL);
+		int i = toIndex(change);
+		return (double) confusionMatrix[i][i] / (confusionMatrix[i][0] + confusionMatrix[i][2] );
+	}
+	
+	public double getEqualIgnoredPrecision(Change change){
+		assert(change != Change.EQUAL);
+		int i = toIndex(change);
+		return (double) confusionMatrix[i][i] / (confusionMatrix[0][i] + confusionMatrix[2][i] );
+	}
+	
 	public void printConfusionMatrix(){
 		System.out.println("\t\t\t Predicted");
 		System.out.println("\t\t UP \t EQUAL \t DOWN");
@@ -46,6 +73,16 @@ public class PredictorPerformance {
 				confusionMatrix[i][j] += thisDayPerformance.confusionMatrix[i][j];
 			}
 		}
+	}
+
+	public int getNumClassifiedExamples() {
+		int sum = 0;
+		for (int i = 0; i < confusionMatrix.length; i++) {
+			for (int j = 0; j < confusionMatrix[0].length; j++) {
+				sum += confusionMatrix[i][j];
+			}
+		}
+		return sum;
 	}
 
 }
