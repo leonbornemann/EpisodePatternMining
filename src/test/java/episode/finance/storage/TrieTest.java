@@ -50,6 +50,29 @@ public class TrieTest {
 		System.out.println(powerset.getOrDefault(null, 1));
 	}
 	
+	@Test
+	public void addAllNewTest(){
+		List<ParallelEpisodePattern> trie1Episodes = Arrays.asList(
+				new ParallelEpisodePattern(A),
+				new ParallelEpisodePattern(B),
+				new ParallelEpisodePattern(A,A)
+		);
+		List<ParallelEpisodePattern> trie2Episodes = Arrays.asList(
+				new ParallelEpisodePattern(A,B,C),
+				new ParallelEpisodePattern(B,C),
+				new ParallelEpisodePattern(A)
+		);
+		EpisodeTrie<Integer> trie1 = assignValues(trie1Episodes);
+		EpisodeTrie<Integer> trie2 = assignValues(trie2Episodes);
+		trie1.addAllNew(trie2);
+		int size=0;
+		for (EpisodeIdentifier<Integer> episodeIdentifier : trie1) {
+			size++;
+		}
+		assertEquals(5, size);
+		assertEquals(0, trie1.getValue(new ParallelEpisodePattern(A)).intValue());
+	}
+	
 	private HashMap<ParallelEpisodePattern, Integer> initPowerset(List<AnnotatedEventType> events) {
 		HashMap<ParallelEpisodePattern,Integer> allPatterns = new HashMap<>();
 		int ansSize = (int)Math.pow(2, events.size());

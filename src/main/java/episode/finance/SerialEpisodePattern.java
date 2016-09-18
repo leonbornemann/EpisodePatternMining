@@ -20,7 +20,7 @@ public class SerialEpisodePattern implements EpisodePattern {
 	 */
 	private static final long serialVersionUID = 1L;
 	private List<AnnotatedEventType> events;
-	private EpisodeTrie<Object> trieForSelf;
+	private transient EpisodeTrie<Object> trieForSelf;
 	
 	public SerialEpisodePattern(AnnotatedEventType... events) {
 		this.events =Arrays.asList(events);

@@ -31,29 +31,32 @@ public class WindowMiner {
 		inversePredictiveWindows = new ArrayList<>();
 		nothingWindows = new ArrayList<>();
 		LocalDateTime currentTime;
-		LocalDateTime lastUsedTime =null;;
+		LocalDateTime lastUsedTimeOfEvent =null;;
 		while(stream.hasNext()){
 			AnnotatedEvent current = stream.next();
 			currentTime = current.getTimestamp();
-			if(lastUsedTime==null){
-				lastUsedTime = currentTime;
+			if(lastUsedTimeOfEvent==null){
+				lastUsedTimeOfEvent = currentTime;
 			}
 			if(predictiveWindows.size()!=numWindows && current.getEventType().equals(toPredict)){
 				FixedStreamWindow backwardsWindow = stream.getBackwardsWindow(windowDuration);
 				if(!backwardsWindow.isEmpty()){
 					predictiveWindows.add(backwardsWindow);
-					lastUsedTime = current.getTimestamp();
+					lastUsedTimeOfEvent = current.getTimestamp();
 				}
 			} else if(inversePredictiveWindows.size()!=numWindows && current.getEventType().equals(toPredict.getInverseEvent())){
 				FixedStreamWindow backwardsWindow = stream.getBackwardsWindow(windowDuration);
 				if(!backwardsWindow.isEmpty()){
 					inversePredictiveWindows.add(backwardsWindow);
-					lastUsedTime = current.getTimestamp();
+					lastUsedTimeOfEvent = current.getTimestamp();
 				}
-			} else if(nothingWindows.size()!=numWindows && ChronoUnit.SECONDS.between(lastUsedTime, currentTime) >=windowDuration*2){ 
-				lastUsedTime = current.getTimestamp();
+			} else if(nothingWindows.size()!=numWindows && ChronoUnit.SECONDS.between(lastUsedTimeOfEvent, currentTime) >=windowDuration*2){ 
+				lastUsedTimeOfEvent = current.getTimestamp();
 				FixedStreamWindow largeWindow = stream.getBackwardsWindow(windowDuration*2);
-				nothingWindows.add(largeWindow.getSubWindow(0,windowDuration));
+				FixedStreamWindow backwardsWindow = largeWindow.getSubWindow(0,windowDuration);
+				if(!backwardsWindow.isEmpty()){
+					nothingWindows.add(backwardsWindow);
+				}
 			}
 		
 			//TODO: get a window of size m where neither happens!

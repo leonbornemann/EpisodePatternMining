@@ -21,7 +21,8 @@ public class ParallelEpisodePattern implements EpisodePattern{
 	 */
 	private static final long serialVersionUID = 1L;
 	private Map<AnnotatedEventType,Integer> events;
-	private EpisodeTrie<?> trieForSelf = null;
+	
+	private transient EpisodeTrie<?> trieForSelf = null;
 	
 	public ParallelEpisodePattern(Map<AnnotatedEventType,Integer> events) {
 		this.events =events;

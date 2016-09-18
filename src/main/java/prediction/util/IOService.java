@@ -17,6 +17,7 @@ import java.util.Set;
 
 import episode.finance.EpisodePattern;
 import prediction.data.AnnotatedEventType;
+import prediction.mining.Method;
 
 public class IOService {
 
@@ -114,22 +115,45 @@ public class IOService {
 		return companyDir;
 	}
 	
-	public static File getEvaluationResultFile(String companyId) {
+	public static File getEvaluationResultFile(String companyId, Method method) {
 		File comp = getOrCreateCompanyDir(companyId);
 		File programState = getOrCreateProgramStateDir(comp);
-		return new File(programState.getAbsolutePath() + File.separator + "evaluationResult.obj");
+		if(method==Method.PERMS){
+			return new File(programState.getAbsolutePath() + File.separator + "evaluationResult.obj");
+		} else{
+			return new File(programState.getAbsolutePath() + File.separator + Method.FBSWC + "_evaluationResult.obj");
+		}
 	}
 	
 
-	public static File buildTargetMovementFile(String companyId) {
+	public static File buildTargetMovementFile(String companyId, Method method) {
 		File companyDir = getOrCreateCompanyDir(companyId);
-		return new File(companyDir.getAbsolutePath() + File.separator + "targetMovement.csv");
+		if(method==Method.PERMS){
+			return new File(companyDir.getAbsolutePath() + File.separator + "targetMovement.csv");
+		} else{
+			return new File(companyDir.getAbsolutePath() + File.separator + Method.FBSWC + "_targetMovement.csv");
+		}
 	}
 
 
-	public static File buildPredictionsTargetFile(String companyId) {
+	public static File buildPredictionsTargetFile(String companyId, Method method) {
 		File companyDir = getOrCreateCompanyDir(companyId);
-		return new File(companyDir.getAbsolutePath() + File.separator + "predictions.csv");
+		if(method==Method.PERMS){
+			return new File(companyDir.getAbsolutePath() + File.separator + "predictions.csv");
+		} else{
+			return new File(companyDir.getAbsolutePath() + File.separator + Method.FBSWC + "_predictions.csv");
+		}
+	}
+
+	public static File getFeatureBasedPredictorFile(String companyID) {
+		File companyDir = getOrCreateCompanyDir(companyID);
+		File programStateDir = getOrCreateProgramStateDir(companyDir);
+		return new File(programStateDir.getAbsolutePath() + File.separator + "featureBasedPredictor.object");
+	}
+
+	public static File getCSVResultFile(String companyID, Method method) {
+		File companyDir = getOrCreateCompanyDir(companyID);
+		return new File(companyDir + File.separator +"resultsAsCSV_" + method + ".csv");
 	}
 
 }

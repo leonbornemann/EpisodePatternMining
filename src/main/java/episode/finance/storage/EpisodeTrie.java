@@ -9,9 +9,10 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import episode.finance.EpisodePattern;
+import prediction.data.AnnotatedEventType;
 import prediction.data.stream.FixedStreamWindow;
 
-public class EpisodeTrie<T> {
+public class EpisodeTrie<T> implements Iterable<EpisodeIdentifier<T>>{
 
 	private EpisodeTrieNode<T> root;
 	private int size =0;
@@ -21,23 +22,27 @@ public class EpisodeTrie<T> {
 	}
 	
 	public void setValue(EpisodePattern e,T v){
-		root.setValue(e.getCanonicalListRepresentation(),v);
+		setValue(e.getCanonicalListRepresentation(),v);
 		size++;
 	}
 	
+	private void setValue(List<AnnotatedEventType> canonicalListRepresentation, T v) {
+		root.setValue(canonicalListRepresentation,v);
+	}
+
 	public T getValue(EpisodePattern e){
-		return root.getValue(e);
+		return root.getValue(e.getCanonicalListRepresentation());
 	}
 	
 	public boolean hasValue(EpisodePattern e){
-		return root.getValue(e)!=null;
+		return hasValue(e.getCanonicalListRepresentation());
+	}
+
+	private boolean hasValue(List<AnnotatedEventType> canonicalListRepresentation) {
+		return root.getValue(canonicalListRepresentation)!=null;
 	}
 
 	public Iterator<EpisodeIdentifier<T>> bfsIterator() {
-		return new BFSTrieIterator<T>(root);
-	}
-
-	public Iterator<EpisodeIdentifier<T>> filteredIterator() {
 		return new BFSTrieIterator<T>(root);
 	}
 
@@ -48,5 +53,19 @@ public class EpisodeTrie<T> {
 
 	public Stream<EpisodeIdentifier<T>> stream() {
 		return StreamSupport.stream(Spliterators.spliteratorUnknownSize(bfsIterator(), Spliterator.ORDERED),false);
+	}
+
+	public void addAllNew(EpisodeTrie<T> other) {
+		for (EpisodeIdentifier<T> episodeIdentifier : other) {
+			List<AnnotatedEventType> canonicalEpisodeRepresentation = episodeIdentifier.getCanonicalEpisodeRepresentation();
+			if(!hasValue(canonicalEpisodeRepresentation)){
+				setValue(canonicalEpisodeRepresentation, episodeIdentifier.getAssociatedValue());
+			}
+		}
+	}
+
+	@Override
+	public Iterator<EpisodeIdentifier<T>> iterator() {
+		return bfsIterator();
 	}
 }

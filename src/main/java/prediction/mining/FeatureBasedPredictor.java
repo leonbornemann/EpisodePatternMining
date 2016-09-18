@@ -10,6 +10,7 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Set;
@@ -25,6 +26,11 @@ import org.apache.spark.mllib.tree.RandomForest;
 import org.apache.spark.mllib.tree.model.RandomForestModel;
 
 import episode.finance.EpisodePattern;
+import episode.finance.ParallelEpisodePattern;
+import episode.finance.SerialEpisodePattern;
+import episode.finance.storage.EpisodeIdentifier;
+import episode.finance.storage.EpisodeTrie;
+import episode.lossy_counting.SerialEpisode;
 import prediction.data.AnnotatedEventType;
 import prediction.data.Change;
 import prediction.data.stream.FixedStreamWindow;
@@ -34,7 +40,8 @@ import util.Pair;
 public class FeatureBasedPredictor implements PredictiveModel {
 	
 	private static String sparkLaptopPath = "C:\\Users\\LeonBornemann\\Documents\\Uni\\Master thesis\\spark-2.0.0-bin-hadoop2.7\\";
-
+	private static JavaSparkContext jsc;
+	
 	private int featuresToKeep = 1000; //TODO - parameter?
 	private int seed = 13;
 	private List<FixedStreamWindow> upExamples;
@@ -49,7 +56,7 @@ public class FeatureBasedPredictor implements PredictiveModel {
 		this.upExamples = upExamples;
 		this.downExamples = downExamples;
 		this.neutralExamples = neutralExamples;
-		HashSet<EpisodePattern> allFrequent = mineFrequentEpisodes(eventAlphabet, s);
+		Pair<EpisodeTrie<List<Boolean>>,EpisodeTrie<List<Boolean>>> allFrequent = mineFrequentEpisodes(eventAlphabet, s);
 		//feature selection via information gain:
 		bestEpisodes = selectBest(allFrequent);
 		//use apache spark's mlib to train random forest
@@ -80,7 +87,9 @@ public class FeatureBasedPredictor implements PredictiveModel {
 
 	private void buildModel() {
 		SparkConf sparkConf = new SparkConf().setAppName("JavaRandomForestClassificationExample").setMaster("local");
-		JavaSparkContext jsc = new JavaSparkContext(sparkConf);
+		if(jsc ==null){
+			jsc = new JavaSparkContext(sparkConf);
+		}
 		JavaRDD<LabeledPoint> trainingData = buildTrainingData(jsc,bestEpisodes);
 		// Train a RandomForest model.
 		// Empty categoricalFeaturesInfo indicates all features are continuous.
@@ -115,28 +124,45 @@ public class FeatureBasedPredictor implements PredictiveModel {
 	 * @param s
 	 * @return
 	 */
-	private HashSet<EpisodePattern> mineFrequentEpisodes(Set<AnnotatedEventType> eventAlphabet, int s) {
+	private Pair<EpisodeTrie<List<Boolean>>,EpisodeTrie<List<Boolean>>> mineFrequentEpisodes(Set<AnnotatedEventType> eventAlphabet, int s) {
 		EpisodeDiscovery discovery = new EpisodeDiscovery();
-		HashSet<EpisodePattern> allFrequent = new HashSet<>();
-		allFrequent.addAll(discovery.mineFrequentEpisodes(upExamples, eventAlphabet, s).keySet());
-		allFrequent.addAll(discovery.mineFrequentEpisodes(downExamples, eventAlphabet, s).keySet());
-		allFrequent.addAll(discovery.mineFrequentEpisodes(neutralExamples, eventAlphabet, s).keySet());
+		Pair<EpisodeTrie<List<Boolean>>,EpisodeTrie<List<Boolean>>> allFrequent = discovery.mineFrequentEpisodes(upExamples, eventAlphabet, s);
+		Pair<EpisodeTrie<List<Boolean>>, EpisodeTrie<List<Boolean>>> fromDown = discovery.mineFrequentEpisodes(downExamples, eventAlphabet, s);
+		allFrequent.getFirst().addAllNew(fromDown.getFirst());
+		allFrequent.getSecond().addAllNew(fromDown.getSecond());
+		Pair<EpisodeTrie<List<Boolean>>, EpisodeTrie<List<Boolean>>> fromNeutral = discovery.mineFrequentEpisodes(neutralExamples, eventAlphabet, s);
+		allFrequent.getFirst().addAllNew(fromNeutral.getFirst());
+		allFrequent.getSecond().addAllNew(fromNeutral.getSecond());
 		return allFrequent;
 	}
 
-	private List<EpisodePattern> selectBest(HashSet<EpisodePattern> allFrequent) {
+	private List<EpisodePattern> selectBest(Pair<EpisodeTrie<List<Boolean>>,EpisodeTrie<List<Boolean>>> allFrequent) {
 		List<Change> classAttribute = buildClassAttribute();
 		PriorityQueue<Pair<EpisodePattern,Double>> bestEpisodes = new PriorityQueue<>( (p1,p2) -> p1.getSecond().compareTo(p2.getSecond()) );
-		for(EpisodePattern pattern : allFrequent){
-			double infoGain = calcInfoGain(classAttribute,pattern);
-			if(bestEpisodes.size()!=featuresToKeep){
-				bestEpisodes.add(new Pair<>(pattern,infoGain));
-			} else if(bestEpisodes.peek().getSecond() < infoGain){
-				bestEpisodes.poll();
-				bestEpisodes.add(new Pair<>(pattern,infoGain));
-			}
+		Iterator<EpisodeIdentifier<List<Boolean>>> serialIterator = allFrequent.getFirst().bfsIterator();
+		while (serialIterator.hasNext()) {
+			EpisodeIdentifier<List<Boolean>> id = serialIterator.next();
+			EpisodePattern pattern = new SerialEpisodePattern(id.getCanonicalEpisodeRepresentation());
+			insertIfBetterInfoGain(classAttribute, bestEpisodes, pattern);
+		}
+		Iterator<EpisodeIdentifier<List<Boolean>>> parallelIterator = allFrequent.getSecond().bfsIterator();
+		while (parallelIterator.hasNext()) {
+			EpisodeIdentifier<List<Boolean>> id = parallelIterator.next();
+			EpisodePattern pattern = new ParallelEpisodePattern(id.getCanonicalEpisodeRepresentation());
+			insertIfBetterInfoGain(classAttribute, bestEpisodes, pattern);
 		}
 		return bestEpisodes.stream().map(p -> p.getFirst()).collect(Collectors.toList());
+	}
+
+	private void insertIfBetterInfoGain(List<Change> classAttribute,
+			PriorityQueue<Pair<EpisodePattern, Double>> bestEpisodes, EpisodePattern pattern) {
+		double infoGain = calcInfoGain(classAttribute,pattern);
+		if(bestEpisodes.size()!=featuresToKeep){
+			bestEpisodes.add(new Pair<>(pattern,infoGain));
+		} else if(bestEpisodes.peek().getSecond() < infoGain){
+			bestEpisodes.poll();
+			bestEpisodes.add(new Pair<>(pattern,infoGain));
+		}
 	}
 	
 	private JavaRDD<LabeledPoint> buildTrainingData(JavaSparkContext jsc,List<EpisodePattern> bestEpisodes) {

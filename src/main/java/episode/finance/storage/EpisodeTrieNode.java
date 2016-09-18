@@ -34,22 +34,22 @@ public class EpisodeTrieNode<T> {
 		setValue(e,0,v);
 	}
 
-	private void setValue(List<AnnotatedEventType> e, int eventIndex, T v) {
-		AnnotatedEventType curEventType = e.get(eventIndex);
-		if(e.size()-1 == eventIndex){
+	private void setValue(List<AnnotatedEventType> canonicalRepresentation, int eventIndex, T v) {
+		AnnotatedEventType curEventType = canonicalRepresentation.get(eventIndex);
+		if(canonicalRepresentation.size()-1 == eventIndex){
 			values.put(curEventType, v);
 		} else if(children.containsKey(curEventType)){
-			children.get(curEventType).setValue(e, eventIndex+1, v);
+			children.get(curEventType).setValue(canonicalRepresentation, eventIndex+1, v);
 		} else{
 			//create new child
 			EpisodeTrieNode<T> newChild = new EpisodeTrieNode<T>(curEventType,this);
 			children.put(curEventType, newChild);
-			newChild.setValue(e, eventIndex+1, v);
+			newChild.setValue(canonicalRepresentation, eventIndex+1, v);
 		}
 	}
 
-	public T getValue(EpisodePattern e) {
-		return getValue(e.getCanonicalListRepresentation(),0);
+	public T getValue(List<AnnotatedEventType> canonicalRepresentation) {
+		return getValue(canonicalRepresentation,0);
 	}
 
 	private T getValue(List<AnnotatedEventType> e, int eventIndex) {

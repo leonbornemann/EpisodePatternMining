@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import episode.finance.EpisodePattern;
 import prediction.data.stream.PredictorPerformance;
@@ -53,15 +54,6 @@ public class EvaluationResult implements Serializable{
 		in.close();
 		return result;
 	}
-	
-	
-	public static Map<EpisodePattern, Double> loadEpisodeMap(File file) throws FileNotFoundException, IOException, ClassNotFoundException {
-		ObjectInputStream in  = new ObjectInputStream(new FileInputStream(file));
-		@SuppressWarnings("unchecked")
-		Map<EpisodePattern, Double> episodeMap = (Map<EpisodePattern, Double>) in.readObject();
-		in.close();
-		return episodeMap;
-	}
 
 	public BigDecimal getTotalReturn() {
 		return totalReturn;
@@ -79,6 +71,10 @@ public class EvaluationResult implements Serializable{
 		warnings.add(string);
 	}
 
+	public Set<LocalDate> getAllDays(){
+		assert(performanceByDay.keySet().equals(returnsByDay.keySet()));
+		return performanceByDay.keySet();
+	}
 	
 
 }

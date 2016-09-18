@@ -68,7 +68,9 @@ public class LowToAnnotatedTransformator {
 		Map<String,List<AnnotatedEvent>> annotatedByCompany = byCompany.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> toAnnotated(e.getValue())));
 		List<AnnotatedEvent> allAnnotated = new ArrayList<>();
 		annotatedByCompany.values().forEach(e -> allAnnotated.addAll(e));
-		AnnotatedEvent.serialize(allAnnotated,outFile);
+		if(!allAnnotated.isEmpty()){
+			AnnotatedEvent.serialize(allAnnotated,outFile);
+		}
 	}
 
 	private List<AnnotatedEvent> toAnnotated(List<LowLevelEvent> lowLevelEvents) {

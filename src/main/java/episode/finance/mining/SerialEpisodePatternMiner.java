@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import episode.finance.EpisodePattern;
 import episode.finance.SerialEpisodePattern;
@@ -19,6 +20,7 @@ import prediction.data.AnnotatedEvent;
 import prediction.data.AnnotatedEventType;
 import prediction.data.stream.FixedStreamWindow;
 import prediction.data.stream.StreamWindow;
+import prediction.util.StandardDateTimeFormatter;
 
 public class SerialEpisodePatternMiner extends EpisodePatternMiner<SerialEpisodePattern>{
 
@@ -36,6 +38,7 @@ public class SerialEpisodePatternMiner extends EpisodePatternMiner<SerialEpisode
 		}
 		for(int i=0;i<windows.size();i++){
 			StreamWindow window = windows.get(i);
+			assert(window.getEvents().size()!=0);
 			Map<AnnotatedEventType, List<SimpleSerialEpisodeIdentifierRecognitionDFA<List<Boolean>>>> waits = dfas.stream().collect(Collectors.groupingBy(SimpleSerialEpisodeIdentifierRecognitionDFA::peek));
 			Map<LocalDateTime, List<AnnotatedEvent>> byTimestamp = window.getEventTypesByTimestamp();
 			final int windowIndex = i;
