@@ -25,16 +25,16 @@ import org.apache.spark.mllib.regression.LabeledPoint;
 import org.apache.spark.mllib.tree.RandomForest;
 import org.apache.spark.mllib.tree.model.RandomForestModel;
 
+import data.AnnotatedEventType;
+import data.Change;
+import data.stream.FixedStreamWindow;
+import data.stream.StreamWindow;
 import episode.finance.EpisodePattern;
 import episode.finance.ParallelEpisodePattern;
 import episode.finance.SerialEpisodePattern;
 import episode.finance.storage.EpisodeIdentifier;
 import episode.finance.storage.EpisodeTrie;
 import episode.lossy_counting.SerialEpisode;
-import prediction.data.AnnotatedEventType;
-import prediction.data.Change;
-import prediction.data.stream.FixedStreamWindow;
-import prediction.data.stream.StreamWindow;
 import util.Pair;
 
 public class FeatureBasedPredictor implements PredictiveModel {

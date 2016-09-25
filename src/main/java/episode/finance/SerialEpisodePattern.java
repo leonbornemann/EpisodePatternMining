@@ -6,12 +6,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import data.AnnotatedEventType;
 import episode.finance.recognition.ContinousSerialEpisodeRecognitionDFA;
 import episode.finance.recognition.SimpleEpisodeRecognitionDFA;
 import episode.finance.recognition.SimpleParallelEpisodeIdentifierRecognitionDFA;
 import episode.finance.recognition.SimpleSerialEpisodeIdentifierRecognitionDFA;
 import episode.finance.storage.EpisodeTrie;
-import prediction.data.AnnotatedEventType;
 
 public class SerialEpisodePattern implements EpisodePattern {
 	

@@ -7,11 +7,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
+
+import data.AnnotatedEventType;
+
 import java.util.Set;
 import java.util.TreeMap;
 
 import episode.finance.EpisodePattern;
-import prediction.data.AnnotatedEventType;
 
 public class EpisodeTrieNode<T> {
 

@@ -10,11 +10,11 @@ import java.util.Map;
 
 import org.junit.Test;
 
+import data.AnnotatedEventType;
+import data.Change;
 import episode.finance.EpisodePattern;
 import episode.finance.ParallelEpisodePattern;
 import episode.finance.SerialEpisodePattern;
-import prediction.data.AnnotatedEventType;
-import prediction.data.Change;
 import prediction.mining.Main;
 import prediction.util.IOService;
 

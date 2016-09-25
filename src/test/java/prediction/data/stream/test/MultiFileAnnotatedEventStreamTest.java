@@ -9,11 +9,11 @@ import java.util.List;
 
 import org.junit.Test;
 
-import prediction.data.AnnotatedEvent;
-import prediction.data.AnnotatedEventType;
-import prediction.data.Change;
-import prediction.data.stream.MultiFileAnnotatedEventStream;
-import prediction.data.stream.StreamWindow;
+import data.AnnotatedEvent;
+import data.AnnotatedEventType;
+import data.Change;
+import data.stream.MultiFileAnnotatedEventStream;
+import data.stream.StreamWindow;
 
 public class MultiFileAnnotatedEventStreamTest {
 

@@ -15,8 +15,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import data.AnnotatedEventType;
 import episode.finance.EpisodePattern;
-import prediction.data.AnnotatedEventType;
 import prediction.mining.Method;
 
 public class IOService {
@@ -154,6 +154,14 @@ public class IOService {
 	public static File getCSVResultFile(String companyID, Method method) {
 		File companyDir = getOrCreateCompanyDir(companyID);
 		return new File(companyDir + File.separator +"resultsAsCSV_" + method + ".csv");
+	}
+
+	public static File getTotalResultByDayCsvFile(Method method) {
+		return new File("resources/AveragedResults/"+method+".csv");
+	}
+
+	public static File getTotalResultByCompanyCsvFile(Method method) {
+		return new File("resources/AveragedResults/"+method+"_byCompany.csv");
 	}
 
 }

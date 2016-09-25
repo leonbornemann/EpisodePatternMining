@@ -1,8 +1,8 @@
 package episode.finance.recognition;
 
+import data.AnnotatedEventType;
 import episode.finance.SerialEpisodePattern;
 import episode.finance.storage.EpisodeIdentifier;
-import prediction.data.AnnotatedEventType;
 
 public class SimpleSerialEpisodeIdentifierRecognitionDFA<T> implements SimpleEpisodeRecognitionDFA<T>{
 

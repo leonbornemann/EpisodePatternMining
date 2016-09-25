@@ -15,11 +15,11 @@ import java.util.Set;
 
 import org.junit.Test;
 
+import data.AnnotatedEventType;
+import data.Change;
 import episode.finance.ParallelEpisodePattern;
 import episode.lossy_counting.EventType;
 import episode.lossy_counting.SerialEpisode;
-import prediction.data.AnnotatedEventType;
-import prediction.data.Change;
 import trie.SerialEpisodeTrie;
 
 public class TrieTest {

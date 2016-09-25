@@ -16,8 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import data.stream.PredictorPerformance;
 import episode.finance.EpisodePattern;
-import prediction.data.stream.PredictorPerformance;
 
 public class EvaluationResult implements Serializable{
 
@@ -74,6 +74,14 @@ public class EvaluationResult implements Serializable{
 	public Set<LocalDate> getAllDays(){
 		assert(performanceByDay.keySet().equals(returnsByDay.keySet()));
 		return performanceByDay.keySet();
+	}
+
+	public BigDecimal getReturn(LocalDate date) {
+		return returnsByDay.get(date);
+	}
+
+	public PredictorPerformance getPerformance(LocalDate date) {
+		return performanceByDay.get(date);
 	}
 	
 

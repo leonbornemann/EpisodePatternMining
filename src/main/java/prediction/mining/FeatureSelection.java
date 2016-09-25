@@ -5,7 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import prediction.data.Change;
+import data.Change;
 
 public class FeatureSelection {
 

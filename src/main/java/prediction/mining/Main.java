@@ -23,15 +23,19 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import data.AnnotatedEvent;
+import data.AnnotatedEventType;
+import data.Change;
+import data.stream.FixedStreamWindow;
+import data.stream.MultiFileAnnotatedEventStream;
+import data.stream.PredictorPerformance;
+import data.stream.StreamWindow;
+import data.stream.StreamWindowSlider;
 import episode.finance.EpisodePattern;
-import prediction.data.AnnotatedEvent;
-import prediction.data.AnnotatedEventType;
-import prediction.data.Change;
-import prediction.data.stream.FixedStreamWindow;
-import prediction.data.stream.MultiFileAnnotatedEventStream;
-import prediction.data.stream.StreamWindow;
-import prediction.data.stream.StreamWindowSlider;
+import prediction.evaluation.CompanyBasedResultSerializer;
+import prediction.evaluation.DayBasedResultSerializer;
 import prediction.evaluation.EvaluationFiles;
 import prediction.evaluation.EvaluationResult;
 import prediction.evaluation.NoAggregationEvaluator;
@@ -53,64 +57,14 @@ public class Main {
 		int d = 90;
 		Set<String> annotatedCompanyCodes = new SemanticKnowledgeCollector().getAnnotatedCompanyCodes();
 		//buildAndApplyModel(method, d, annotatedCompanyCodes);
-		//runEvaluation(d, annotatedCompanyCodes,method);
+		runEvaluation(d, annotatedCompanyCodes,method);
 		//printEvaluationResult(annotatedCompanyCodes,method);
-		evaluationResultToCSV(annotatedCompanyCodes,method);
-	}
-
-	private static void evaluationResultToCSV(Set<String> annotatedCompanyCodes, Method method) throws FileNotFoundException, ClassNotFoundException, IOException {
-		Map<String,EvaluationResult> results = new HashMap<>();
-		for (String id : annotatedCompanyCodes) {
-			results.put(id,EvaluationResult.deserialize(IOService.getEvaluationResultFile(id,method)));
-		}
-		Set<LocalDate> allDays = results.values().stream().flatMap(r -> r.getAllDays().stream()).collect(Collectors.toSet());
-		for(String id: annotatedCompanyCodes){
-			File csvResultFile = IOService.getCSVResultFile(id,method);
-			PrintWriter writer = new PrintWriter(new FileWriter(csvResultFile));
-			List<LocalDate> orderedDates = allDays.stream().sorted().collect(Collectors.toList());
-			writer.println(buildHeadLine());
-			for(LocalDate date : orderedDates){
-				writer.println(buildResultString(date,results.get(date)));
-			}
-			writer.close();
-		}
-	}
-
-	private static String buildResultString(LocalDate date,EvaluationResult evaluationResult) {
-		int roundTo = 5;
-		String dateString = date.format(StandardDateTimeFormatter.getStandardDateFormatter());
-		return dateString+ "," +
-				getAsRoundedString(evaluationResult.getSummedReturn(),roundTo) + "," +
-				getAsRoundedString(evaluationResult.getTotalPerformance().getPrecision(Change.UP),roundTo) + "," +
-				getAsRoundedString(evaluationResult.getTotalPerformance().getPrecision(Change.DOWN),roundTo) + "," + 
-				getAsRoundedString(evaluationResult.getTotalPerformance().getRecall(Change.UP),roundTo) + ","  + 
-				getAsRoundedString(evaluationResult.getTotalPerformance().getRecall(Change.DOWN),roundTo) + ","  + 
-				getAsRoundedString(evaluationResult.getTotalPerformance().getEqualIgnoredPrecision(Change.UP),roundTo) + ","  + 
-				getAsRoundedString(evaluationResult.getTotalPerformance().getEqualIgnoredPrecision(Change.DOWN),roundTo) + ","  + 
-				getAsRoundedString(evaluationResult.getTotalPerformance().getEqualIgnoredRecall(Change.UP),roundTo) + ","  + 
-				getAsRoundedString(evaluationResult.getTotalPerformance().getEqualIgnoredRecall(Change.DOWN),roundTo);
-	}
-
-	private static String getAsRoundedString(double val, int roundTo) {
-		return getAsRoundedString(new BigDecimal(val), roundTo);
-	}
-
-	private static String getAsRoundedString(BigDecimal summedReturn, int roundTo) {
-		return summedReturn.setScale(roundTo, RoundingMode.FLOOR).toString();
-	}
-
-	private static String buildHeadLine() {
-		String result = "date,"+
-				"precision_" + Change.UP + "," +
-				"precision_" + Change.DOWN + "," +
-				"recall_" + Change.UP + "," +
-				"recall_" + Change.DOWN + "," +
-				"precisionIgnoreEqual_" + Change.UP + "," +
-				"precisionIgnoreEqual_" + Change.DOWN + "," +
-				"recallIgnoreEqual_" + Change.UP + "," +
-				"recallIgnoreEqual_" + Change.DOWN;
-		System.out.println(result);
-		return result;
+				
+		DayBasedResultSerializer dayBasedSerializer = new DayBasedResultSerializer();
+		dayBasedSerializer.toCSV(annotatedCompanyCodes,method);
+		
+		CompanyBasedResultSerializer serializer = new CompanyBasedResultSerializer();
+		serializer.toCSV(annotatedCompanyCodes,method);
 	}
 
 	private static void buildAndApplyModel(Method method, int d, Set<String> annotatedCompanyCodes)
@@ -193,7 +147,7 @@ public class Main {
 		do{
 			StreamWindow currentWindow = slider.getCurrentWindow();
 			Change predicted = featureBasedPredictor.predict(currentWindow);
-			LocalDateTime curTs = currentWindow.getWindowBorders().getFirst();
+			LocalDateTime curTs = currentWindow.getWindowBorders().getSecond();
 			predictions.add(new Pair<>(curTs,predicted));
 			List<AnnotatedEvent> droppedOut = slider.slideForward();
 			droppedOut.stream().filter(e -> e.getEventType().getCompanyID().equals(toPredict.getCompanyID())).forEach(e -> targetMovement.add(new Pair<>(e.getTimestamp(),e.getEventType().getChange())));

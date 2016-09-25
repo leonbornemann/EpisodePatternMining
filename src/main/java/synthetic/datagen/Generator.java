@@ -12,13 +12,13 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import data.AnnotatedEvent;
+import data.AnnotatedEventType;
+import data.stream.AnnotatedEventStream;
+import data.stream.InMemoryAnnotatedEventStream;
 import episode.finance.EpisodePattern;
 import episode.finance.SerialEpisodePattern;
 import episode.finance.recognition.SimpleSerialEpisodeIdentifierRecognitionDFA;
-import prediction.data.AnnotatedEvent;
-import prediction.data.AnnotatedEventType;
-import prediction.data.stream.AnnotatedEventStream;
-import prediction.data.stream.InMemoryAnnotatedEventStream;
 import prediction.util.StandardDateTimeFormatter;
 
 public class Generator {

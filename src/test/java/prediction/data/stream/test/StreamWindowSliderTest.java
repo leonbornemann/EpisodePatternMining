@@ -7,13 +7,13 @@ import java.util.List;
 
 import org.junit.Test;
 
-import prediction.data.AnnotatedEvent;
-import prediction.data.AnnotatedEventType;
-import prediction.data.Change;
-import prediction.data.stream.AnnotatedEventStream;
-import prediction.data.stream.InMemoryAnnotatedEventStream;
-import prediction.data.stream.SlidableStreamWindow;
-import prediction.data.stream.StreamWindowSlider;
+import data.AnnotatedEvent;
+import data.AnnotatedEventType;
+import data.Change;
+import data.stream.AnnotatedEventStream;
+import data.stream.InMemoryAnnotatedEventStream;
+import data.stream.SlidableStreamWindow;
+import data.stream.StreamWindowSlider;
 import util.Pair;
 
 public class StreamWindowSliderTest {

@@ -2,8 +2,8 @@ package episode.finance.recognition;
 
 import java.time.LocalDateTime;
 
+import data.AnnotatedEvent;
 import episode.finance.EpisodePattern;
-import prediction.data.AnnotatedEvent;
 import util.Pair;
 
 public interface ContinousEpisodeRecognitionDFA {

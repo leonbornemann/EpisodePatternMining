@@ -2,9 +2,9 @@ package prediction.mining;
 
 import java.util.Map;
 
+import data.Change;
+import data.stream.StreamWindow;
 import episode.finance.EpisodePattern;
-import prediction.data.Change;
-import prediction.data.stream.StreamWindow;
 
 public class PredictiveEpisodeModel implements PredictiveModel {
 

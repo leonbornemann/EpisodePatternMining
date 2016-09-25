@@ -6,11 +6,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import data.AnnotatedEventType;
+import data.stream.FixedStreamWindow;
 import episode.finance.EpisodePattern;
 import episode.finance.mining.ParallelEpisodePatternMiner;
 import episode.finance.mining.SerialEpisodePatternMiner;
-import prediction.data.AnnotatedEventType;
-import prediction.data.stream.FixedStreamWindow;
 
 public class PredictiveMiner {
 

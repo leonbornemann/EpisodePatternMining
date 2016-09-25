@@ -4,11 +4,11 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
+import data.AnnotatedEventType;
+import data.Change;
+import data.stream.AnnotatedEventStream;
+import data.stream.PredictorPerformance;
 import episode.finance.EpisodePattern;
-import prediction.data.AnnotatedEventType;
-import prediction.data.Change;
-import prediction.data.stream.AnnotatedEventStream;
-import prediction.data.stream.PredictorPerformance;
 import prediction.mining.PredictiveMiner;
 import prediction.mining.WindowMiner;
 import semantic.SemanticKnowledgeCollector;

@@ -10,14 +10,14 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import data.AnnotatedEventType;
+import data.stream.FixedStreamWindow;
+import data.stream.StreamWindow;
 import episode.finance.EpisodePattern;
 import episode.finance.ParallelEpisodePattern;
 import episode.finance.recognition.SimpleParallelEpisodeIdentifierRecognitionDFA;
 import episode.finance.storage.EpisodeIdentifier;
 import episode.finance.storage.EpisodeTrie;
-import prediction.data.AnnotatedEventType;
-import prediction.data.stream.FixedStreamWindow;
-import prediction.data.stream.StreamWindow;
 
 public class ParallelEpisodePatternMiner extends EpisodePatternMiner<ParallelEpisodePattern>{
 

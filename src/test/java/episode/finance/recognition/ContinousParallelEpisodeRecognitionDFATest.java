@@ -9,11 +9,11 @@ import java.util.Arrays;
 import org.junit.Before;
 import org.junit.Test;
 
+import data.AnnotatedEvent;
+import data.AnnotatedEventType;
+import data.Change;
 import episode.finance.ParallelEpisodePattern;
 import episode.finance.recognition.ContinousEpisodeRecognitionDFA;
-import prediction.data.AnnotatedEvent;
-import prediction.data.AnnotatedEventType;
-import prediction.data.Change;
 import prediction.util.StandardDateTimeFormatter;
 import util.Pair;
 

@@ -7,12 +7,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import data.AnnotatedEventType;
 import episode.finance.EpisodePattern;
 import episode.finance.ParallelEpisodePattern;
 import episode.finance.SerialEpisodePattern;
 import episode.finance.storage.EpisodeIdentifier;
 import episode.finance.storage.EpisodeTrie;
-import prediction.data.AnnotatedEventType;
 
 public abstract class EpisodePatternGenerator<E extends EpisodePattern> {
 

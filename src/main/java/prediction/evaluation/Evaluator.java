@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import prediction.data.Change;
+import data.Change;
 import prediction.util.StandardDateTimeFormatter;
 import util.Pair;
 

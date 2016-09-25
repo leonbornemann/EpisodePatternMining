@@ -7,10 +7,10 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
 
+import data.AnnotatedEvent;
+import data.AnnotatedEventType;
 import episode.finance.EpisodePattern;
 import episode.finance.ParallelEpisodePattern;
-import prediction.data.AnnotatedEvent;
-import prediction.data.AnnotatedEventType;
 import util.Pair;
 
 public class ContinousParallelEpisodeRecognitionDFA implements ContinousEpisodeRecognitionDFA {

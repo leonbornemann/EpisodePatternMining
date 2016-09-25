@@ -8,9 +8,9 @@ import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import data.AnnotatedEventType;
+import data.stream.FixedStreamWindow;
 import episode.finance.EpisodePattern;
-import prediction.data.AnnotatedEventType;
-import prediction.data.stream.FixedStreamWindow;
 
 public class EpisodeTrie<T> implements Iterable<EpisodeIdentifier<T>>{
 

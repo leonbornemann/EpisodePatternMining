@@ -3,7 +3,7 @@ package episode.finance.storage;
 import java.util.ArrayList;
 import java.util.List;
 
-import prediction.data.AnnotatedEventType;
+import data.AnnotatedEventType;
 
 public class EpisodeIdentifier<T> {
 

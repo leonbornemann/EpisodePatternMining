@@ -14,9 +14,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import prediction.data.Change;
-import prediction.data.LowLevelEvent;
-import prediction.data.stream.PredictorPerformance;
+import data.Change;
+import data.LowLevelEvent;
+import data.stream.PredictorPerformance;
 import prediction.util.StandardDateTimeFormatter;
 import util.Pair;
 
@@ -154,39 +154,57 @@ public class NoAggregationEvaluator extends Evaluator{
 		}
 	}
 
-	private Change getActualValue(LocalDateTime predictionTime, List<Pair<LocalDateTime, BigDecimal>> targetMovement) {
+	/***
+	 * only public so we can unit-test!
+	 * @param predictionTime
+	 * @param targetMovement
+	 * @return
+	 */
+	public Change getActualValue(LocalDateTime predictionTime, List<Pair<LocalDateTime, BigDecimal>> targetMovement) {
 		int i=0;
 		Pair<LocalDateTime, BigDecimal> curElem = targetMovement.get(i);
-		while(curElem.getFirst().compareTo(predictionTime)<=0 && i<targetMovement.size()){
-			curElem = targetMovement.get(i);
+		while(curElem.getFirst().compareTo(predictionTime)<=0 && i+1<targetMovement.size()){
 			i++;
+			curElem = targetMovement.get(i);
 		}
-		if(i==targetMovement.size()){
-			return Change.EQUAL;
+		BigDecimal initial;
+		if(curElem.getFirst().compareTo(predictionTime)<=0){
+			assert(i+1==targetMovement.size());
+			initial = targetMovement.get(i).getSecond();
+		} else if(i==0){
+			initial = targetMovement.get(i).getSecond(); //hotfix - this should be a rare problem?
 		} else{
-			BigDecimal initial;
-			if(i==0){
-				initial = targetMovement.get(i).getSecond(); //hotfix - this should be a rare problem?
-			} else{
-				initial = targetMovement.get(i-1).getSecond();
-			}
-			BigDecimal end = targetMovement.get(i).getSecond();
-			while(curElem.getFirst().compareTo(predictionTime.plus(d,ChronoUnit.SECONDS))  <= 0 && i<targetMovement.size()){
-				curElem = targetMovement.get(i);
-				end = curElem.getSecond();
-				i++;
-			}
-			if(end.compareTo(initial) > 0){
-				return Change.UP;
-			} else if(initial.compareTo(end)>0){
-				return Change.DOWN;
-			} else{
-				return Change.EQUAL;
-			}
+			initial = targetMovement.get(i-1).getSecond();
+		}
+		BigDecimal end = targetMovement.get(i).getSecond();
+		while(curElem.getFirst().compareTo(predictionTime.plus(d,ChronoUnit.SECONDS))  <= 0 && i+1<targetMovement.size()){
+			i++;
+			curElem = targetMovement.get(i);
+			end = curElem.getSecond();
+		}
+		if(curElem.getFirst().compareTo(predictionTime.plus(d,ChronoUnit.SECONDS)) <=0){
+			assert(i+1==targetMovement.size());
+		} else if(i==0){
+			end = targetMovement.get(i).getSecond(); //hotfix - this should be a rare problem?
+		} else{
+			end = targetMovement.get(i-1).getSecond();
+		}
+		if(end.compareTo(initial) > 0){
+			return Change.UP;
+		} else if(initial.compareTo(end)>0){
+			return Change.DOWN;
+		} else{
+			return Change.EQUAL;
 		}
 	}
 
-	private void evalRateOfReturnForDay(List<Pair<LocalDateTime, Change>> pred,List<Pair<LocalDateTime, BigDecimal>> targetMovement, InvestmentTracker tracker) {
+	/***
+	 * only public so we can unit-test
+	 * @param pred
+	 * @param targetMovement
+	 * @param tracker
+	 */
+	public void evalRateOfReturnForDay(List<Pair<LocalDateTime, Change>> pred,List<Pair<LocalDateTime, BigDecimal>> targetMovement, InvestmentTracker tracker) {
 		Collections.sort(pred, (a,b) -> a.getFirst().compareTo(b.getFirst()));
 		Collections.sort(targetMovement, (a,b) -> a.getFirst().compareTo(b.getFirst()));
 		int predIndex = 0;

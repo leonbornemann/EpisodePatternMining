@@ -6,10 +6,10 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
-import prediction.data.AnnotatedEvent;
-import prediction.data.AnnotatedEventType;
-import prediction.data.stream.AnnotatedEventStream;
-import prediction.data.stream.FixedStreamWindow;
+import data.AnnotatedEvent;
+import data.AnnotatedEventType;
+import data.stream.AnnotatedEventStream;
+import data.stream.FixedStreamWindow;
 
 public class WindowMiner {
 

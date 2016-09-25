@@ -9,8 +9,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
-import prediction.data.Change;
-import prediction.data.stream.PredictorPerformance;
+import data.Change;
+import data.stream.PredictorPerformance;
 import prediction.util.StandardDateTimeFormatter;
 import util.Pair;
 

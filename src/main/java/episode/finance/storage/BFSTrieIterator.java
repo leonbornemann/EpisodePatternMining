@@ -4,10 +4,11 @@ import java.util.ArrayDeque;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
+
+import data.AnnotatedEventType;
+
 import java.util.NoSuchElementException;
 import java.util.Queue;
-
-import prediction.data.AnnotatedEventType;
 
 public class BFSTrieIterator<T> implements Iterator<EpisodeIdentifier<T>> {
 

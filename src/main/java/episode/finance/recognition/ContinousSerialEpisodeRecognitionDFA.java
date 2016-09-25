@@ -8,10 +8,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import data.AnnotatedEvent;
+import data.AnnotatedEventType;
 import episode.finance.EpisodePattern;
 import episode.finance.SerialEpisodePattern;
-import prediction.data.AnnotatedEvent;
-import prediction.data.AnnotatedEventType;
 import util.Pair;
 
 public class ContinousSerialEpisodeRecognitionDFA implements ContinousEpisodeRecognitionDFA{

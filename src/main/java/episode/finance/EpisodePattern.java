@@ -4,9 +4,9 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
 
+import data.AnnotatedEventType;
 import episode.finance.recognition.ContinousEpisodeRecognitionDFA;
 import episode.finance.recognition.SimpleEpisodeRecognitionDFA;
-import prediction.data.AnnotatedEventType;
 
 public interface EpisodePattern extends Serializable{
 

@@ -3,11 +3,11 @@ package prediction.mining;
 import java.util.List;
 import java.util.Set;
 
+import data.AnnotatedEventType;
+import data.stream.FixedStreamWindow;
 import episode.finance.mining.ParallelEpisodePatternMiner;
 import episode.finance.mining.SerialEpisodePatternMiner;
 import episode.finance.storage.EpisodeTrie;
-import prediction.data.AnnotatedEventType;
-import prediction.data.stream.FixedStreamWindow;
 import util.Pair;
 
 public class EpisodeDiscovery {

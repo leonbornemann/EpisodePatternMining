@@ -3,9 +3,9 @@ package episode.finance.recognition;
 import java.util.HashMap;
 import java.util.Set;
 
+import data.AnnotatedEventType;
 import episode.finance.ParallelEpisodePattern;
 import episode.finance.storage.EpisodeIdentifier;
-import prediction.data.AnnotatedEventType;
 
 public class SimpleParallelEpisodeIdentifierRecognitionDFA<T> implements SimpleEpisodeRecognitionDFA<T> {
 

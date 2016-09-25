@@ -15,13 +15,13 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import data.AnnotatedEventType;
+import data.Change;
+import data.stream.FixedStreamWindow;
 import episode.finance.EpisodePattern;
 import episode.finance.SerialEpisodePattern;
 import episode.finance.storage.EpisodeIdentifier;
 import episode.finance.storage.EpisodeTrie;
-import prediction.data.AnnotatedEventType;
-import prediction.data.Change;
-import prediction.data.stream.FixedStreamWindow;
 
 public abstract class EpisodePatternMiner<E extends EpisodePattern> {
 

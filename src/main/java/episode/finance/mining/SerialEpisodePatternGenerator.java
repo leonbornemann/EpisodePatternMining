@@ -9,11 +9,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import data.AnnotatedEventType;
 import episode.finance.ParallelEpisodePattern;
 import episode.finance.SerialEpisodePattern;
 import episode.finance.storage.EpisodeIdentifier;
 import episode.finance.storage.EpisodeTrie;
-import prediction.data.AnnotatedEventType;
 
 public class SerialEpisodePatternGenerator extends EpisodePatternGenerator<SerialEpisodePattern>{
 
