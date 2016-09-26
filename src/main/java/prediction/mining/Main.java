@@ -53,24 +53,27 @@ public class Main {
 	private static File lowLevelStreamDirDesktop = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Low Level Data\\");
 	
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
-		Method method = Method.FBSWC;
+		Method method = Method.PERMS;
 		int d = 90;
 		Set<String> annotatedCompanyCodes = new SemanticKnowledgeCollector().getAnnotatedCompanyCodes();
 		//buildAndApplyModel(method, d, annotatedCompanyCodes);
-		runEvaluation(d, annotatedCompanyCodes,method);
-		//printEvaluationResult(annotatedCompanyCodes,method);
+		//runEvaluation(d, annotatedCompanyCodes,method);
+		printEvaluationResult(annotatedCompanyCodes,method);
 				
-		DayBasedResultSerializer dayBasedSerializer = new DayBasedResultSerializer();
-		dayBasedSerializer.toCSV(annotatedCompanyCodes,method);
+		//DayBasedResultSerializer dayBasedSerializer = new DayBasedResultSerializer();
+		//dayBasedSerializer.toCSV(annotatedCompanyCodes,method);
 		
-		CompanyBasedResultSerializer serializer = new CompanyBasedResultSerializer();
-		serializer.toCSV(annotatedCompanyCodes,method);
+		//CompanyBasedResultSerializer serializer = new CompanyBasedResultSerializer();
+		//serializer.toCSV(annotatedCompanyCodes,method);
 	}
 
 	private static void buildAndApplyModel(Method method, int d, Set<String> annotatedCompanyCodes)
 			throws IOException, ClassNotFoundException {
 		Set<AnnotatedEventType> eventAlphabet = AnnotatedEventType.loadEventAlphabet(annotatedCompanyCodes);
-		for(AnnotatedEventType toPredict : eventAlphabet.stream().filter(e -> e.getChange()==Change.UP).collect(Collectors.toList())){
+		List<AnnotatedEventType> toDo = eventAlphabet.stream().filter(e -> e.getChange()==Change.UP).collect(Collectors.toList());
+		for(int i=0;i<toDo.size();i++){
+			AnnotatedEventType toPredict = toDo.get(i);
+			System.out.println("Iteration "+i + "out of "+toDo.size());
 			System.out.println("beginning company " + toPredict.getCompanyID());
 			//parameters:
 			int m = 100;
@@ -129,12 +132,12 @@ public class Main {
 		//feature based predictive mining:
 		FeatureBasedPredictor featureBasedPredictor;
 		File featurebasedPredictorFile = IOService.getFeatureBasedPredictorFile(toPredict.getCompanyID());
-		if(featurebasedPredictorFile.exists()){
-			featureBasedPredictor = new FeatureBasedPredictor(featurebasedPredictorFile);
-		} else{
+//		if(featurebasedPredictorFile.exists()){
+//			featureBasedPredictor = new FeatureBasedPredictor(featurebasedPredictorFile);
+//		} else{
 			featureBasedPredictor = new FeatureBasedPredictor(winMiner.getPredictiveWindows(), winMiner.getInversePredictiveWindows(), winMiner.getNeutralWindows(), eventAlphabet, s);
 			featureBasedPredictor.saveModel(featurebasedPredictorFile);
-		}
+//		}
 		//window Sliding
 		return featureBasedPredictor;
 	}
@@ -173,18 +176,18 @@ public class Main {
 		PredictiveMiner miner = new PredictiveMiner(winMiner,eventAlphabet,s,n);
 		Map<EpisodePattern, Double> predictors;
 		Map<EpisodePattern, Double> inversePredictors;
-		if(predictorsFile.exists()){
-			predictors = IOService.loadEpisodeMap(predictorsFile);
-		} else{
+//		if(predictorsFile.exists()){
+//			predictors = IOService.loadEpisodeMap(predictorsFile);
+//		} else{
 			predictors = miner.getInitialPreditiveEpisodes();
 			IOService.serializeEpisodeMap(predictors,predictorsFile);
-		}
-		if(inversePredictorsFile.exists()){
-			inversePredictors = IOService.loadEpisodeMap(inversePredictorsFile);
-		} else{
+//		}
+//		if(inversePredictorsFile.exists()){
+//			inversePredictors = IOService.loadEpisodeMap(inversePredictorsFile);
+//		} else{
 			inversePredictors = miner.getInitialInversePreditiveEpisodes();
 			IOService.serializeEpisodeMap(inversePredictors,inversePredictorsFile);
-		}
+//		}
 		predictors.keySet().stream().forEach(p -> System.out.println("found predictor" + p + "with " + predictors.get(p) + " confidence" ));
 		System.out.println("inverse");
 		inversePredictors.keySet().stream().forEach(p -> System.out.println("found predictor" + p + "with " + inversePredictors.get(p) + " confidence" ));

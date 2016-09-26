@@ -30,7 +30,6 @@ public class TimeSeriesExtractor {
 			File file = allFiles.get(i);
 			List<LowLevelEvent> lowLevelEvents = LowLevelEvent.readAll(file);
 			List<LowLevelEvent> timeSeries = lowLevelEvents.stream().filter(e -> e.getCompanyId().equals("\""+id + "\"")).sorted(LowLevelEvent::temporalOrder).collect(Collectors.toList());
-			System.out.println("yo");
 			for(int j=0;j<timeSeries.size();j++){
 				LowLevelEvent e = timeSeries.get(j);
 				String toPrint = e.getTimestamp().format(StandardDateTimeFormatter.getStandardDateTimeFormatter()) + "," + e.getValue();

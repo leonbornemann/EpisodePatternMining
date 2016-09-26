@@ -18,6 +18,7 @@ barchart(return*100~company,
          origin = 0,
          xlab = "companies",
          ylab = "total Return [%]",
+         ylim = c(0,200),
          auto.key=list(space="top", columns=2, cex.title=1),
          scales=list(x=list(rot=90)),
          main="Return by Company"
