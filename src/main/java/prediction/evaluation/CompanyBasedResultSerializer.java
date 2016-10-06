@@ -28,7 +28,8 @@ public class CompanyBasedResultSerializer extends ResultSerializer{
 		}
 		File csvResultFile = IOService.getTotalResultByCompanyCsvFile(method);
 		PrintWriter writer = new PrintWriter(new FileWriter(csvResultFile));
-		writer.println("company,return,Precision_UP,Precision_DOWN,PrecisionIgnoreEqual_UP,PrecisionIgnoreEqual_DOWN,Accuracy,AccuracyIngoreEqual");
+		writer.println("company,return,Precision_UP,Precision_DOWN,PrecisionIgnoreEqual_UP,PrecisionIgnoreEqual_DOWN,Accuracy,AccuracyIngoreEqual,"
+				+ "ImprovedPrecision_UP,ImprovedPrecision_DOWN,ImprovedPrecisionIgnoreEqual_UP,ImprovedPrecisionIgnoreEqual_DOWN,ImprovedAccuracy,ImprovedAccuracyIngoreEqual");
 		for(int i=0;i<orderedCompanyCodes.size();i++){
 			String id = orderedCompanyCodes.get(i);
 			if(i==orderedCompanyCodes.size()-1){
@@ -42,6 +43,7 @@ public class CompanyBasedResultSerializer extends ResultSerializer{
 
 	private String buildTotalResultString(EvaluationResult evaluationResult) {
 		PredictorPerformance total = evaluationResult.getTotalPerformance();
+		PredictorPerformance totalImproved = evaluationResult.getTotalImprovedPerformance();
 		int roundTo = 5;
 		return getAsRoundedString(evaluationResult.getSummedReturn(),roundTo) + "," +
 				getAsRoundedString(total.getPrecision(Change.UP), roundTo) + "," +
@@ -49,6 +51,13 @@ public class CompanyBasedResultSerializer extends ResultSerializer{
 				getAsRoundedString(total.getEqualIgnoredPrecision(Change.UP), roundTo) + "," +
 				getAsRoundedString(total.getEqualIgnoredPrecision(Change.DOWN), roundTo) + "," +
 				getAsRoundedString(total.getAccuracy(), roundTo) + "," +
-				getAsRoundedString(total.getEqualIgnoredAccuracy(), roundTo);
+				getAsRoundedString(total.getEqualIgnoredAccuracy(), roundTo) + "," + 
+				
+				getAsRoundedString(totalImproved.getPrecision(Change.UP), roundTo) + "," +
+				getAsRoundedString(totalImproved.getPrecision(Change.DOWN), roundTo) + "," +
+				getAsRoundedString(totalImproved.getEqualIgnoredPrecision(Change.UP), roundTo) + "," +
+				getAsRoundedString(totalImproved.getEqualIgnoredPrecision(Change.DOWN), roundTo) + "," +
+				getAsRoundedString(totalImproved.getAccuracy(), roundTo) + "," +
+				getAsRoundedString(totalImproved.getEqualIgnoredAccuracy(), roundTo);
 	}
 }

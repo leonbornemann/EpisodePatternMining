@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -52,14 +53,16 @@ public class NoAggregationEvaluator extends Evaluator{
 				List<Pair<LocalDateTime, BigDecimal>> targetMovement = getTargetPriceMovement(lowLevelEvents,companyID);
 				if(byDay.get(day)!=null && !targetMovement.isEmpty()){
 					PredictorPerformance thisDayPerformance = new PredictorPerformance();
+					PredictorPerformance thisDayPerformanceImprovedMetric = new PredictorPerformance();
 					evalMetricsForDay(byDay.get(day),targetMovement,thisDayPerformance);
+					evalImprovedMetricForDay(byDay.get(day),targetMovement,thisDayPerformanceImprovedMetric);
 					evalRateOfReturnForDay(byDay.get(day),targetMovement,tracker);
-					//TODO: save return of investment for this day
 					System.out.println("--------------------------------------------------------------------");
 					print(thisDayPerformance);
 					System.out.println("Return of investment: " + tracker.rateOfReturn());
 					result.putReturnOfInvestment(day,tracker.rateOfReturn());
 					result.putMetricPerformance(day,thisDayPerformance);
+					result.putImprovedMetricPerformance(day,thisDayPerformanceImprovedMetric);
 					System.out.println("--------------------------------------------------------------------");
 					trackers.put(companyID,new InvestmentTracker(tracker.getPrice(), tracker.netWorth()));
 				} else{
@@ -75,6 +78,52 @@ public class NoAggregationEvaluator extends Evaluator{
 			assert(company.size()==1);
 			results.get(id).serialize(company.get(0).getEvaluationResultFile());
 		}
+	}
+
+	private void evalImprovedMetricForDay(List<Pair<LocalDateTime, Change>> predictions,List<Pair<LocalDateTime, BigDecimal>> targetMovement,PredictorPerformance perf) {
+		List<Pair<LocalDateTime,Change>> diff = getDiffPoints(targetMovement);
+		int searchStartIndex = 0;
+		for(int i = 0;i<diff.size();i++){
+			Change curMovement = diff.get(i).getSecond();
+			LocalDateTime curMovementTimestamp = diff.get(i).getFirst();
+			int predictionIndex = getIndexOfLastBefore(predictions,searchStartIndex,curMovementTimestamp);
+			if(predictionIndex>=0){
+				Pair<LocalDateTime,Change> predicted = predictions.get(predictionIndex);
+				assert(predicted.getFirst().compareTo(curMovementTimestamp)<0);
+				if(Math.abs(ChronoUnit.SECONDS.between(predicted.getFirst(), curMovementTimestamp))<=d){
+					perf.addTestExample(predicted.getSecond(), curMovement);
+					searchStartIndex = predictionIndex+1;
+				} else {
+					System.out.println("Weird - gap between prediction and movement");
+				}
+			}
+		}
+	}
+
+	//only public so we can unit-test
+	public int getIndexOfLastBefore(List<Pair<LocalDateTime, Change>> predictions, int searchStartIndex,LocalDateTime time) {
+		for(int i=searchStartIndex;i<predictions.size();i++){
+			if(predictions.get(i).getFirst().compareTo(time) >=0){
+				return i-1;
+			}
+		}
+		return -1;
+	}
+
+	//only public so we can unit-test
+	public List<Pair<LocalDateTime, Change>> getDiffPoints(List<Pair<LocalDateTime, BigDecimal>> targetMovement) {
+		BigDecimal prev = targetMovement.get(0).getSecond();
+		List<Pair<LocalDateTime, Change>> diff = new ArrayList<>();
+		for(int i=1;i<targetMovement.size();i++){
+			Pair<LocalDateTime, BigDecimal> current = targetMovement.get(i);
+			if(current.getSecond().compareTo(prev)<0){
+				diff.add(new Pair<>(current.getFirst(),Change.DOWN));
+			} else if(current.getSecond().compareTo(prev)>0){
+				diff.add(new Pair<>(current.getFirst(),Change.UP));
+			}
+			prev = current.getSecond();
+		}
+		return diff;
 	}
 
 	private BigDecimal getStartingPrice(String id){

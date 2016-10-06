@@ -27,6 +27,7 @@ public class EvaluationResult implements Serializable{
 	private static final long serialVersionUID = 1L;
 	private Map<LocalDate,BigDecimal> returnsByDay = new HashMap<>();
 	private Map<LocalDate,PredictorPerformance> performanceByDay = new HashMap<>();
+	private Map<LocalDate,PredictorPerformance> improvedPerformanceByDay = new HashMap<>();
 	private BigDecimal totalReturn;
 	private List<String> warnings = new ArrayList<>();
 	
@@ -66,6 +67,10 @@ public class EvaluationResult implements Serializable{
 	public PredictorPerformance getTotalPerformance(){
 		return new PredictorPerformance(performanceByDay.values());
 	}
+	
+	public PredictorPerformance getTotalImprovedPerformance(){
+		return new PredictorPerformance(improvedPerformanceByDay.values());
+	}
 
 	public void addWarning(String string) {
 		warnings.add(string);
@@ -82,6 +87,14 @@ public class EvaluationResult implements Serializable{
 
 	public PredictorPerformance getPerformance(LocalDate date) {
 		return performanceByDay.get(date);
+	}
+
+	public void putImprovedMetricPerformance(LocalDate day, PredictorPerformance performance) {
+		improvedPerformanceByDay.put(day, performance);
+	}
+
+	public PredictorPerformance getImprovedPerformance(LocalDate date) {
+		return improvedPerformanceByDay.get(date);
 	}
 	
 

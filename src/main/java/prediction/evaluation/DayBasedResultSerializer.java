@@ -44,7 +44,8 @@ public class DayBasedResultSerializer extends ResultSerializer{
 		List<LocalDate> allDatesOrdered = results.values().stream().flatMap(r -> r.getAllDays().stream()).sorted().distinct().collect(Collectors.toList());
 		File target = IOService.getTotalResultByDayCsvFile(method);
 		PrintWriter writer = new PrintWriter(new FileWriter(target));
-		writer.println("date,avgReturn,avgPrecision_UP,avgPrecision_DOWN,avgPrecisionIgnoreEqual_UP,avgPrecisionIgnoreEqual_DOWN");
+		writer.println("date,avgReturn,avgPrecision_UP,avgPrecision_DOWN,avgPrecisionIgnoreEqual_UP,avgPrecisionIgnoreEqual_DOWN,Accuracy,AccuracyIngoreEqual,"
+				+ "avgImprovedPrecision_UP,avgImprovedPrecision_DOWN,avgImprovedPrecisionIgnoreEqual_UP,avgImprovedPrecisionIgnoreEqual_DOWN,ImprovedAccuracy,ImprovedAccuracyIngoreEqual");
 		for(int i=0;i<allDatesOrdered.size();i++){
 			LocalDate date = allDatesOrdered.get(i);
 			String dateString = date.format(StandardDateTimeFormatter.getStandardDateFormatter());
@@ -84,17 +85,47 @@ public class DayBasedResultSerializer extends ResultSerializer{
 		List<Double> downPrecisions = validResults.stream().map(r -> r.getPerformance(date).getPrecision(Change.DOWN)).
 				filter(d -> !d.isNaN()).collect(Collectors.toList());
 		String avgDownPrecisionString = getAvgAsRoundedStringForDoubleList(downPrecisions);
-		List<Double> upPrecisionsIgnoreRecall = validResults.stream().map(r -> r.getPerformance(date).getEqualIgnoredPrecision(Change.UP)).
+		List<Double> upPrecisionsIgnoreEqual = validResults.stream().map(r -> r.getPerformance(date).getEqualIgnoredPrecision(Change.UP)).
 				filter(d -> !d.isNaN()).collect(Collectors.toList());
-		String avgUpPrecisionsIgnoreRecallString = getAvgAsRoundedStringForDoubleList(upPrecisionsIgnoreRecall);
-		List<Double> downPrecisionsIgnoreRecall = validResults.stream().map(r -> r.getPerformance(date).getEqualIgnoredPrecision(Change.DOWN)).
+		String avgUpPrecisionsIgnoreEqualString = getAvgAsRoundedStringForDoubleList(upPrecisionsIgnoreEqual);
+		List<Double> downPrecisionsIgnoreEqual = validResults.stream().map(r -> r.getPerformance(date).getEqualIgnoredPrecision(Change.DOWN)).
 				filter(d -> !d.isNaN()).collect(Collectors.toList());
-		String avgDownPrecisionsIgnoreRecallString = getAvgAsRoundedStringForDoubleList(downPrecisionsIgnoreRecall);
+		String avgDownPrecisionsIgnoreEqualString = getAvgAsRoundedStringForDoubleList(downPrecisionsIgnoreEqual);
+		String avgAccuracyString = getAvgAsRoundedStringForDoubleList(validResults.stream().map(r -> r.getPerformance(date).getAccuracy()).
+				filter(d -> !d.isNaN()).collect(Collectors.toList()));
+		String avgAccuracyIgnoreEqualString = getAvgAsRoundedStringForDoubleList(validResults.stream().map(r -> r.getPerformance(date).getEqualIgnoredAccuracy()).
+				filter(d -> !d.isNaN()).collect(Collectors.toList()));
+		
+		List<Double> upPrecisionsImproved = validResults.stream().map(r -> r.getImprovedPerformance(date).getPrecision(Change.UP)).
+				filter(d -> !d.isNaN()).collect(Collectors.toList());
+		String avgUpPrecisionImprovedString = getAvgAsRoundedStringForDoubleList(upPrecisionsImproved);
+		List<Double> downPrecisionsImproved = validResults.stream().map(r -> r.getImprovedPerformance(date).getPrecision(Change.DOWN)).
+				filter(d -> !d.isNaN()).collect(Collectors.toList());
+		String avgDownPrecisionImprovedString = getAvgAsRoundedStringForDoubleList(downPrecisionsImproved);
+		List<Double> upPrecisionsIgnoreEqualImproved = validResults.stream().map(r -> r.getImprovedPerformance(date).getEqualIgnoredPrecision(Change.UP)).
+				filter(d -> !d.isNaN()).collect(Collectors.toList());
+		String avgUpPrecisionsIgnoreEqualImprovedString = getAvgAsRoundedStringForDoubleList(upPrecisionsIgnoreEqualImproved);
+		List<Double> downPrecisionsIgnoreEqualImproved = validResults.stream().map(r -> r.getImprovedPerformance(date).getEqualIgnoredPrecision(Change.DOWN)).
+				filter(d -> !d.isNaN()).collect(Collectors.toList());
+		String avgDownPrecisionsIgnoreEqualImprovedString = getAvgAsRoundedStringForDoubleList(downPrecisionsIgnoreEqualImproved);
+		String avgAccuracyImprovedString = getAvgAsRoundedStringForDoubleList(validResults.stream().map(r -> r.getImprovedPerformance(date).getAccuracy()).
+				filter(d -> !d.isNaN()).collect(Collectors.toList()));
+		String avgAccuracyIgnoreEqualImprovedString = getAvgAsRoundedStringForDoubleList(validResults.stream().map(r -> r.getImprovedPerformance(date).getEqualIgnoredAccuracy()).
+				filter(d -> !d.isNaN()).collect(Collectors.toList()));
+		
 		return avgReturnString + "," + 
 			avgUpPrecisionString + "," + 
 			avgDownPrecisionString + "," + 
-			avgUpPrecisionsIgnoreRecallString + "," + 
-			avgDownPrecisionsIgnoreRecallString;
+			avgUpPrecisionsIgnoreEqualString + "," + 
+			avgDownPrecisionsIgnoreEqualString + "," + 
+			avgAccuracyString + "," + 
+			avgAccuracyIgnoreEqualString + "," + 
+			avgUpPrecisionImprovedString + "," + 
+			avgDownPrecisionImprovedString + "," + 
+			avgUpPrecisionsIgnoreEqualImprovedString + "," + 
+			avgDownPrecisionsIgnoreEqualImprovedString + "," + 
+			avgAccuracyImprovedString + "," + 
+			avgAccuracyIgnoreEqualImprovedString;
 	}
 	
 	private String buildResultString(LocalDate date,EvaluationResult evaluationResult) {
@@ -111,7 +142,16 @@ public class DayBasedResultSerializer extends ResultSerializer{
 				getAsRoundedString(evaluationResult.getPerformance(date).getEqualIgnoredPrecision(Change.UP),roundTo) + ","  + 
 				getAsRoundedString(evaluationResult.getPerformance(date).getEqualIgnoredPrecision(Change.DOWN),roundTo) + ","  + 
 				getAsRoundedString(evaluationResult.getPerformance(date).getEqualIgnoredRecall(Change.UP),roundTo) + ","  + 
-				getAsRoundedString(evaluationResult.getPerformance(date).getEqualIgnoredRecall(Change.DOWN),roundTo);
+				getAsRoundedString(evaluationResult.getPerformance(date).getEqualIgnoredRecall(Change.DOWN),roundTo) + "," +
+				
+				getAsRoundedString(evaluationResult.getImprovedPerformance(date).getPrecision(Change.UP),roundTo) + "," +
+				getAsRoundedString(evaluationResult.getImprovedPerformance(date).getPrecision(Change.DOWN),roundTo) + "," + 
+				getAsRoundedString(evaluationResult.getImprovedPerformance(date).getRecall(Change.UP),roundTo) + ","  + 
+				getAsRoundedString(evaluationResult.getImprovedPerformance(date).getRecall(Change.DOWN),roundTo) + ","  + 
+				getAsRoundedString(evaluationResult.getImprovedPerformance(date).getEqualIgnoredPrecision(Change.UP),roundTo) + ","  + 
+				getAsRoundedString(evaluationResult.getImprovedPerformance(date).getEqualIgnoredPrecision(Change.DOWN),roundTo) + ","  + 
+				getAsRoundedString(evaluationResult.getImprovedPerformance(date).getEqualIgnoredRecall(Change.UP),roundTo) + ","  + 
+				getAsRoundedString(evaluationResult.getImprovedPerformance(date).getEqualIgnoredRecall(Change.DOWN),roundTo);
 	}
 
 	private String buildHeadLine() {
@@ -124,7 +164,20 @@ public class DayBasedResultSerializer extends ResultSerializer{
 				"precisionIgnoreEqual_" + Change.UP + "," +
 				"precisionIgnoreEqual_" + Change.DOWN + "," +
 				"recallIgnoreEqual_" + Change.UP + "," +
-				"recallIgnoreEqual_" + Change.DOWN;
+				"recallIgnoreEqual_" + Change.DOWN + "," +
+				"Accuracy" + "," +
+				"AccuracyIgnoreEqual" + "," +
+				
+				"improvedPrecision_" + Change.UP + "," +
+				"improvedPrecision_" + Change.DOWN + "," +
+				"improvedRecall_" + Change.UP + "," +
+				"improvedRecall_" + Change.DOWN + "," +
+				"improvedPrecisionIgnoreEqual_" + Change.UP + "," +
+				"improvedPrecisionIgnoreEqual_" + Change.DOWN + "," +
+				"improvedRecallIgnoreEqual_" + Change.UP + "," +
+				"improvedRecallIgnoreEqual_" + Change.DOWN + "," +
+				"improvedAccuracy" + "," +
+				"improvedAccuracyIgnoerEqual";
 		System.out.println(result);
 		return result;
 	}

@@ -8,6 +8,7 @@ perms = read.table("PERMS_byCompany.csv",header=T,sep=",")
 fbswc$method = "fbswc"
 perms$method = "perms"
 totalTable = rbind(fbswc,perms)
+totalTable = totalTable[totalTable$company != "TECH",]
 
 colors = c("purple","blue")
 
@@ -18,7 +19,6 @@ barchart(return*100~company,
          origin = 0,
          xlab = "companies",
          ylab = "total Return [%]",
-         ylim = c(0,200),
          auto.key=list(space="top", columns=2, cex.title=1),
          scales=list(x=list(rot=90)),
          main="Return by Company"
@@ -33,7 +33,7 @@ barchart(Precision_UP*100~company,
          ylab = "Precision {UP} [%]",
          auto.key=list(space="top", columns=2, cex.title=1),
          scales=list(x=list(rot=90)),
-         main="Precision {UP} by Company"
+         main="A - Precision {UP} by Company"
 )
 
 barchart(Precision_DOWN*100~company,
@@ -45,7 +45,19 @@ barchart(Precision_DOWN*100~company,
          ylab = "Precision {DOWN} [%]",
          auto.key=list(space="top", columns=2, cex.title=1),
          scales=list(x=list(rot=90)),
-         main="Precision {DOWN} by Company"
+         main="A - Precision {DOWN} by Company"
+)
+
+barchart(Accuracy*100~company,
+         data=totalTable,
+         groups=method,
+         par.settings=list(superpose.polygon=list(col=colors)),
+         origin = 50,
+         xlab = "companies",
+         ylab = "Accuracy [%]",
+         auto.key=list(space="top", columns=2, cex.title=1),
+         scales=list(x=list(rot=90)),
+         main="A - Accuracy by Company"
 )
 
 barchart(PrecisionIgnoreEqual_UP*100~company,
@@ -54,10 +66,10 @@ barchart(PrecisionIgnoreEqual_UP*100~company,
          par.settings=list(superpose.polygon=list(col=colors)),
          origin = 50,
          xlab = "companies",
-         ylab = "Precision Ignore Equal {UP} [%]",
+         ylab = "Precision {UP} [%]",
          auto.key=list(space="top", columns=2, cex.title=1),
          scales=list(x=list(rot=90)),
-         main="Precision Ignore Equal {UP} by Company"
+         main="IE_A - Precision {UP} by Company"
 )
 
 barchart(PrecisionIgnoreEqual_DOWN*100~company,
@@ -66,11 +78,98 @@ barchart(PrecisionIgnoreEqual_DOWN*100~company,
          par.settings=list(superpose.polygon=list(col=colors)),
          origin = 50,
          xlab = "companies",
-         ylab = "Precision Ignore Equal {DOWN} [%]",
+         ylab = "Precision {DOWN} [%]",
          auto.key=list(space="top", columns=2, cex.title=1),
          scales=list(x=list(rot=90)),
-         main="Precision Ignore Equal {DOWN} by Company"
+         main="IE_A - Precision {DOWN} by Company"
 )
+
+barchart(AccuracyIngoreEqual*100~company,
+         data=totalTable,
+         groups=method,
+         par.settings=list(superpose.polygon=list(col=colors)),
+         origin = 50,
+         xlab = "companies",
+         ylab = "Accuracy (Ignore Equal) [%]",
+         auto.key=list(space="top", columns=2, cex.title=1),
+         scales=list(x=list(rot=90)),
+         main="IE_A - Accuracy by Company"
+)
+#improved metrics:
+
+barchart(ImprovedPrecision_UP*100~company,
+         data=totalTable,
+         groups=method,
+         par.settings=list(superpose.polygon=list(col=colors)),
+         origin = 50,
+         xlab = "companies",
+         ylab = "Precision {UP} [%]",
+         auto.key=list(space="top", columns=2, cex.title=1),
+         scales=list(x=list(rot=90)),
+         main="B - Precision {UP} by Company"
+)
+
+barchart(ImprovedPrecision_DOWN*100~company,
+         data=totalTable,
+         groups=method,
+         par.settings=list(superpose.polygon=list(col=colors)),
+         origin = 50,
+         xlab = "companies",
+         ylab = "Precision {DOWN} [%]",
+         auto.key=list(space="top", columns=2, cex.title=1),
+         scales=list(x=list(rot=90)),
+         main="B - Precision {DOWN} by Company"
+)
+
+barchart(ImprovedAccuracy*100~company,
+         data=totalTable,
+         groups=method,
+         par.settings=list(superpose.polygon=list(col=colors)),
+         origin = 50,
+         xlab = "companies",
+         ylab = "B - Accuracy [%]",
+         auto.key=list(space="top", columns=2, cex.title=1),
+         scales=list(x=list(rot=90)),
+         main="B - Accuracy by Company"
+)
+
+barchart(ImprovedPrecisionIgnoreEqual_UP*100~company,
+         data=totalTable,
+         groups=method,
+         par.settings=list(superpose.polygon=list(col=colors)),
+         origin = 50,
+         xlab = "companies",
+         ylab = "Improved Precision Ignore Equal {UP} [%]",
+         auto.key=list(space="top", columns=2, cex.title=1),
+         scales=list(x=list(rot=90)),
+         main="Improved Precision Ignore Equal {UP} by Company"
+)
+
+barchart(ImprovedPrecisionIgnoreEqual_DOWN*100~company,
+         data=totalTable,
+         groups=method,
+         par.settings=list(superpose.polygon=list(col=colors)),
+         origin = 50,
+         xlab = "companies",
+         ylab = "Improved Precision Ignore Equal {DOWN} [%]",
+         auto.key=list(space="top", columns=2, cex.title=1),
+         scales=list(x=list(rot=90)),
+         main="Improved Precision Ignore Equal {DOWN} by Company"
+)
+
+barchart(ImprovedAccuracyIngoreEqual*100~company,
+         data=totalTable,
+         groups=method,
+         par.settings=list(superpose.polygon=list(col=colors)),
+         origin = 50,
+         xlab = "companies",
+         ylab = "Improved Accuracy (Ignore Equal) [%]",
+         auto.key=list(space="top", columns=2, cex.title=1),
+         scales=list(x=list(rot=90)),
+         main="Improved Accuracy (Ignore Equal) by Company"
+)
+
+
 
 #by day
 
@@ -79,6 +178,7 @@ perms = read.table("PERMS.csv",header=T,sep=",")
 fbswc$method = "fbswc"
 perms$method = "perms"
 totalTable = rbind(fbswc,perms)
+totalTable = totalTable[totalTable$date != "2016-05-11",]
 
 barchart(avgReturn*100~date,
          data=totalTable,
@@ -93,6 +193,9 @@ barchart(avgReturn*100~date,
 )
 
 #prepare the moving averages:
+library(zoo)
+library(timeDate)
+library(forecast)
 windowSize = 5
 permsmA = as.numeric(ma(totalTable[totalTable$method == "perms",]$avgReturn,windowSize))*100
 permsDate = totalTable$date[totalTable$method == "perms"]

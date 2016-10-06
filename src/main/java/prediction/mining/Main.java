@@ -18,6 +18,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -53,18 +55,29 @@ public class Main {
 	private static File lowLevelStreamDirDesktop = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Low Level Data\\");
 	
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
-		Method method = Method.PERMS;
+		Method method = Method.FBSWC;
 		int d = 90;
 		Set<String> annotatedCompanyCodes = new SemanticKnowledgeCollector().getAnnotatedCompanyCodes();
 		//buildAndApplyModel(method, d, annotatedCompanyCodes);
+
 		//runEvaluation(d, annotatedCompanyCodes,method);
-		printEvaluationResult(annotatedCompanyCodes,method);
+		HashSet<String> toEvaluate = new HashSet<>(Arrays.asList("AAPL"));
+		printEvaluationResult(toEvaluate,method);
 				
-		//DayBasedResultSerializer dayBasedSerializer = new DayBasedResultSerializer();
-		//dayBasedSerializer.toCSV(annotatedCompanyCodes,method);
-		
-		//CompanyBasedResultSerializer serializer = new CompanyBasedResultSerializer();
-		//serializer.toCSV(annotatedCompanyCodes,method);
+//		DayBasedResultSerializer dayBasedSerializer = new DayBasedResultSerializer();
+//		dayBasedSerializer.toCSV(annotatedCompanyCodes,method);
+//		
+//		CompanyBasedResultSerializer serializer = new CompanyBasedResultSerializer();
+//		serializer.toCSV(annotatedCompanyCodes,method);
+//		
+//		method = Method.FBSWC;
+//		
+//		runEvaluation(d, annotatedCompanyCodes,method);
+//		printEvaluationResult(annotatedCompanyCodes,method);
+//				
+//		dayBasedSerializer.toCSV(annotatedCompanyCodes,method);
+//		
+//		serializer.toCSV(annotatedCompanyCodes,method);
 	}
 
 	private static void buildAndApplyModel(Method method, int d, Set<String> annotatedCompanyCodes)
@@ -105,7 +118,17 @@ public class Main {
 			System.out.println("DOWN-Precision: " + a.getTotalPerformance().getPrecision(Change.DOWN));
 			System.out.println("Up-Precision without equal: " + a.getTotalPerformance().getEqualIgnoredPrecision(Change.UP));
 			System.out.println("DOWN-Precision without equal: " + a.getTotalPerformance().getEqualIgnoredPrecision(Change.DOWN));
+			System.out.println("Accuracy: " + a.getTotalPerformance().getAccuracy());
+			System.out.println("Accuracy without equal: " + a.getTotalPerformance().getEqualIgnoredAccuracy());
 			a.getTotalPerformance().printConfusionMatrix();
+			System.out.println("Improved Performance Metric:");
+			System.out.println("Up-Precision: " + a.getTotalImprovedPerformance().getPrecision(Change.UP));
+			System.out.println("DOWN-Precision: " + a.getTotalImprovedPerformance().getPrecision(Change.DOWN));
+			System.out.println("Up-Precision without equal: " + a.getTotalImprovedPerformance().getEqualIgnoredPrecision(Change.UP));
+			System.out.println("DOWN-Precision without equal: " + a.getTotalImprovedPerformance().getEqualIgnoredPrecision(Change.DOWN));
+			System.out.println("Accuracy: " + a.getTotalImprovedPerformance().getAccuracy());
+			System.out.println("Accuracy without equal: " + a.getTotalImprovedPerformance().getEqualIgnoredAccuracy());
+			a.getTotalImprovedPerformance().printConfusionMatrix();
 			System.out.println("-----------------------------------------------------------------------------");
 		}
 		System.out.println("avg Return: " + avg.divide(new BigDecimal(annotatedCompanyCodes.size()),100,RoundingMode.FLOOR));

@@ -2,6 +2,9 @@ package data.transformation;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Set;
+
+import semantic.SemanticKnowledgeCollector;
 
 public class SingleTimeSeriesExtractor {
 
@@ -9,10 +12,9 @@ public class SingleTimeSeriesExtractor {
 	private static String timeSeriesTargetLocation = "D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Time Series\\";
 	
 	public static void main(String[] args) throws IOException {
-		String id = "TECH";
-		File target = new File(timeSeriesTargetLocation + id + ".csv");
+		Set<String> annotatedCompanyCodes = new SemanticKnowledgeCollector().getAnnotatedCompanyCodes();
 		TimeSeriesExtractor extractor = new TimeSeriesExtractor(dataBaseLocation);
-		extractor.extractTimeSeries(id,target);
+		extractor.extractAllTimeSeries(annotatedCompanyCodes,timeSeriesTargetLocation);
 	}
 
 }
