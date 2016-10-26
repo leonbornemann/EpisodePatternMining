@@ -13,11 +13,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import data.Change;
-import data.LowLevelEvent;
 import data.stream.PredictorPerformance;
+import prediction.util.IOService;
 import prediction.util.StandardDateTimeFormatter;
 import util.Pair;
 
@@ -25,14 +26,42 @@ public class NoAggregationEvaluator extends Evaluator{
 
 	private File lowLevelStreamDir;
 	private int d;
+	private Map<String, List<Pair<LocalDateTime, BigDecimal>>> companyMovements;
 	
-	public NoAggregationEvaluator(int d,File lowLevelStreamDir){
+	public NoAggregationEvaluator(int d,File lowLevelStreamDir) throws IOException{
 		this.d = d;
-		this.lowLevelStreamDir = lowLevelStreamDir;
+		if(lowLevelStreamDir!=null){
+			this.lowLevelStreamDir = lowLevelStreamDir;
+			companyMovements = initCompanyMovements();
+			assertTimeSeriesSorted();
+		} else{
+			//just for unit testing methods:
+			
+		}
+		
+	}
+
+	private void assertTimeSeriesSorted() {
+		for(String id:companyMovements.keySet()){
+			List<Pair<LocalDateTime, BigDecimal>> timeSeries = companyMovements.get(id);
+			for(int i=1;i<timeSeries.size();i++){
+				assert(timeSeries.get(0).getFirst().compareTo(timeSeries.get(i).getFirst())<=0);
+			}
+		}
+	}
+
+	private Map<String, List<Pair<LocalDateTime, BigDecimal>>> initCompanyMovements() throws IOException {
+		List<File> allFiles = Arrays.asList(lowLevelStreamDir.listFiles());
+		Map<String, List<Pair<LocalDateTime, BigDecimal>>> companyMovements = new HashMap<>();
+		for(File file : allFiles){
+			if(file.isFile() && file.getName().endsWith(".csv")){
+				companyMovements.put(file.getName().split("\\.")[0], IOService.readTimeSeriesData(file));
+			}
+		}
+		return companyMovements;
 	}
 
 	public void eval(List<EvaluationFiles> companies) throws IOException {
-		Map<LocalDate,File> filenames = initLowLevelDatabase();
 		Map<String,Map<LocalDate, List<Pair<LocalDateTime, Change>>>> predictionsByCompanyByDay = getOrganizedPredictions(companies);
 		Map<String,EvaluationResult> results = new HashMap<>();
 		Map<String,InvestmentTracker> trackers = new HashMap<>();
@@ -40,17 +69,17 @@ public class NoAggregationEvaluator extends Evaluator{
 			results.put(id, new EvaluationResult());
 			trackers.put(id, new InvestmentTracker(getStartingPrice(id)));
 		});
-		for (LocalDate day : filenames.keySet().stream().sorted().collect(Collectors.toList())) {
+		List<LocalDate> daysSorted = getAllDates().stream().sorted().collect(Collectors.toList());
+		for (LocalDate day : daysSorted) {
 			System.out.println("Results for day " + day.format(StandardDateTimeFormatter.getStandardDateFormatter()));
 			System.out.println("--------------------------------------------------------------------");
-			List<LowLevelEvent> lowLevelEvents = getLowLevelEvents(filenames.get(day));
 			for(String companyID : predictionsByCompanyByDay.keySet().stream().sorted().collect(Collectors.toList())){
 				System.out.println("--------------------------------------------------------------------");
 				System.out.println("Results for company " + companyID);
 				EvaluationResult result = results.get(companyID);
 				InvestmentTracker tracker = trackers.get(companyID);
 				Map<LocalDate, List<Pair<LocalDateTime, Change>>> byDay = predictionsByCompanyByDay.get(companyID);
-				List<Pair<LocalDateTime, BigDecimal>> targetMovement = getTargetPriceMovement(lowLevelEvents,companyID);
+				List<Pair<LocalDateTime, BigDecimal>> targetMovement = getTargetPriceMovementForDay(companyID,day);
 				if(byDay.get(day)!=null && !targetMovement.isEmpty()){
 					PredictorPerformance thisDayPerformance = new PredictorPerformance();
 					PredictorPerformance thisDayPerformanceImprovedMetric = new PredictorPerformance();
@@ -78,6 +107,10 @@ public class NoAggregationEvaluator extends Evaluator{
 			assert(company.size()==1);
 			results.get(id).serialize(company.get(0).getEvaluationResultFile());
 		}
+	}
+
+	private Set<LocalDate> getAllDates() {
+		return companyMovements.values().stream().flatMap(l -> l.stream().map(p -> p.getFirst())).map(dt -> LocalDate.from(dt)).collect(Collectors.toSet());
 	}
 
 	private void evalImprovedMetricForDay(List<Pair<LocalDateTime, Change>> predictions,List<Pair<LocalDateTime, BigDecimal>> targetMovement,PredictorPerformance perf) {
@@ -127,33 +160,13 @@ public class NoAggregationEvaluator extends Evaluator{
 	}
 
 	private BigDecimal getStartingPrice(String id){
-		try{
-			 File earliestFile = Arrays.asList(lowLevelStreamDir.listFiles()).stream().
-					 sorted((f1,f2) -> getLocalDateFromFile(f1).compareTo(getLocalDateFromFile(f2)))
-					 .iterator().next();
-			return LowLevelEvent.getStartingPrice(earliestFile,getLowLevelStyleId(id));
-		} catch(Exception e){
-			throw new AssertionError(e);
-		}
+		List<Pair<LocalDateTime, BigDecimal>> timeSeries = companyMovements.get(id);
+		//assert its actually start:
+		return timeSeries.get(0).getSecond();
 	}
 
-	private String getLowLevelStyleId(String id) {
-		return "\""+id + "\"";
-	}
-
-	private List<LowLevelEvent> getLowLevelEvents(File file) throws IOException {
-		return LowLevelEvent.readAll(file).stream().
-			filter(e -> isInTimeBounds(e.getTimestamp())).
-			collect(Collectors.toList());
-	}
-
-	private List<Pair<LocalDateTime, BigDecimal>> getTargetPriceMovement(List<LowLevelEvent> lowLevelEvents,
-			String companyID) {
-		return lowLevelEvents.stream().
-				filter(e -> e.getCompanyId().equals(getLowLevelStyleId(companyID))).
-				sorted(LowLevelEvent::temporalOrder).
-				map(e -> new Pair<>(e.getTimestamp(),e.getValue())).
-				collect(Collectors.toList());
+	private List<Pair<LocalDateTime, BigDecimal>> getTargetPriceMovementForDay(String companyID,LocalDate day) {
+		return companyMovements.get(companyID).stream().filter(p -> LocalDate.from(p.getFirst()).equals(day)).sorted((a,b)->a.getFirst().compareTo(b.getFirst())).collect(Collectors.toList());
 	}
 
 	private Map<String, Map<LocalDate, List<Pair<LocalDateTime, Change>>>> getOrganizedPredictions(List<EvaluationFiles> companies) throws IOException {
@@ -165,19 +178,6 @@ public class NoAggregationEvaluator extends Evaluator{
 			organizedPredictions.put(company.getCompanyID(), byDay);
 		}
 		return organizedPredictions;
-	}
-
-	private Map<LocalDate, File> initLowLevelDatabase() {
-		List<File> files = Arrays.asList(lowLevelStreamDir.listFiles()).stream().filter(f -> f.exists()).collect(Collectors.toList());
-		return files.stream().collect(Collectors.toMap(f -> getLocalDateFromFile(f), f->f));
-	}
-
-	private LocalDate getLocalDateFromFile(File f) {
-		String[] a = f.getName().split("_");
-		assert(a.length==2 && a[0].equals("NASDAQ"));
-		String[] b = a[1].split("\\.");
-		assert(b.length==2 && b[1].equals("csv"));
-		return LocalDate.parse(b[0], StandardDateTimeFormatter.getStandardDateFormatter());
 	}
 
 	private void print(PredictorPerformance perf) {

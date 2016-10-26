@@ -30,7 +30,10 @@ import java.util.stream.Stream;
 import data.AnnotatedEvent;
 import data.AnnotatedEventType;
 import data.Change;
+import data.stream.AnnotatedEventStream;
 import data.stream.FixedStreamWindow;
+import data.stream.InMemoryAnnotatedEventStream;
+import data.stream.InMemoryMultiTimeSeriesAnnotatedEventStream;
 import data.stream.MultiFileAnnotatedEventStream;
 import data.stream.PredictorPerformance;
 import data.stream.StreamWindow;
@@ -52,17 +55,20 @@ public class Main {
 	private static File streamDirLaptop = new File("C:\\Users\\LeonBornemann\\Documents\\Uni\\Master thesis\\data\\Annotated Data\\");
 	
 	private static File streamDirDesktop = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Data\\");
-	private static File lowLevelStreamDirDesktop = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Low Level Data\\");
+	private static File unchangedStreamDirDesktop = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Low Level Data\\");
+	
+	private static File annotatedStreamDirDesktop = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Time Series\\");
+	private static File lowLevelStreamDirDesktop = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Time Series\\");
 	
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
 		Method method = Method.FBSWC;
 		int d = 90;
 		Set<String> annotatedCompanyCodes = new SemanticKnowledgeCollector().getAnnotatedCompanyCodes();
-		//buildAndApplyModel(method, d, annotatedCompanyCodes);
+		//HashSet<String> toEvaluate = new HashSet<>(Arrays.asList("AAPL"));
+		buildAndApplyModel(method, d, annotatedCompanyCodes,null);
 
-		//runEvaluation(d, annotatedCompanyCodes,method);
-		HashSet<String> toEvaluate = new HashSet<>(Arrays.asList("AAPL"));
-		printEvaluationResult(toEvaluate,method);
+		runEvaluation(d, annotatedCompanyCodes,method);
+		printEvaluationResult(annotatedCompanyCodes,method);
 				
 //		DayBasedResultSerializer dayBasedSerializer = new DayBasedResultSerializer();
 //		dayBasedSerializer.toCSV(annotatedCompanyCodes,method);
@@ -80,29 +86,31 @@ public class Main {
 //		serializer.toCSV(annotatedCompanyCodes,method);
 	}
 
-	private static void buildAndApplyModel(Method method, int d, Set<String> annotatedCompanyCodes)
+	private static void buildAndApplyModel(Method method, int d, Set<String> annotatedCompanyCodes,HashSet<String> codesToEvaluate)
 			throws IOException, ClassNotFoundException {
 		Set<AnnotatedEventType> eventAlphabet = AnnotatedEventType.loadEventAlphabet(annotatedCompanyCodes);
 		List<AnnotatedEventType> toDo = eventAlphabet.stream().filter(e -> e.getChange()==Change.UP).collect(Collectors.toList());
 		for(int i=0;i<toDo.size();i++){
 			AnnotatedEventType toPredict = toDo.get(i);
-			System.out.println("Iteration "+i + "out of "+toDo.size());
-			System.out.println("beginning company " + toPredict.getCompanyID());
-			//parameters:
-			int m = 100;
-			int s=75;
-			MultiFileAnnotatedEventStream stream = new MultiFileAnnotatedEventStream(Arrays.stream(streamDirDesktop.listFiles()).sorted().collect(Collectors.toList()),d*2,e -> annotatedCompanyCodes.contains(e.getEventType().getCompanyID()));
-			System.out.println("beginning to mine windows");
-			WindowMiner winMiner = new WindowMiner(stream,toPredict,m,d);
-			System.out.println("done mining windows");
-			//perms(d, s, eventAlphabet, stream,toPredict, winMiner);
-			PredictiveModel model = null;
-			if(method==Method.PERMS){
-				model = perms(d, s, eventAlphabet, stream,toPredict, winMiner);
-			} else{
-				model = featureBasedPrediction(d, s, toPredict, eventAlphabet, stream, winMiner);
+			if(codesToEvaluate == null || codesToEvaluate.contains(toPredict.getCompanyID())){
+				System.out.println("Iteration "+i + "out of "+toDo.size());
+				System.out.println("beginning company " + toPredict.getCompanyID());
+				//parameters:
+				int m = 100;
+				int s=75;
+				InMemoryMultiTimeSeriesAnnotatedEventStream stream = new InMemoryMultiTimeSeriesAnnotatedEventStream(annotatedStreamDirDesktop);
+				System.out.println("beginning to mine windows");
+				WindowMiner winMiner = new WindowMiner(stream,toPredict,m,d);
+				System.out.println("done mining windows");
+				//perms(d, s, eventAlphabet, stream,toPredict, winMiner);
+				PredictiveModel model = null;
+				if(method==Method.PERMS){
+					model = perms(d, s, eventAlphabet, stream,toPredict, winMiner);
+				} else{
+					model = featureBasedPrediction(d, s, toPredict, eventAlphabet, stream, winMiner);
+				}
+				applyPredictor(d, toPredict, stream, model,method);
 			}
-			applyPredictor(d, toPredict, stream, model,method);
 		}
 	}
 
@@ -146,41 +154,38 @@ public class Main {
 			forEachOrdered(w -> System.out.println(w.getWindowBorders()));
 	}
 
-	private static FeatureBasedPredictor featureBasedPrediction(int d, int s, AnnotatedEventType toPredict,
-			Set<AnnotatedEventType> eventAlphabet, MultiFileAnnotatedEventStream stream,WindowMiner winMiner) throws IOException, ClassNotFoundException {
+	private static FBSWCModel featureBasedPrediction(int d, int s, AnnotatedEventType toPredict,
+			Set<AnnotatedEventType> eventAlphabet, AnnotatedEventStream stream,WindowMiner winMiner) throws IOException, ClassNotFoundException {
 		
 		//find frequent Episodes
 		
 		//do first method predictive mining
 		//feature based predictive mining:
-		FeatureBasedPredictor featureBasedPredictor;
+		FBSWCModel featureBasedPredictor;
 		File featurebasedPredictorFile = IOService.getFeatureBasedPredictorFile(toPredict.getCompanyID());
 //		if(featurebasedPredictorFile.exists()){
 //			featureBasedPredictor = new FeatureBasedPredictor(featurebasedPredictorFile);
 //		} else{
-			featureBasedPredictor = new FeatureBasedPredictor(winMiner.getPredictiveWindows(), winMiner.getInversePredictiveWindows(), winMiner.getNeutralWindows(), eventAlphabet, s);
+			featureBasedPredictor = new FBSWCModel(winMiner.getPredictiveWindows(), winMiner.getInversePredictiveWindows(), winMiner.getNeutralWindows(), eventAlphabet, s);
 			featureBasedPredictor.saveModel(featurebasedPredictorFile);
 //		}
 		//window Sliding
 		return featureBasedPredictor;
 	}
 
-	private static void applyPredictor(int d, AnnotatedEventType toPredict, MultiFileAnnotatedEventStream stream,
+	private static void applyPredictor(int d, AnnotatedEventType toPredict, AnnotatedEventStream stream,
 			PredictiveModel featureBasedPredictor, Method method) throws IOException {
 		StreamWindowSlider slider = new StreamWindowSlider(stream,d);
 		List<Pair<LocalDateTime,Change>> predictions = new ArrayList<>();
-		List<Pair<LocalDateTime,Change>> targetMovement = new ArrayList<>();
 		do{
 			StreamWindow currentWindow = slider.getCurrentWindow();
 			Change predicted = featureBasedPredictor.predict(currentWindow);
 			LocalDateTime curTs = currentWindow.getWindowBorders().getSecond();
 			predictions.add(new Pair<>(curTs,predicted));
-			List<AnnotatedEvent> droppedOut = slider.slideForward();
-			droppedOut.stream().filter(e -> e.getEventType().getCompanyID().equals(toPredict.getCompanyID())).forEach(e -> targetMovement.add(new Pair<>(e.getTimestamp(),e.getEventType().getChange())));
+			slider.slideForward();
 		} while(slider.canSlide());
 		//serialize results
 		serializePairList(predictions,IOService.buildPredictionsTargetFile(toPredict.getCompanyID(),method));
-		serializePairList(targetMovement,IOService.buildTargetMovementFile(toPredict.getCompanyID(),method));
 	}
 
 	private static void serializePairList(List<Pair<LocalDateTime, Change>> predictions,File file) throws IOException {
@@ -192,11 +197,11 @@ public class Main {
 	}
 
 	private static PredictiveModel perms(int d, int s, Set<AnnotatedEventType> eventAlphabet,
-			MultiFileAnnotatedEventStream stream, AnnotatedEventType toPredict, WindowMiner winMiner) throws IOException, ClassNotFoundException {
+			AnnotatedEventStream stream, AnnotatedEventType toPredict, WindowMiner winMiner) throws IOException, ClassNotFoundException {
 		int n=20;
 		File predictorsFile = IOService.buildPredictorsFilePath(toPredict.getCompanyID());
 		File inversePredictorsFile = IOService.buildInversePredictorsFilePath(toPredict.getCompanyID());
-		PredictiveMiner miner = new PredictiveMiner(winMiner,eventAlphabet,s,n);
+		PERMSTrainer miner = new PERMSTrainer(winMiner,eventAlphabet,s,n);
 		Map<EpisodePattern, Double> predictors;
 		Map<EpisodePattern, Double> inversePredictors;
 //		if(predictorsFile.exists()){
@@ -215,7 +220,7 @@ public class Main {
 		System.out.println("inverse");
 		inversePredictors.keySet().stream().forEach(p -> System.out.println("found predictor" + p + "with " + inversePredictors.get(p) + " confidence" ));
 
-		return new PredictiveEpisodeModel(predictors,inversePredictors);
+		return new PERSMModel(predictors,inversePredictors);
 	}
 
 	/*private static void singleStream() throws IOException {

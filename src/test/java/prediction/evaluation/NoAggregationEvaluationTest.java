@@ -2,6 +2,7 @@ package prediction.evaluation;
 
 import static org.junit.Assert.*;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -17,14 +18,14 @@ import util.Pair;
 public class NoAggregationEvaluationTest {
 
 	@Test
-	public void getActualValueNotEnoughInWindowTestTest(){
+	public void getActualValueNotEnoughInWindowTestTest() throws IOException{
 		NoAggregationEvaluator evaluator = new NoAggregationEvaluator(5, null);
 		List<Pair<LocalDateTime, BigDecimal>> targetMovement = buildTargetMovement();
 		assertEquals(Change.EQUAL,evaluator.getActualValue(toTime(2), targetMovement));
 	}
 	
 	@Test
-	public void getActualValueEqualTest(){
+	public void getActualValueEqualTest() throws IOException{
 		NoAggregationEvaluator evaluator = new NoAggregationEvaluator(5, null);
 		List<Pair<LocalDateTime, BigDecimal>> targetMovement = buildEqualTargetMovement();
 		for(int i=0;i<14;i++){
@@ -34,7 +35,7 @@ public class NoAggregationEvaluationTest {
 	}
 	
 	@Test
-	public void getaActualValueDownTest(){
+	public void getaActualValueDownTest() throws IOException{
 		NoAggregationEvaluator evaluator = new NoAggregationEvaluator(5, null);
 		List<Pair<LocalDateTime, BigDecimal>> targetMovement = buildDownTargetMovement();
 		for(int i=0;i<4;i++){
@@ -59,7 +60,7 @@ public class NoAggregationEvaluationTest {
 	}
 
 	@Test
-	public void getActualValueUpTest(){
+	public void getActualValueUpTest() throws IOException{
 		NoAggregationEvaluator evaluator = new NoAggregationEvaluator(5, null);
 		List<Pair<LocalDateTime, BigDecimal>> targetMovement = buildUpTargetMovement();
 		assertEquals(Change.UP,evaluator.getActualValue(toTime(1), targetMovement));
@@ -98,7 +99,7 @@ public class NoAggregationEvaluationTest {
 	}
 
 	@Test
-	public void evalRateOfReturnForDayTest_GoodPrediction() {
+	public void evalRateOfReturnForDayTest_GoodPrediction() throws IOException {
 		NoAggregationEvaluator evaluator = new NoAggregationEvaluator(5, null);
 		InvestmentTracker tracker = new InvestmentTracker(new BigDecimal(100.0));
 		int start = tracker.netWorth().toBigInteger().intValue();
@@ -108,7 +109,7 @@ public class NoAggregationEvaluationTest {
 	}
 	
 	@Test
-	public void evalRateOfReturnForDayTest_BadPrediction() {
+	public void evalRateOfReturnForDayTest_BadPrediction() throws IOException {
 		NoAggregationEvaluator evaluator = new NoAggregationEvaluator(5, null);
 		InvestmentTracker tracker = new InvestmentTracker(new BigDecimal(100.0));
 		evaluator.evalRateOfReturnForDay(buildBadPred(), buildTargetMovement(), tracker);
@@ -117,7 +118,7 @@ public class NoAggregationEvaluationTest {
 	}
 
 	@Test
-	public void testRateOfReturnPredTooLate(){
+	public void testRateOfReturnPredTooLate() throws IOException{
 		NoAggregationEvaluator evaluator = new NoAggregationEvaluator(5, null);
 		InvestmentTracker tracker = new InvestmentTracker(new BigDecimal(100.0));
 		int start = tracker.netWorth().toBigInteger().intValue();

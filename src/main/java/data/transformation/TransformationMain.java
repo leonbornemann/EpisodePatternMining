@@ -13,10 +13,25 @@ public class TransformationMain {
 	private static String dataBaseLocation = "D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Low Level Data\\";
 	private static String target = "D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Data\\";
 	private static String illegalFormatDir = "D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Illegally Formatted";
+		
+	private static String timeSeriesSourceLocation = "D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Time Series\\";
+	private static String sectorTimeSeriesSourceLocation = "D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Sector Time Series\\";
+	
+	private static String timeSeriesTargetLocation = "D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Time Series\\";
+	private static String sectorTimeSeriesTargetLocation = "D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Sector Time Series\\";
+	
 	
 	public static void main(String[] args) throws IOException {
 		//laptop();
-		desktop();
+		//desktop();
+		timeSeriesToAnnotated();
+	}
+
+	private static void timeSeriesToAnnotated() {
+		TimeSeriesTransformator transformer = new TimeSeriesTransformator(timeSeriesSourceLocation,timeSeriesTargetLocation);
+		transformer.transform();
+		transformer = new TimeSeriesTransformator(sectorTimeSeriesSourceLocation,sectorTimeSeriesTargetLocation);
+		transformer.transform();
 	}
 
 	private static void laptop() throws IOException {

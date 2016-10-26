@@ -9,7 +9,7 @@ import data.Change;
 import data.stream.AnnotatedEventStream;
 import data.stream.PredictorPerformance;
 import episode.finance.EpisodePattern;
-import prediction.mining.PredictiveMiner;
+import prediction.mining.PERMSTrainer;
 import prediction.mining.WindowMiner;
 import semantic.SemanticKnowledgeCollector;
 import synthetic.datagen.Generator;
@@ -33,7 +33,7 @@ public class SyntheticExperimentMain {
 		//DIRTY DIRTY COPY:
 		int d = 1000;
 		WindowMiner winMiner = new WindowMiner(stream, A, 100, d);
-		PredictiveMiner miner = new PredictiveMiner(winMiner, eventAlphabet,15,20);
+		PERMSTrainer miner = new PERMSTrainer(winMiner, eventAlphabet,15,20);
 		Map<EpisodePattern, Double> predictors = miner.getInitialPreditiveEpisodes();
 		Map<EpisodePattern, Double> inversePredictors = miner.getInitialInversePreditiveEpisodes();
 		//printTrustScores(predictors);

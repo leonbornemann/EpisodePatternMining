@@ -27,10 +27,10 @@ public class WindowMinerTest {
 		MultiFileAnnotatedEventStream stream = new MultiFileAnnotatedEventStream(streamFile , windowDuration*2 );
 		WindowMiner miner = new WindowMiner(stream, new AnnotatedEventType("A",Change.UP), numWindows, windowDuration);
 		assertEquals(2,miner.getPredictiveWindows().size());
-		assertBorders(new AnnotatedEventType("A",Change.DOWN),new AnnotatedEventType("E",Change.DOWN),miner.getPredictiveWindows().get(0));
+		assertBorders(new AnnotatedEventType("B",Change.DOWN),new AnnotatedEventType("E",Change.DOWN),miner.getPredictiveWindows().get(0));
 		assertBorders(new AnnotatedEventType("B",Change.DOWN),new AnnotatedEventType("C",Change.DOWN),miner.getPredictiveWindows().get(1));
 		assertEquals(2,miner.getInversePredictiveWindows().size());
-		assertEquals(0,miner.getInversePredictiveWindows().get(0).getEvents().size());
+		assertEquals(1,miner.getInversePredictiveWindows().get(0).getEvents().size());
 		assertBorders(new AnnotatedEventType("B",Change.DOWN),new AnnotatedEventType("F",Change.UP),miner.getInversePredictiveWindows().get(1));
 		System.out.println(miner.getNeutralWindows().size());
 

@@ -19,11 +19,11 @@ public class EpisodeDiscovery {
 	 * @param s
 	 * @return
 	 */
-	public Pair<EpisodeTrie<List<Boolean>>,EpisodeTrie<List<Boolean>>>  mineFrequentEpisodes(List<FixedStreamWindow> windows, Set<AnnotatedEventType> eventAlphabet,int s){
+	public Pair<EpisodeTrie<List<Boolean>>,EpisodeTrie<List<Boolean>>>  mineFrequentEpisodes(List<FixedStreamWindow> windows, Set<AnnotatedEventType> eventAlphabet,double sSerial,double sParallel){
 		SerialEpisodePatternMiner serialMiner = new SerialEpisodePatternMiner(windows, eventAlphabet);
-		EpisodeTrie<List<Boolean>> serialPatterns = serialMiner.mineFrequentEpisodePatterns(s);
+		EpisodeTrie<List<Boolean>> serialPatterns = serialMiner.mineFrequentEpisodePatterns(sSerial);
 		ParallelEpisodePatternMiner parallelMiner = new ParallelEpisodePatternMiner(windows, eventAlphabet);
-		EpisodeTrie<List<Boolean>> parallelPatterns = parallelMiner.mineFrequentEpisodePatterns(s);
+		EpisodeTrie<List<Boolean>> parallelPatterns = parallelMiner.mineFrequentEpisodePatterns(sParallel);
 		return new Pair<>(serialPatterns,parallelPatterns);
 	}	
 	

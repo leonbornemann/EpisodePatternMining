@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import prediction.util.StandardDateTimeFormatter;
 
@@ -54,7 +55,7 @@ public class LowLevelEvent {
 				lineCount++;
 				line = br.readLine();
 			}
-			return events;
+			return events.stream().sorted(LowLevelEvent::temporalOrder).collect(Collectors.toList());
 		} finally{
 			br.close();	
 		}

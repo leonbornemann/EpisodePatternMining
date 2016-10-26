@@ -6,12 +6,12 @@ import data.Change;
 import data.stream.StreamWindow;
 import episode.finance.EpisodePattern;
 
-public class PredictiveEpisodeModel implements PredictiveModel {
+public class PERSMModel implements PredictiveModel {
 
 	private Map<EpisodePattern, Double> predictors;
 	private Map<EpisodePattern, Double> inversePredictors;
 
-	public PredictiveEpisodeModel(Map<EpisodePattern, Double> predictors,Map<EpisodePattern, Double> inversePredictors) {
+	public PERSMModel(Map<EpisodePattern, Double> predictors,Map<EpisodePattern, Double> inversePredictors) {
 		this.predictors = predictors;
 		this.inversePredictors = inversePredictors;
 	}

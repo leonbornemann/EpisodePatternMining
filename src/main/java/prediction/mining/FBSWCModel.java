@@ -37,7 +37,7 @@ import episode.finance.storage.EpisodeTrie;
 import episode.lossy_counting.SerialEpisode;
 import util.Pair;
 
-public class FeatureBasedPredictor implements PredictiveModel {
+public class FBSWCModel implements PredictiveModel {
 	
 	private static String sparkLaptopPath = "C:\\Users\\LeonBornemann\\Documents\\Uni\\Master thesis\\spark-2.0.0-bin-hadoop2.7\\";
 	private static JavaSparkContext jsc;
@@ -52,11 +52,11 @@ public class FeatureBasedPredictor implements PredictiveModel {
 
 	private List<EpisodePattern> bestEpisodes;
 
-	public FeatureBasedPredictor(List<FixedStreamWindow> upExamples, List<FixedStreamWindow> downExamples, List<FixedStreamWindow> neutralExamples, Set<AnnotatedEventType> eventAlphabet, int s){
+	public FBSWCModel(List<FixedStreamWindow> upExamples, List<FixedStreamWindow> downExamples, List<FixedStreamWindow> neutralExamples, Set<AnnotatedEventType> eventAlphabet, double sSerial,double sParallel){
 		this.upExamples = upExamples;
 		this.downExamples = downExamples;
 		this.neutralExamples = neutralExamples;
-		Pair<EpisodeTrie<List<Boolean>>,EpisodeTrie<List<Boolean>>> allFrequent = mineFrequentEpisodes(eventAlphabet, s);
+		Pair<EpisodeTrie<List<Boolean>>,EpisodeTrie<List<Boolean>>> allFrequent = mineFrequentEpisodes(eventAlphabet, sSerial,sParallel);
 		//feature selection via information gain:
 		bestEpisodes = selectBest(allFrequent);
 		//use apache spark's mlib to train random forest
@@ -78,7 +78,7 @@ public class FeatureBasedPredictor implements PredictiveModel {
 	 * @throws ClassNotFoundException 
 	 */
 	@SuppressWarnings("unchecked")
-	public FeatureBasedPredictor(File file) throws FileNotFoundException, IOException, ClassNotFoundException{
+	public FBSWCModel(File file) throws FileNotFoundException, IOException, ClassNotFoundException{
 		ObjectInputStream in = new ObjectInputStream(new FileInputStream(file));
 		bestEpisodes =  (List<EpisodePattern>) in.readObject();
 		model = (RandomForestModel) in.readObject();
@@ -124,13 +124,13 @@ public class FeatureBasedPredictor implements PredictiveModel {
 	 * @param s
 	 * @return
 	 */
-	private Pair<EpisodeTrie<List<Boolean>>,EpisodeTrie<List<Boolean>>> mineFrequentEpisodes(Set<AnnotatedEventType> eventAlphabet, int s) {
+	private Pair<EpisodeTrie<List<Boolean>>,EpisodeTrie<List<Boolean>>> mineFrequentEpisodes(Set<AnnotatedEventType> eventAlphabet,double sSerial,double sParallel) {
 		EpisodeDiscovery discovery = new EpisodeDiscovery();
-		Pair<EpisodeTrie<List<Boolean>>,EpisodeTrie<List<Boolean>>> allFrequent = discovery.mineFrequentEpisodes(upExamples, eventAlphabet, s);
-		Pair<EpisodeTrie<List<Boolean>>, EpisodeTrie<List<Boolean>>> fromDown = discovery.mineFrequentEpisodes(downExamples, eventAlphabet, s);
+		Pair<EpisodeTrie<List<Boolean>>,EpisodeTrie<List<Boolean>>> allFrequent = discovery.mineFrequentEpisodes(upExamples, eventAlphabet, sSerial, sParallel);
+		Pair<EpisodeTrie<List<Boolean>>, EpisodeTrie<List<Boolean>>> fromDown = discovery.mineFrequentEpisodes(downExamples, eventAlphabet, sSerial, sParallel);
 		allFrequent.getFirst().addAllNew(fromDown.getFirst());
 		allFrequent.getSecond().addAllNew(fromDown.getSecond());
-		Pair<EpisodeTrie<List<Boolean>>, EpisodeTrie<List<Boolean>>> fromNeutral = discovery.mineFrequentEpisodes(neutralExamples, eventAlphabet, s);
+		Pair<EpisodeTrie<List<Boolean>>, EpisodeTrie<List<Boolean>>> fromNeutral = discovery.mineFrequentEpisodes(neutralExamples, eventAlphabet, sSerial, sParallel);
 		allFrequent.getFirst().addAllNew(fromNeutral.getFirst());
 		allFrequent.getSecond().addAllNew(fromNeutral.getSecond());
 		return allFrequent;

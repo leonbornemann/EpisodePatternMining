@@ -51,9 +51,13 @@ public class LowToAnnotatedTransformator {
 						System.out.println("error while transforming "+ file.getName());
 						System.out.println("stack trace:");
 						e.printStackTrace();
-						File garbageDst = new File(illegalFormatDir.getAbsolutePath() + File.separator + file.getName());
-						Files.move(file.toPath(), garbageDst.toPath());
-						System.out.println("Moved File: " + file.getName() +" to garbage folder");
+						if(illegalFormatDir!=null){
+							File garbageDst = new File(illegalFormatDir.getAbsolutePath() + File.separator + file.getName());
+							Files.move(file.toPath(), garbageDst.toPath());
+							System.out.println("Moved File: " + file.getName() +" to garbage folder");
+						} else{
+							throw new AssertionError();
+						}
 					}
 				} else{
 					System.out.println("skipping "+file.getName()+" because target already exists");

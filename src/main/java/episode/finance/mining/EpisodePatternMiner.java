@@ -33,8 +33,9 @@ public abstract class EpisodePatternMiner<E extends EpisodePattern> {
 		this.patternGen = createPatternGen(eventAlphabet);
 	}
 	
-	public EpisodeTrie<List<Boolean>> mineFrequentEpisodePatterns(int s){
-		System.out.println("Starting to mine "+getEpisodeTypeName()+" out of "+pred.size() + " windows with support "+s );
+	public EpisodeTrie<List<Boolean>> mineFrequentEpisodePatterns(double relativeSupport){
+		int absoluteSupport = (int) Math.ceil(relativeSupport*pred.size());
+		System.out.println("Starting to mine "+getEpisodeTypeName()+" out of "+pred.size() + " windows with support "+relativeSupport );
 		List<E> initialCandidates = patternGen.generateSize1Candidates();
 		EpisodeTrie<List<Boolean>> frequentTrie = new EpisodeTrie<>();
 		initialCandidates.forEach(c -> frequentTrie.setValue(c, null));
@@ -43,9 +44,7 @@ public abstract class EpisodePatternMiner<E extends EpisodePattern> {
 		while(true){
 			//TODO: insert support for each candidate!
 			addSupportToTrie(candidates.iterator(),pred);
-			List<Boolean> a = frequentTrie.getValue(new SerialEpisodePattern(Arrays.asList(new AnnotatedEventType("AAPL",Change.EQUAL))));
-			filterAllBelowMinSup(candidates.iterator(),pred,s);
-			a = frequentTrie.getValue(new SerialEpisodePattern(Arrays.asList(new AnnotatedEventType("AAPL",Change.EQUAL))));
+			filterAllBelowMinSup(candidates.iterator(),pred,absoluteSupport);
 			Iterator<EpisodeIdentifier<List<Boolean>>> newFrequent = frequentTrie.getAllOfSize(size).iterator();
 			if(!newFrequent.hasNext()){
 				break;
@@ -81,13 +80,13 @@ public abstract class EpisodePatternMiner<E extends EpisodePattern> {
 		return (int) list.stream().filter(p -> p == true).count();
 	}
 
-	public Map<E,Double> mineBestEpisodePatterns(int s, int n,List<FixedStreamWindow> inversePred, List<FixedStreamWindow> precedingNothingWindows){
-		return getBestPredictors(mineFrequentEpisodePatterns(s),n,inversePred,precedingNothingWindows);
+	public Map<E,Double> mineBestEpisodePatterns(double s, int n,List<FixedStreamWindow> inversePred){
+		return getBestPredictors(mineFrequentEpisodePatterns(s),n,inversePred);
 	}
 
 	protected abstract String getEpisodeTypeName();
 
-	private Map<E,Double> getBestPredictors(EpisodeTrie<List<Boolean>> frequent, int n, List<FixedStreamWindow> inversePred, List<FixedStreamWindow> precedingNothingWindows) {
+	private Map<E,Double> getBestPredictors(EpisodeTrie<List<Boolean>> frequent, int n, List<FixedStreamWindow> inversePred) {
 		EpisodeTrie<List<Boolean>> inverseFrequent = new EpisodeTrie<>();
 		Iterator<EpisodeIdentifier<List<Boolean>>> allFrequentEpisodes = frequent.bfsIterator();
 		while (allFrequentEpisodes.hasNext()) {

@@ -10,14 +10,21 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintStream;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import data.AnnotatedEventType;
 import episode.finance.EpisodePattern;
 import prediction.mining.Method;
+import util.Pair;
 
 public class IOService {
 
@@ -82,15 +89,15 @@ public class IOService {
 		out.close();
 	}	
 	
-	public static File buildInversePredictorsFilePath(String companyId) {
-		File companyDir = getOrCreateCompanyDir(companyId);
+	public static File buildInversePredictorsFilePath(String companyId, File parentDir) {
+		File companyDir = getOrCreateCompanyDir(companyId,parentDir);
 		File programStateDir = getOrCreateProgramStateDir(companyDir);
 		return new File(programStateDir.getAbsolutePath() + File.separator + "inversePredictors.map");
 	}
 
 
-	public static File buildPredictorsFilePath(String companyId) {
-		File companyDir = getOrCreateCompanyDir(companyId);
+	public static File buildPredictorsFilePath(String companyId, File parentDir) {
+		File companyDir = getOrCreateCompanyDir(companyId,parentDir);
 		File programStateDir = getOrCreateProgramStateDir(companyDir);
 		return new File(programStateDir.getAbsolutePath() + File.separator + "predictors.map");
 	}
@@ -106,8 +113,12 @@ public class IOService {
 	}
 
 
-	private static File getOrCreateCompanyDir(String companyId) {
-		String basePath = "resources/results/";
+	private static File getOrCreateCompanyDir(String companyId, File parentDir) {
+		String parentDirString = parentDir.getAbsolutePath();
+		if(parentDirString.charAt(parentDirString.length()-1)!='/'){
+			parentDirString = parentDirString + "/";
+		}
+		String basePath = parentDirString + "resources/results/";
 		File companyDir = new File(basePath + companyId + "/");
 		if(!companyDir.exists()){
 			companyDir.mkdirs();
@@ -115,8 +126,8 @@ public class IOService {
 		return companyDir;
 	}
 	
-	public static File getEvaluationResultFile(String companyId, Method method) {
-		File comp = getOrCreateCompanyDir(companyId);
+	public static File getEvaluationResultFile(String companyId, Method method, File parentDir) {
+		File comp = getOrCreateCompanyDir(companyId,parentDir);
 		File programState = getOrCreateProgramStateDir(comp);
 		if(method==Method.PERMS){
 			return new File(programState.getAbsolutePath() + File.separator + "evaluationResult.obj");
@@ -126,8 +137,8 @@ public class IOService {
 	}
 	
 
-	public static File buildTargetMovementFile(String companyId, Method method) {
-		File companyDir = getOrCreateCompanyDir(companyId);
+	public static File buildTargetMovementFile(String companyId, Method method, File parentDir) {
+		File companyDir = getOrCreateCompanyDir(companyId,parentDir);
 		if(method==Method.PERMS){
 			return new File(companyDir.getAbsolutePath() + File.separator + "targetMovement.csv");
 		} else{
@@ -136,8 +147,8 @@ public class IOService {
 	}
 
 
-	public static File buildPredictionsTargetFile(String companyId, Method method) {
-		File companyDir = getOrCreateCompanyDir(companyId);
+	public static File buildPredictionsTargetFile(String companyId, Method method, File parentDir) {
+		File companyDir = getOrCreateCompanyDir(companyId,parentDir);
 		if(method==Method.PERMS){
 			return new File(companyDir.getAbsolutePath() + File.separator + "predictions.csv");
 		} else{
@@ -145,23 +156,87 @@ public class IOService {
 		}
 	}
 
-	public static File getFeatureBasedPredictorFile(String companyID) {
-		File companyDir = getOrCreateCompanyDir(companyID);
+	public static File getFeatureBasedPredictorFile(String companyID, File parentDir) {
+		File companyDir = getOrCreateCompanyDir(companyID,parentDir);
 		File programStateDir = getOrCreateProgramStateDir(companyDir);
 		return new File(programStateDir.getAbsolutePath() + File.separator + "featureBasedPredictor.object");
 	}
 
-	public static File getCSVResultFile(String companyID, Method method) {
-		File companyDir = getOrCreateCompanyDir(companyID);
+	public static File getCSVResultFile(String companyID, Method method, File parentDir) {
+		File companyDir = getOrCreateCompanyDir(companyID,parentDir);
 		return new File(companyDir + File.separator +"resultsAsCSV_" + method + ".csv");
 	}
 
-	public static File getTotalResultByDayCsvFile(Method method) {
-		return new File("resources/AveragedResults/"+method+".csv");
+	public static File getTotalResultByDayCsvFile(Method method, File parentDir) {
+		String parentDirString = parentDir.getAbsolutePath();
+		if(parentDirString.charAt(parentDirString.length()-1)!='/'){
+			parentDirString = parentDirString + "/";
+		}
+		return new File(parentDirString + "resources/AveragedResults/"+method+".csv");
 	}
 
-	public static File getTotalResultByCompanyCsvFile(Method method) {
-		return new File("resources/AveragedResults/"+method+"_byCompany.csv");
+	public static File getTotalResultByCompanyCsvFile(Method method, File parentDir) {
+		String parentDirString = parentDir.getAbsolutePath();
+		if(parentDirString.charAt(parentDirString.length()-1)!='/'){
+			parentDirString = parentDirString + "/";
+		}
+		return new File(parentDirString + "resources/AveragedResults/"+method+"_byCompany.csv");
+	}
+
+	public static Map<String, Set<String>> getSectorInfo(Set<String> codes) throws IOException {
+		String companyListPath = "resources/stock_data/companyInfo/companylist.csv";
+		BufferedReader br = new BufferedReader(new FileReader(new File(companyListPath)));
+		br.readLine();
+		String line = br.readLine();
+		Map<String,Set<String>> bySector = new HashMap<>();
+		int sectorIndex = 5;
+		while(line!=null){
+			String[] lineTokens = line.split("\",\"");
+			String curCompanyCode = lineTokens[0].replaceAll("\"", "").trim();
+			if(codes == null || codes.contains(curCompanyCode)){
+				String sector = lineTokens[sectorIndex].replaceAll("\"", "");
+				if(bySector.containsKey(sector)) {
+					bySector.get(sector).add(curCompanyCode);
+				} else{
+					bySector.put(sector, new HashSet<>(Arrays.asList(curCompanyCode)));
+				}
+			}
+			line = br.readLine();
+		}
+		br.close();
+		// remove those that don't have a sector
+		bySector.remove("n/a");
+		return bySector;
+	}
+
+	public static Map<String, Set<String>> getCodeBySector() throws IOException {
+		return getSectorInfo(null);
+	}
+
+	public static List<Pair<LocalDateTime, BigDecimal>> readTimeSeriesData(File source) throws IOException {
+		System.out.println("beginning file "+source.getName());
+		BufferedReader br = new BufferedReader(new FileReader(source));
+		try{
+			List<Pair<LocalDateTime, BigDecimal>> events = new ArrayList<>();
+			br.readLine();
+			String line = br.readLine();
+			int lineCount = 2;
+			while(line!=null && !line.equals("")){
+				String[] tokens = line.split(",");
+				if(tokens.length!=2){
+					System.out.println(line);
+					System.out.println(lineCount);
+					assert(false);
+				}
+				Pair<LocalDateTime, BigDecimal> curPair = new Pair<>(LocalDateTime.parse(tokens[0], StandardDateTimeFormatter.getStandardDateTimeFormatter()),new BigDecimal(tokens[1]));
+				events.add(curPair);
+				lineCount++;
+				line = br.readLine();
+			}
+			return events.stream().sorted((p1,p2) -> p1.getFirst().compareTo(p2.getFirst())).collect(Collectors.toList());
+		} finally{
+			br.close();	
+		}
 	}
 
 }
