@@ -172,6 +172,7 @@ public class IOService {
 		if(parentDirString.charAt(parentDirString.length()-1)!='/'){
 			parentDirString = parentDirString + "/";
 		}
+		new File(parentDirString + "resources/AveragedResults/").mkdir();
 		return new File(parentDirString + "resources/AveragedResults/"+method+".csv");
 	}
 
@@ -236,6 +237,15 @@ public class IOService {
 			return events.stream().sorted((p1,p2) -> p1.getFirst().compareTo(p2.getFirst())).collect(Collectors.toList());
 		} finally{
 			br.close();	
+		}
+	}
+
+	public static File buildTimeTargetFile(String companyID, Method method, File parentDir) {
+		File companyDir = getOrCreateCompanyDir(companyID,parentDir);
+		if(method==Method.PERMS){
+			return new File(companyDir.getAbsolutePath() + File.separator + "runtimePerformance.csv");
+		} else{
+			return new File(companyDir.getAbsolutePath() + File.separator + Method.FBSWC + "runtimePerformance.csv");
 		}
 	}
 

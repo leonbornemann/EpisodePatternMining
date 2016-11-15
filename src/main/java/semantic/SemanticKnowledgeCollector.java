@@ -2,6 +2,8 @@ package semantic;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -31,7 +33,19 @@ public class SemanticKnowledgeCollector {
 	}
 	
 	public Set<String> getAnnotatedCompanyCodes(){
-		return filteredResults.stream().map(e -> e.getSecond()).collect(Collectors.toSet());
+		//return filteredResults.stream().map(e -> e.getSecond()).collect(Collectors.toSet());
+		//no need to do the query all the time, since we know the result:
+		Set<String> codes = new HashSet<>();
+		codes.addAll(Arrays.asList("CERN","AAPL","EYES","CSCO","ELNK","OPTT","SNDK","YHOO","TXN","HEAR","MSFT","CGEN","QCOM","STX",
+				"ISSC","CTSH","KE","Z","ACOR","EA","GNCMA","ALSK","SP","OHGI","ON","GOOG","IBKR","VOD","VA","AUDC","TECH","CMPR","EBAY","INTC","FCS","LE","NLST","NK","CSTE","SODA"));
+		return codes;
+	}
+	
+	public Set<String> getSectorCodes(){
+		Set<String> codes = new HashSet<>();
+		codes.addAll(Arrays.asList("Miscellaneous","Finance","Transportation","Consumer Services","Capital Goods","Public Utilities",
+				"Basic Industries","Health Care","Energy","Consumer Durables","Technology","Consumer Non-Durables"));
+		return codes;
 	}
 
 	private String getSymbol(String longCode) {

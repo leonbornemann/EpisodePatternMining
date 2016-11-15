@@ -1,5 +1,7 @@
 setwd("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Time Series\\")
+setwd("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Time Series Smoothed\\")
 files = list.files()
+totalNumRows = 0
 for(file in files){
   timeSeries = read.table(file,header =T,sep = ",")
   dtimes = as.character(timeSeries$time)
@@ -12,11 +14,21 @@ for(file in files){
   finalTS$diffDate = diffDate
   interstingEvents = finalTS[abs(finalTS$diff) > finalTS$value *0.05,]
   print(file)
+  print(nrow(interstingEvents))
   print(interstingEvents)
+  totalNumRows = totalNumRows + nrow(interstingEvents)
   #xAxis = 1:nrow(timeSeries)
   #plot(value~xAxis, data = timeSeries, type = "l", lwd=1, main = file)
-    
 }
+print(totalNumRows)
+
+
+setwd("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Time Series\\")
+file = "ACOR.csv"
+timeSeries = read.table(file,header =T,sep = ",")$value
+setwd("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Time Series Smoothed\\")
+timeSeriesSmoothed = read.table(file,header =T,sep = ",")$value
+
 
 
 

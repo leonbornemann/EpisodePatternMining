@@ -1,6 +1,17 @@
+filterOutSectors = function(x){
+  sectorCodes = c("Miscellaneous","Finance","Transportation","Consumer Services","Capital Goods","Public Utilities",
+                  "Basic Industries","Health Care","Energy","Consumer Durables","Technology","Consumer Non-Durables")
+  result = logical(length(x))
+  for(i in 1:length(x)){
+    result[i] = all(x[i] != sectorCodes)
+  }
+  return(result)
+}
+
 library(lattice)
 setwd("C:\\Users\\Leon Bornemann\\git\\EpisodePatternMining\\resources\\AveragedResults\\")
 
+setwd("C:\\Users\\Leon Bornemann\\Desktop\\base Folder\\Run 7\\resources\\AveragedResults\\")
 #by company
 
 fbswc = read.table("FBSWC_byCompany.csv",header=T,sep=",")
@@ -8,9 +19,14 @@ perms = read.table("PERMS_byCompany.csv",header=T,sep=",")
 fbswc$method = "fbswc"
 perms$method = "perms"
 totalTable = rbind(fbswc,perms)
-totalTable = totalTable[totalTable$company != "TECH",]
+totalTable = totalTable[filterOutSectors(totalTable$company),]
 
 colors = c("purple","blue")
+
+mean(fbswc$return)
+mean(fbswc$smoothedReturn)
+mean(perms$smoothedReturn)
+mean(perms$return)
 
 barchart(return*100~company,
          data=totalTable,
@@ -23,6 +39,18 @@ barchart(return*100~company,
          scales=list(x=list(rot=90)),
          main="Return by Company"
          )
+
+barchart(smoothedReturn*100~company,
+         data=totalTable,
+         groups=method,
+         par.settings=list(superpose.polygon=list(col=colors)),
+         origin = 0,
+         xlab = "companies",
+         ylab = "total Smoothed Return [%]",
+         auto.key=list(space="top", columns=2, cex.title=1),
+         scales=list(x=list(rot=90)),
+         main="Smoothed Return by Company"
+)
 
 barchart(Precision_UP*100~company,
          data=totalTable,

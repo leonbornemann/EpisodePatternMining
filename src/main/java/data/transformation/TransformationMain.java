@@ -20,11 +20,20 @@ public class TransformationMain {
 	private static String timeSeriesTargetLocation = "D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Time Series\\";
 	private static String sectorTimeSeriesTargetLocation = "D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Sector Time Series\\";
 	
+	private static String smoothedTimeSeriesLocation = "D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Time Series Smoothed\\";
+	private static String smoothedSectorTimeSeriesLocation = "D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Sector Time Series Smoothed\\";
 	
 	public static void main(String[] args) throws IOException {
 		//laptop();
 		//desktop();
-		timeSeriesToAnnotated();
+		//timeSeriesToAnnotated();
+		smoothTimeSeries();
+	}
+
+	private static void smoothTimeSeries() throws IOException {
+		TimeSeriesSmoother smoother = new TimeSeriesSmoother();
+		smoother.smoothAll(new File(timeSeriesSourceLocation), new File(smoothedTimeSeriesLocation));
+		smoother.smoothAll(new File(sectorTimeSeriesSourceLocation), new File(smoothedSectorTimeSeriesLocation));
 	}
 
 	private static void timeSeriesToAnnotated() {

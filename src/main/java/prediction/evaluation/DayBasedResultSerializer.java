@@ -21,13 +21,13 @@ import prediction.util.StandardDateTimeFormatter;
 
 public class DayBasedResultSerializer extends ResultSerializer{
 
-	public void toCSV(Set<String> annotatedCompanyCodes, Method method) throws FileNotFoundException, ClassNotFoundException, IOException {
+	public void toCSV(Set<String> annotatedCompanyCodes, Method method, File resultDir) throws FileNotFoundException, ClassNotFoundException, IOException {
 		Map<String,EvaluationResult> results = new HashMap<>();
 		for (String id : annotatedCompanyCodes) {
-			results.put(id,EvaluationResult.deserialize(IOService.getEvaluationResultFile(id,method)));
+			results.put(id,EvaluationResult.deserialize(IOService.getEvaluationResultFile(id,method,resultDir)));
 		}
 		for(String id: annotatedCompanyCodes){
-			File csvResultFile = IOService.getCSVResultFile(id,method);
+			File csvResultFile = IOService.getCSVResultFile(id,method,resultDir);
 			PrintWriter writer = new PrintWriter(new FileWriter(csvResultFile));
 			List<LocalDate> orderedDates = results.get(id).getAllDays().stream().sorted().collect(Collectors.toList());
 			writer.println(buildHeadLine());
@@ -42,9 +42,9 @@ public class DayBasedResultSerializer extends ResultSerializer{
 			writer.close();
 		}
 		List<LocalDate> allDatesOrdered = results.values().stream().flatMap(r -> r.getAllDays().stream()).sorted().distinct().collect(Collectors.toList());
-		File target = IOService.getTotalResultByDayCsvFile(method);
+		File target = IOService.getTotalResultByDayCsvFile(method,resultDir);
 		PrintWriter writer = new PrintWriter(new FileWriter(target));
-		writer.println("date,avgReturn,avgPrecision_UP,avgPrecision_DOWN,avgPrecisionIgnoreEqual_UP,avgPrecisionIgnoreEqual_DOWN,Accuracy,AccuracyIngoreEqual,"
+		writer.println("date,avgReturn,avgSmoothedReturn,avgPrecision_UP,avgPrecision_DOWN,avgPrecisionIgnoreEqual_UP,avgPrecisionIgnoreEqual_DOWN,Accuracy,AccuracyIngoreEqual,"
 				+ "avgImprovedPrecision_UP,avgImprovedPrecision_DOWN,avgImprovedPrecisionIgnoreEqual_UP,avgImprovedPrecisionIgnoreEqual_DOWN,ImprovedAccuracy,ImprovedAccuracyIngoreEqual");
 		for(int i=0;i<allDatesOrdered.size();i++){
 			LocalDate date = allDatesOrdered.get(i);
@@ -79,6 +79,9 @@ public class DayBasedResultSerializer extends ResultSerializer{
 		List<BigDecimal> returns = validResults.stream().
 			map(r -> r.getReturn(date)).collect(Collectors.toList());
 		String avgReturnString = getAvgAsRoundedString(returns);
+		List<BigDecimal> avgSmoothedreturns = validResults.stream().
+				map(r -> r.getSmoothedReturn(date)).collect(Collectors.toList());
+			String avgSmoothedReturnString = getAvgAsRoundedString(avgSmoothedreturns);
 		List<Double> upPrecisions = validResults.stream().map(r -> r.getPerformance(date).getPrecision(Change.UP)).
 				filter(d -> !d.isNaN()).collect(Collectors.toList());
 		String avgUpPrecisionString = getAvgAsRoundedStringForDoubleList(upPrecisions);
@@ -114,6 +117,7 @@ public class DayBasedResultSerializer extends ResultSerializer{
 				filter(d -> !d.isNaN()).collect(Collectors.toList()));
 		
 		return avgReturnString + "," + 
+			avgSmoothedReturnString + "," + 
 			avgUpPrecisionString + "," + 
 			avgDownPrecisionString + "," + 
 			avgUpPrecisionsIgnoreEqualString + "," + 

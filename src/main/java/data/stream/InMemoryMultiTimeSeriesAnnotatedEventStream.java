@@ -17,11 +17,13 @@ public class InMemoryMultiTimeSeriesAnnotatedEventStream extends AbstractAnnotat
 	private List<AnnotatedEvent> stream;
 	private int curIndex;
 
-	public InMemoryMultiTimeSeriesAnnotatedEventStream(File streamDir) throws IOException {
-		List<File> allFiles = Arrays.asList(streamDir.listFiles()).stream().filter(f -> f.getName().endsWith(".csv")).collect(Collectors.toList());
+	public InMemoryMultiTimeSeriesAnnotatedEventStream(List<File> streamDirs) throws IOException {
 		List<AnnotatedEvent> allEvents = new ArrayList<>();
-		for(File file : allFiles){
-			allEvents.addAll(AnnotatedEvent.readAll(file));
+		for(File streamDir : streamDirs){
+			List<File> allFiles = Arrays.asList(streamDir.listFiles()).stream().filter(f -> f.getName().endsWith(".csv")).collect(Collectors.toList());
+			for(File file : allFiles){
+				allEvents.addAll(AnnotatedEvent.readAll(file));
+			}
 		}
 		Collections.sort(allEvents,(a,b) -> a.getTimestamp().compareTo(b.getTimestamp()));
 		this.stream = allEvents;

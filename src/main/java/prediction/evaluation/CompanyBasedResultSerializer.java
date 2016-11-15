@@ -20,16 +20,16 @@ import prediction.util.IOService;
 
 public class CompanyBasedResultSerializer extends ResultSerializer{
 
-	public void toCSV(Set<String> annotatedCompanyCodes, Method method) throws FileNotFoundException, ClassNotFoundException, IOException {
+	public void toCSV(Set<String> annotatedCompanyCodes, Method method, File resultDir) throws FileNotFoundException, ClassNotFoundException, IOException {
 		List<String> orderedCompanyCodes = annotatedCompanyCodes.stream().sorted().collect(Collectors.toList());
 		Map<String,EvaluationResult> results = new HashMap<>();
 		for (String id : annotatedCompanyCodes) {
-			results.put(id,EvaluationResult.deserialize(IOService.getEvaluationResultFile(id,method)));
+			results.put(id,EvaluationResult.deserialize(IOService.getEvaluationResultFile(id,method,resultDir)));
 		}
-		File csvResultFile = IOService.getTotalResultByCompanyCsvFile(method);
+		File csvResultFile = IOService.getTotalResultByCompanyCsvFile(method,resultDir);
 		PrintWriter writer = new PrintWriter(new FileWriter(csvResultFile));
-		writer.println("company,return,Precision_UP,Precision_DOWN,PrecisionIgnoreEqual_UP,PrecisionIgnoreEqual_DOWN,Accuracy,AccuracyIngoreEqual,"
-				+ "ImprovedPrecision_UP,ImprovedPrecision_DOWN,ImprovedPrecisionIgnoreEqual_UP,ImprovedPrecisionIgnoreEqual_DOWN,ImprovedAccuracy,ImprovedAccuracyIngoreEqual");
+		writer.println("company,return,smoothedReturn,Precision_UP,Precision_DOWN,PrecisionIgnoreEqual_UP,PrecisionIgnoreEqual_DOWN,Accuracy,AccuracyIngoreEqual,"
+				+ "ImprovedPrecision_UP,ImprovedPrecision_DOWN,ImprovedPrecisionIgnoreEqual_UP,ImprovedPrecisionIgnoreEqual_DOWN,ImprovedAccuracy,ImprovedAccuracyIngoreEqual,trainingTimeNs,testTimeNS");
 		for(int i=0;i<orderedCompanyCodes.size();i++){
 			String id = orderedCompanyCodes.get(i);
 			if(i==orderedCompanyCodes.size()-1){
@@ -46,6 +46,7 @@ public class CompanyBasedResultSerializer extends ResultSerializer{
 		PredictorPerformance totalImproved = evaluationResult.getTotalImprovedPerformance();
 		int roundTo = 5;
 		return getAsRoundedString(evaluationResult.getSummedReturn(),roundTo) + "," +
+				getAsRoundedString(evaluationResult.getSummedSmoothedReturn(),roundTo) + "," +
 				getAsRoundedString(total.getPrecision(Change.UP), roundTo) + "," +
 				getAsRoundedString(total.getPrecision(Change.DOWN), roundTo) + "," +
 				getAsRoundedString(total.getEqualIgnoredPrecision(Change.UP), roundTo) + "," +
@@ -58,6 +59,9 @@ public class CompanyBasedResultSerializer extends ResultSerializer{
 				getAsRoundedString(totalImproved.getEqualIgnoredPrecision(Change.UP), roundTo) + "," +
 				getAsRoundedString(totalImproved.getEqualIgnoredPrecision(Change.DOWN), roundTo) + "," +
 				getAsRoundedString(totalImproved.getAccuracy(), roundTo) + "," +
-				getAsRoundedString(totalImproved.getEqualIgnoredAccuracy(), roundTo);
+				getAsRoundedString(totalImproved.getEqualIgnoredAccuracy(), roundTo) + "," +
+		
+				evaluationResult.getTrainingTimeNs() + "," +
+				evaluationResult.getTestTimeNs();
 	}
 }

@@ -24,21 +24,19 @@ import util.Pair;
 
 public class NoAggregationEvaluator extends Evaluator{
 
-	private File lowLevelStreamDir;
 	private int d;
 	private Map<String, List<Pair<LocalDateTime, BigDecimal>>> companyMovements;
+	private Map<String, List<Pair<LocalDateTime, BigDecimal>>> smoothedCompanyMovements;
 	
-	public NoAggregationEvaluator(int d,File lowLevelStreamDir) throws IOException{
+	public NoAggregationEvaluator(int d,List<File> lowLevelStreamDirs, List<File> smoothedStreamDirs) throws IOException{
 		this.d = d;
-		if(lowLevelStreamDir!=null){
-			this.lowLevelStreamDir = lowLevelStreamDir;
-			companyMovements = initCompanyMovements();
+		if(lowLevelStreamDirs!=null){
+			companyMovements = initCompanyMovements(lowLevelStreamDirs);
 			assertTimeSeriesSorted();
-		} else{
-			//just for unit testing methods:
-			
+		} 
+		if(smoothedStreamDirs!=null){
+			smoothedCompanyMovements = initCompanyMovements(smoothedStreamDirs);
 		}
-		
 	}
 
 	private void assertTimeSeriesSorted() {
@@ -50,8 +48,8 @@ public class NoAggregationEvaluator extends Evaluator{
 		}
 	}
 
-	private Map<String, List<Pair<LocalDateTime, BigDecimal>>> initCompanyMovements() throws IOException {
-		List<File> allFiles = Arrays.asList(lowLevelStreamDir.listFiles());
+	private Map<String, List<Pair<LocalDateTime, BigDecimal>>> initCompanyMovements(List<File> dirs) throws IOException {
+		List<File> allFiles = dirs.stream().flatMap(dir -> Arrays.stream(dir.listFiles())).collect(Collectors.toList());
 		Map<String, List<Pair<LocalDateTime, BigDecimal>>> companyMovements = new HashMap<>();
 		for(File file : allFiles){
 			if(file.isFile() && file.getName().endsWith(".csv")){
@@ -61,13 +59,15 @@ public class NoAggregationEvaluator extends Evaluator{
 		return companyMovements;
 	}
 
-	public void eval(List<EvaluationFiles> companies) throws IOException {
+	public void eval(List<EvaluationFiles> companies,Map<String,Pair<Long,Long>> timeValues) throws IOException {
 		Map<String,Map<LocalDate, List<Pair<LocalDateTime, Change>>>> predictionsByCompanyByDay = getOrganizedPredictions(companies);
 		Map<String,EvaluationResult> results = new HashMap<>();
 		Map<String,InvestmentTracker> trackers = new HashMap<>();
+		Map<String,InvestmentTracker> smoothedTrackers = new HashMap<>();
 		predictionsByCompanyByDay.keySet().stream().forEach(id -> {
-			results.put(id, new EvaluationResult());
+			results.put(id, new EvaluationResult(timeValues.get(id).getFirst(),timeValues.get(id).getSecond()));
 			trackers.put(id, new InvestmentTracker(getStartingPrice(id)));
+			smoothedTrackers.put(id, new InvestmentTracker(getStartingPrice(id)));
 		});
 		List<LocalDate> daysSorted = getAllDates().stream().sorted().collect(Collectors.toList());
 		for (LocalDate day : daysSorted) {
@@ -78,22 +78,28 @@ public class NoAggregationEvaluator extends Evaluator{
 				System.out.println("Results for company " + companyID);
 				EvaluationResult result = results.get(companyID);
 				InvestmentTracker tracker = trackers.get(companyID);
+				InvestmentTracker smoothedTracker = smoothedTrackers.get(companyID);
 				Map<LocalDate, List<Pair<LocalDateTime, Change>>> byDay = predictionsByCompanyByDay.get(companyID);
 				List<Pair<LocalDateTime, BigDecimal>> targetMovement = getTargetPriceMovementForDay(companyID,day);
+				List<Pair<LocalDateTime, BigDecimal>> smoothedTargetMovement = getSmoothedTargetPriceMovementForDay(companyID,day);
 				if(byDay.get(day)!=null && !targetMovement.isEmpty()){
 					PredictorPerformance thisDayPerformance = new PredictorPerformance();
 					PredictorPerformance thisDayPerformanceImprovedMetric = new PredictorPerformance();
 					evalMetricsForDay(byDay.get(day),targetMovement,thisDayPerformance);
 					evalImprovedMetricForDay(byDay.get(day),targetMovement,thisDayPerformanceImprovedMetric);
 					evalRateOfReturnForDay(byDay.get(day),targetMovement,tracker);
+					evalRateOfReturnForDay(byDay.get(day),smoothedTargetMovement,smoothedTracker);
 					System.out.println("--------------------------------------------------------------------");
 					print(thisDayPerformance);
 					System.out.println("Return of investment: " + tracker.rateOfReturn());
+					System.out.println("Smoothed Return of investment: " + smoothedTracker.rateOfReturn());
 					result.putReturnOfInvestment(day,tracker.rateOfReturn());
+					result.putSmoothedReturnOfInvestment(day,smoothedTracker.rateOfReturn());
 					result.putMetricPerformance(day,thisDayPerformance);
 					result.putImprovedMetricPerformance(day,thisDayPerformanceImprovedMetric);
 					System.out.println("--------------------------------------------------------------------");
 					trackers.put(companyID,new InvestmentTracker(tracker.getPrice(), tracker.netWorth()));
+					smoothedTrackers.put(companyID,new InvestmentTracker(smoothedTracker.getPrice(), smoothedTracker.netWorth()));
 				} else{
 					result.addWarning("Skipped day " + day.format(StandardDateTimeFormatter.getStandardDateFormatter()));
 					System.out.println("Skipping Company because there were no predictions this day");
@@ -107,6 +113,10 @@ public class NoAggregationEvaluator extends Evaluator{
 			assert(company.size()==1);
 			results.get(id).serialize(company.get(0).getEvaluationResultFile());
 		}
+	}
+
+	private List<Pair<LocalDateTime, BigDecimal>> getSmoothedTargetPriceMovementForDay(String companyID,LocalDate day) {
+		return smoothedCompanyMovements.get(companyID).stream().filter(p -> LocalDate.from(p.getFirst()).equals(day)).sorted((a,b)->a.getFirst().compareTo(b.getFirst())).collect(Collectors.toList());
 	}
 
 	private Set<LocalDate> getAllDates() {

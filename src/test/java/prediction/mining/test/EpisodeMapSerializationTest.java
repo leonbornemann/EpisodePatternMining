@@ -15,7 +15,6 @@ import data.Change;
 import episode.finance.EpisodePattern;
 import episode.finance.ParallelEpisodePattern;
 import episode.finance.SerialEpisodePattern;
-import prediction.mining.Main;
 import prediction.util.IOService;
 
 public class EpisodeMapSerializationTest {
