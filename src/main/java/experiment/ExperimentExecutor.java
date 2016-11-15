@@ -82,7 +82,11 @@ public class ExperimentExecutor {
 	}
 
 	private void execute(Method method) throws ClassNotFoundException, IOException {
-		Map<String, Pair<Long, Long>> times = buildAndApplyModel(method);
+		//Map<String, Pair<Long, Long>> times = buildAndApplyModel(method);
+		Map<String, Pair<Long, Long>> times = new HashMap<String, Pair<Long, Long>>();
+		for(String id : annotatedCompanyCodes){
+			times.put(id, new Pair<>(-1L,-1L));
+		}
 		runEvaluation(method,times);
 		printEvaluationResult(method);
 		DayBasedResultSerializer dayBasedSerializer = new DayBasedResultSerializer();

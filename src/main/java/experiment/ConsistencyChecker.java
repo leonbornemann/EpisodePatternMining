@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import data.Change;
+import data.stream.PredictorPerformance;
 import prediction.evaluation.EvaluationResult;
 import prediction.mining.Method;
 import prediction.util.IOService;
@@ -38,20 +39,18 @@ public class ConsistencyChecker {
 			BigDecimal meanGain = NumericUtil.mean(positives,100);
 			BigDecimal meanLoss = NumericUtil.mean(negatives,100);
 			EvaluationResult evalResult = EvaluationResult.deserialize(IOService.getEvaluationResultFile(cmpId, Method.PERMS, resultDir));
-			double upRecall = evalResult.getTotalImprovedPerformance().getRecall(Change.UP);
-			double downRecall = evalResult.getTotalImprovedPerformance().getRecall(Change.DOWN);
-			double expectedReturn = getExpectedReturn(upRecall,downRecall,meanGain.doubleValue(),meanLoss.doubleValue(),positives.size(),negatives.size());
-			System.out.println("-------------------------" + cmpId + "-----------------------------------");
-			System.out.println("Recall up: " + upRecall);
-			System.out.println("Recall down:" + downRecall);
-			System.out.println("mean Gain: " + meanGain);
-			System.out.println("num positive: " + positives.size());
-			System.out.println("mean Loss: " + meanLoss);
-			System.out.println("num negative: " + negatives.size());
-			System.out.println("expected Return: " + expectedReturn);
-			System.out.println("Actual Return: " + evalResult.getSummedReturn());
-			System.out.println("Smoothed Return: " + evalResult.getSummedSmoothedReturn());
-			System.out.println("Buy and Hold Return: " + getBuyAndHoldReturn(timeSeries));
+			double expectedReturn = getExpectedBalance(evalResult.getTotalImprovedPerformance(),meanGain.doubleValue(),meanLoss.doubleValue(),positives.size(),negatives.size());
+			System.out.println(cmpId + "\t"+Math.abs(expectedReturn-evalResult.getSummedReturn().doubleValue()));
+//			System.out.println("-------------------------" + cmpId + "-----------------------------------");
+//			System.out.println("mean Gain: " + meanGain);
+//			System.out.println("num positive: " + positives.size());
+//			System.out.println("mean Loss: " + meanLoss);
+//			System.out.println("num negative: " + negatives.size());
+//			System.out.println("expected Return: " + expectedReturn);
+//			System.out.println("test examples: "+ evalResult.getTotalImprovedPerformance().getNumClassifiedExamples() );
+//			System.out.println("Actual Balance: " + evalResult.getSummedReturn());
+//			System.out.println("Smoothed Balance: " + evalResult.getSummedSmoothedReturn());
+//			System.out.println("Buy and Hold Return: " + getBuyAndHoldReturn(timeSeries));
 			
 		}
 	}
@@ -62,8 +61,8 @@ public class ConsistencyChecker {
 		return (end.doubleValue() - start.doubleValue()) / start.doubleValue();
 	}
 
-	private double getExpectedReturn(double upRecall,double downRecall,double meanGain,double meanLoss,int numUp,int numDown){
-		return upRecall*meanGain*numUp + (1-downRecall)*meanLoss*numDown;
+	private double getExpectedBalance(PredictorPerformance perf,double meanGain,double meanLoss,int numUp,int numDown){
+		return perf.getRecall(Change.UP)*meanGain*numUp + perf.getFalsePositiveRate(Change.UP)*meanLoss*numDown - perf.getRecall(Change.DOWN)*meanLoss*numDown - perf.getFalsePositiveRate(Change.DOWN)*meanGain*numDown;
 	}
 	
 

@@ -3,6 +3,7 @@ package prediction.evaluation;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -62,12 +63,8 @@ public class NoAggregationEvaluator extends Evaluator{
 	public void eval(List<EvaluationFiles> companies,Map<String,Pair<Long,Long>> timeValues) throws IOException {
 		Map<String,Map<LocalDate, List<Pair<LocalDateTime, Change>>>> predictionsByCompanyByDay = getOrganizedPredictions(companies);
 		Map<String,EvaluationResult> results = new HashMap<>();
-		Map<String,InvestmentTracker> trackers = new HashMap<>();
-		Map<String,InvestmentTracker> smoothedTrackers = new HashMap<>();
 		predictionsByCompanyByDay.keySet().stream().forEach(id -> {
 			results.put(id, new EvaluationResult(timeValues.get(id).getFirst(),timeValues.get(id).getSecond()));
-			trackers.put(id, new InvestmentTracker(getStartingPrice(id)));
-			smoothedTrackers.put(id, new InvestmentTracker(getStartingPrice(id)));
 		});
 		List<LocalDate> daysSorted = getAllDates().stream().sorted().collect(Collectors.toList());
 		for (LocalDate day : daysSorted) {
@@ -77,8 +74,6 @@ public class NoAggregationEvaluator extends Evaluator{
 				System.out.println("--------------------------------------------------------------------");
 				System.out.println("Results for company " + companyID);
 				EvaluationResult result = results.get(companyID);
-				InvestmentTracker tracker = trackers.get(companyID);
-				InvestmentTracker smoothedTracker = smoothedTrackers.get(companyID);
 				Map<LocalDate, List<Pair<LocalDateTime, Change>>> byDay = predictionsByCompanyByDay.get(companyID);
 				List<Pair<LocalDateTime, BigDecimal>> targetMovement = getTargetPriceMovementForDay(companyID,day);
 				List<Pair<LocalDateTime, BigDecimal>> smoothedTargetMovement = getSmoothedTargetPriceMovementForDay(companyID,day);
@@ -86,20 +81,11 @@ public class NoAggregationEvaluator extends Evaluator{
 					PredictorPerformance thisDayPerformance = new PredictorPerformance();
 					PredictorPerformance thisDayPerformanceImprovedMetric = new PredictorPerformance();
 					evalMetricsForDay(byDay.get(day),targetMovement,thisDayPerformance);
-					evalImprovedMetricForDay(byDay.get(day),targetMovement,thisDayPerformanceImprovedMetric);
-					evalRateOfReturnForDay(byDay.get(day),targetMovement,tracker);
-					evalRateOfReturnForDay(byDay.get(day),smoothedTargetMovement,smoothedTracker);
-					System.out.println("--------------------------------------------------------------------");
-					print(thisDayPerformance);
-					System.out.println("Return of investment: " + tracker.rateOfReturn());
-					System.out.println("Smoothed Return of investment: " + smoothedTracker.rateOfReturn());
-					result.putReturnOfInvestment(day,tracker.rateOfReturn());
-					result.putSmoothedReturnOfInvestment(day,smoothedTracker.rateOfReturn());
+					evalImprovedMetricForDay(byDay.get(day),targetMovement,thisDayPerformanceImprovedMetric);					
+					result.putReturnOfInvestment(day,getBalance(byDay.get(day),targetMovement));
+					result.putSmoothedReturnOfInvestment(day,getBalance(byDay.get(day),smoothedTargetMovement));
 					result.putMetricPerformance(day,thisDayPerformance);
 					result.putImprovedMetricPerformance(day,thisDayPerformanceImprovedMetric);
-					System.out.println("--------------------------------------------------------------------");
-					trackers.put(companyID,new InvestmentTracker(tracker.getPrice(), tracker.netWorth()));
-					smoothedTrackers.put(companyID,new InvestmentTracker(smoothedTracker.getPrice(), smoothedTracker.netWorth()));
 				} else{
 					result.addWarning("Skipped day " + day.format(StandardDateTimeFormatter.getStandardDateFormatter()));
 					System.out.println("Skipping Company because there were no predictions this day");
@@ -113,6 +99,42 @@ public class NoAggregationEvaluator extends Evaluator{
 			assert(company.size()==1);
 			results.get(id).serialize(company.get(0).getEvaluationResultFile());
 		}
+	}
+
+	private BigDecimal getBalance(List<Pair<LocalDateTime, Change>> predictions,List<Pair<LocalDateTime, BigDecimal>> targetMovement) {
+		int targetStartIndex = 0;
+		BigDecimal startval = targetMovement.get(0).getSecond();
+		BigDecimal balance = BigDecimal.ZERO;
+		for(Pair<LocalDateTime, Change> pred : predictions){
+			Pair<BigDecimal,Integer> diff = getDiffToNext(pred.getFirst(),targetMovement,targetStartIndex);
+			targetStartIndex = diff.getSecond();
+			if(pred.getSecond()==Change.UP){
+				balance = balance.add(diff.getFirst());
+			} else if(pred.getSecond()==Change.DOWN){
+				balance = balance.subtract(diff.getFirst());
+			}
+		}
+		return balance;
+	}
+
+	private Pair<BigDecimal, Integer> getDiffToNext(LocalDateTime predictionTime, List<Pair<LocalDateTime, BigDecimal>> targetMovement, int targetStartIndex) {
+		//TODO: reincomment assert(predictionTime.compareTo(targetMovement.get(targetStartIndex).getFirst())>0);
+		if(predictionTime.compareTo(targetMovement.get(targetStartIndex).getFirst())>=0){
+			for(int i=targetStartIndex;i<targetMovement.size();i++){
+				if(predictionTime.compareTo(targetMovement.get(i).getFirst())<0){
+					if(i< targetMovement.size()-1 && i>0){
+						assert(predictionTime.compareTo(targetMovement.get(i-1).getFirst())>=0 );
+						BigDecimal diff = targetMovement.get(i).getSecond().subtract(targetMovement.get(i-1).getSecond());
+						return new Pair<>(diff,i);
+					} else{
+						//return dummy
+						return new Pair<>(BigDecimal.ZERO,i);
+					}
+				}
+			}
+		}
+		//return dummy
+		return new Pair<>(BigDecimal.ZERO,targetStartIndex);
 	}
 
 	private List<Pair<LocalDateTime, BigDecimal>> getSmoothedTargetPriceMovementForDay(String companyID,LocalDate day) {

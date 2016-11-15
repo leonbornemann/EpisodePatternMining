@@ -94,4 +94,15 @@ public class PredictorPerformance implements Serializable{
 		return ((double) confusionMatrix[0][0] + confusionMatrix[2][2]) / ((double) confusionMatrix[0][0] + confusionMatrix[2][2] + confusionMatrix[0][2] + confusionMatrix[2][0]);
 	}
 
+	public double getFalsePositiveRate(Change change) {
+		int i = toIndex(change);
+		int j;
+		if(change == Change.DOWN){
+			j = toIndex(Change.UP);
+		} else{
+			j = toIndex(Change.DOWN);
+		}
+		return confusionMatrix[j][i] / (double)(confusionMatrix[j][0] + confusionMatrix[j][1] + confusionMatrix[j][2]);
+	}
+
 }
