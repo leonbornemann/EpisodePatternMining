@@ -1,13 +1,9 @@
 package episode.finance.mining;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
@@ -16,10 +12,8 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import data.AnnotatedEventType;
-import data.Change;
 import data.stream.FixedStreamWindow;
 import episode.finance.EpisodePattern;
-import episode.finance.SerialEpisodePattern;
 import episode.finance.storage.EpisodeIdentifier;
 import episode.finance.storage.EpisodeTrie;
 

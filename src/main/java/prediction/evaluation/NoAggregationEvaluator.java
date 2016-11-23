@@ -6,55 +6,46 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import data.Change;
 import data.stream.PredictorPerformance;
 import prediction.util.IOService;
 import prediction.util.StandardDateTimeFormatter;
+import util.NumericUtil;
 import util.Pair;
 
 public class NoAggregationEvaluator extends Evaluator{
 
 	private int d;
-	private Map<String, List<Pair<LocalDateTime, BigDecimal>>> companyMovements;
-	private Map<String, List<Pair<LocalDateTime, BigDecimal>>> smoothedCompanyMovements;
+	private Map<String, TreeMap<LocalDateTime,BigDecimal>> companyMovements;
+	private Map<String, TreeMap<LocalDateTime,BigDecimal>> smoothedCompanyMovements;
 	
 	public NoAggregationEvaluator(int d,List<File> lowLevelStreamDirs, List<File> smoothedStreamDirs) throws IOException{
 		this.d = d;
 		if(lowLevelStreamDirs!=null){
 			companyMovements = initCompanyMovements(lowLevelStreamDirs);
-			assertTimeSeriesSorted();
 		} 
 		if(smoothedStreamDirs!=null){
 			smoothedCompanyMovements = initCompanyMovements(smoothedStreamDirs);
 		}
 	}
 
-	private void assertTimeSeriesSorted() {
-		for(String id:companyMovements.keySet()){
-			List<Pair<LocalDateTime, BigDecimal>> timeSeries = companyMovements.get(id);
-			for(int i=1;i<timeSeries.size();i++){
-				assert(timeSeries.get(0).getFirst().compareTo(timeSeries.get(i).getFirst())<=0);
-			}
-		}
-	}
-
-	private Map<String, List<Pair<LocalDateTime, BigDecimal>>> initCompanyMovements(List<File> dirs) throws IOException {
+	private Map<String, TreeMap<LocalDateTime,BigDecimal>> initCompanyMovements(List<File> dirs) throws IOException {
 		List<File> allFiles = dirs.stream().flatMap(dir -> Arrays.stream(dir.listFiles())).collect(Collectors.toList());
-		Map<String, List<Pair<LocalDateTime, BigDecimal>>> companyMovements = new HashMap<>();
+		Map<String, TreeMap<LocalDateTime,BigDecimal>> companyMovements = new HashMap<>();
 		for(File file : allFiles){
 			if(file.isFile() && file.getName().endsWith(".csv")){
-				companyMovements.put(file.getName().split("\\.")[0], IOService.readTimeSeriesData(file));
+				companyMovements.put(file.getName().split("\\.")[0], IOService.readTimeSeries(file));
 			}
 		}
 		return companyMovements;
@@ -75,21 +66,11 @@ public class NoAggregationEvaluator extends Evaluator{
 				System.out.println("Results for company " + companyID);
 				EvaluationResult result = results.get(companyID);
 				Map<LocalDate, List<Pair<LocalDateTime, Change>>> byDay = predictionsByCompanyByDay.get(companyID);
-				List<Pair<LocalDateTime, BigDecimal>> targetMovement = getTargetPriceMovementForDay(companyID,day);
-				List<Pair<LocalDateTime, BigDecimal>> smoothedTargetMovement = getSmoothedTargetPriceMovementForDay(companyID,day);
+				TreeMap<LocalDateTime,BigDecimal> targetMovement = getTargetPriceMovementForDay(companyID,day, companyMovements);
+				TreeMap<LocalDateTime,BigDecimal> smoothedTargetMovement = getTargetPriceMovementForDay(companyID,day,smoothedCompanyMovements);
 				if(byDay.get(day)!=null && !targetMovement.isEmpty()){
-					PredictorPerformance thisDayPerformance = new PredictorPerformance();
-					PredictorPerformance thisDayPerformanceImprovedMetric = new PredictorPerformance();
-					evalMetricsForDay(byDay.get(day),targetMovement,thisDayPerformance);
-					evalImprovedMetricForDay(byDay.get(day),targetMovement,thisDayPerformanceImprovedMetric);					
-					result.putReturnOfInvestment(day,getBalance(byDay.get(day),targetMovement));
-					result.putSmoothedReturnOfInvestment(day,getBalance(byDay.get(day),smoothedTargetMovement));
-					result.putMetricPerformance(day,thisDayPerformance);
-					result.putImprovedMetricPerformance(day,thisDayPerformanceImprovedMetric);
-				} else{
-					result.addWarning("Skipped day " + day.format(StandardDateTimeFormatter.getStandardDateFormatter()));
-					System.out.println("Skipping Company because there were no predictions this day");
-				}
+					evalThisNowBetter(byDay.get(day),day,targetMovement,smoothedTargetMovement,result);					
+				} 
 				System.out.println("--------------------------------------------------------------------");
 			}
 			System.out.println("--------------------------------------------------------------------");
@@ -101,68 +82,78 @@ public class NoAggregationEvaluator extends Evaluator{
 		}
 	}
 
-	private BigDecimal getBalance(List<Pair<LocalDateTime, Change>> predictions,List<Pair<LocalDateTime, BigDecimal>> targetMovement) {
-		int targetStartIndex = 0;
-		BigDecimal startval = targetMovement.get(0).getSecond();
-		BigDecimal balance = BigDecimal.ZERO;
-		for(Pair<LocalDateTime, Change> pred : predictions){
-			Pair<BigDecimal,Integer> diff = getDiffToNext(pred.getFirst(),targetMovement,targetStartIndex);
-			targetStartIndex = diff.getSecond();
-			if(pred.getSecond()==Change.UP){
-				balance = balance.add(diff.getFirst());
-			} else if(pred.getSecond()==Change.DOWN){
-				balance = balance.subtract(diff.getFirst());
-			}
-		}
-		return balance;
+	private void evalThisNowBetter(List<Pair<LocalDateTime,Change>> predictions, LocalDate day, TreeMap<LocalDateTime, BigDecimal> timeSeries, TreeMap<LocalDateTime,BigDecimal> smoothedTargetMovement, EvaluationResult evalResult) {
+		List<BigDecimal> longResult = new ArrayList<>();
+		List<BigDecimal> shortResult = new ArrayList<>();
+		List<BigDecimal> smoothedLongResult = new ArrayList<>();
+		List<BigDecimal> smoothedShortResult = new ArrayList<>();
+		PredictorPerformance result = evalMetrics(predictions, timeSeries, longResult, shortResult);
+		evalMetrics(predictions, smoothedTargetMovement, smoothedLongResult, smoothedShortResult);
+		BigDecimal totalReturn = NumericUtil.sum(longResult).add(NumericUtil.sum(shortResult));
+		BigDecimal relativeReturn = totalReturn.divide(timeSeries.values().iterator().next(), 100, RoundingMode.FLOOR);
+		BigDecimal totalSmoothedReturn = NumericUtil.sum(smoothedLongResult).add(NumericUtil.sum(smoothedShortResult));
+		BigDecimal relativeSmoothedReturn = totalSmoothedReturn.divide(timeSeries.values().iterator().next(), 100, RoundingMode.FLOOR);
+		evalResult.putReturnOfInvestment(day, relativeReturn);
+		evalResult.putSmoothedReturnOfInvestment(day, relativeSmoothedReturn);
+		evalResult.putAbsoluteReturn(day,totalReturn);
+		evalResult.putAbsoluteSmoothedReturn(day,totalSmoothedReturn);
+		evalResult.putPredictorPerformance(day, result);
 	}
 
-	private Pair<BigDecimal, Integer> getDiffToNext(LocalDateTime predictionTime, List<Pair<LocalDateTime, BigDecimal>> targetMovement, int targetStartIndex) {
-		//TODO: reincomment assert(predictionTime.compareTo(targetMovement.get(targetStartIndex).getFirst())>0);
-		if(predictionTime.compareTo(targetMovement.get(targetStartIndex).getFirst())>=0){
-			for(int i=targetStartIndex;i<targetMovement.size();i++){
-				if(predictionTime.compareTo(targetMovement.get(i).getFirst())<0){
-					if(i< targetMovement.size()-1 && i>0){
-						assert(predictionTime.compareTo(targetMovement.get(i-1).getFirst())>=0 );
-						BigDecimal diff = targetMovement.get(i).getSecond().subtract(targetMovement.get(i-1).getSecond());
-						return new Pair<>(diff,i);
+	private PredictorPerformance evalMetrics(List<Pair<LocalDateTime, Change>> predictions,
+			TreeMap<LocalDateTime, BigDecimal> timeSeries, List<BigDecimal> longResult, List<BigDecimal> shortResult) {
+		PredictorPerformance result = new PredictorPerformance();
+		for(Pair<LocalDateTime, Change> pred : predictions){
+			LocalDateTime predictionTime = pred.getFirst();
+			assert(before2316(predictionTime));
+			assert(after16(predictionTime));
+			BigDecimal valBefore = timeSeries.floorEntry(predictionTime).getValue();
+			LocalDateTime nextTSAfterPrecxition = timeSeries.higherKey(predictionTime);
+			if(	before2316(predictionTime) && after16(predictionTime)){
+				if(nextTSAfterPrecxition != null && 
+						ChronoUnit.SECONDS.between(predictionTime, nextTSAfterPrecxition)<=15){
+					BigDecimal valAfter = timeSeries.get(nextTSAfterPrecxition);
+					if(valAfter.equals(valBefore)){
+						result.addTestExample(pred.getSecond(), Change.EQUAL);
 					} else{
-						//return dummy
-						return new Pair<>(BigDecimal.ZERO,i);
+						if(pred.getSecond()==Change.UP){
+							longResult.add(valAfter.subtract(valBefore));
+						} else if(pred.getSecond()==Change.DOWN){
+							shortResult.add(valBefore.subtract(valAfter));
+						}
+						if(valAfter.compareTo(valBefore)>0){
+							result.addTestExample(pred.getSecond(), Change.UP);
+						} else if(valAfter.compareTo(valBefore)<0){
+							result.addTestExample(pred.getSecond(), Change.DOWN);
+						}
 					}
+				} else{
+					result.addTestExample(pred.getSecond(), Change.EQUAL);
+					//was equal
 				}
 			}
 		}
-		//return dummy
-		return new Pair<>(BigDecimal.ZERO,targetStartIndex);
+		return result;
+	}
+	
+	protected boolean before2316(LocalDateTime timestamp) {
+		if(timestamp.getHour()<=23){
+			return true;
+		} else{
+			return timestamp.getMinute()<=15;
+		}
 	}
 
-	private List<Pair<LocalDateTime, BigDecimal>> getSmoothedTargetPriceMovementForDay(String companyID,LocalDate day) {
-		return smoothedCompanyMovements.get(companyID).stream().filter(p -> LocalDate.from(p.getFirst()).equals(day)).sorted((a,b)->a.getFirst().compareTo(b.getFirst())).collect(Collectors.toList());
+	protected boolean after16(LocalDateTime timestamp) {
+		if(timestamp.getHour() >=16){
+			return true;
+		} else{
+			return false;
+		}
 	}
 
 	private Set<LocalDate> getAllDates() {
-		return companyMovements.values().stream().flatMap(l -> l.stream().map(p -> p.getFirst())).map(dt -> LocalDate.from(dt)).collect(Collectors.toSet());
-	}
-
-	private void evalImprovedMetricForDay(List<Pair<LocalDateTime, Change>> predictions,List<Pair<LocalDateTime, BigDecimal>> targetMovement,PredictorPerformance perf) {
-		List<Pair<LocalDateTime,Change>> diff = getDiffPoints(targetMovement);
-		int searchStartIndex = 0;
-		for(int i = 0;i<diff.size();i++){
-			Change curMovement = diff.get(i).getSecond();
-			LocalDateTime curMovementTimestamp = diff.get(i).getFirst();
-			int predictionIndex = getIndexOfLastBefore(predictions,searchStartIndex,curMovementTimestamp);
-			if(predictionIndex>=0){
-				Pair<LocalDateTime,Change> predicted = predictions.get(predictionIndex);
-				assert(predicted.getFirst().compareTo(curMovementTimestamp)<0);
-				if(Math.abs(ChronoUnit.SECONDS.between(predicted.getFirst(), curMovementTimestamp))<=d){
-					perf.addTestExample(predicted.getSecond(), curMovement);
-					searchStartIndex = predictionIndex+1;
-				} else {
-					System.out.println("Weird - gap between prediction and movement");
-				}
-			}
-		}
+		return companyMovements.values().stream().flatMap(m -> m.keySet().stream()).map(dt -> LocalDate.from(dt)).collect(Collectors.toSet());
 	}
 
 	//only public so we can unit-test
@@ -191,25 +182,26 @@ public class NoAggregationEvaluator extends Evaluator{
 		return diff;
 	}
 
-	private BigDecimal getStartingPrice(String id){
-		List<Pair<LocalDateTime, BigDecimal>> timeSeries = companyMovements.get(id);
-		//assert its actually start:
-		return timeSeries.get(0).getSecond();
-	}
-
-	private List<Pair<LocalDateTime, BigDecimal>> getTargetPriceMovementForDay(String companyID,LocalDate day) {
-		return companyMovements.get(companyID).stream().filter(p -> LocalDate.from(p.getFirst()).equals(day)).sorted((a,b)->a.getFirst().compareTo(b.getFirst())).collect(Collectors.toList());
+	private TreeMap<LocalDateTime, BigDecimal> getTargetPriceMovementForDay(String companyID,LocalDate day, Map<String, TreeMap<LocalDateTime, BigDecimal>> timeSeriesDB) {
+		List<Entry<LocalDateTime, BigDecimal>> a = timeSeriesDB.get(companyID).entrySet().stream().filter(p -> LocalDate.from(p.getKey()).equals(day)).collect(Collectors.toList());
+		TreeMap<LocalDateTime, BigDecimal> thisDay = new TreeMap<LocalDateTime, BigDecimal>();
+		a.forEach(e -> thisDay.put(e.getKey(), e.getValue()));
+		return thisDay;
 	}
 
 	private Map<String, Map<LocalDate, List<Pair<LocalDateTime, Change>>>> getOrganizedPredictions(List<EvaluationFiles> companies) throws IOException {
 		Map<String, Map<LocalDate, List<Pair<LocalDateTime, Change>>>> organizedPredictions = new HashMap<>();
 		for(EvaluationFiles company : companies){
-			List<Pair<LocalDateTime, Change>> predictions = deserializePairList(company.getPredictionsFile());
+			List<Pair<LocalDateTime, Change>> predictions = IOService.deserializePairList(company.getPredictionsFile());
 			predictions = predictions.stream().filter(p -> isInTimeBounds(p.getFirst())).collect(Collectors.toList());
 			Map<LocalDate, List<Pair<LocalDateTime, Change>>> byDay = predictions.stream().collect(Collectors.groupingBy(p -> LocalDate.from(p.getFirst())));
 			organizedPredictions.put(company.getCompanyID(), byDay);
 		}
 		return organizedPredictions;
+	}
+
+	private boolean isInTimeBounds(LocalDateTime timestamp) {
+		return after16(timestamp) && before2316(timestamp);
 	}
 
 	private void print(PredictorPerformance perf) {
@@ -227,116 +219,6 @@ public class NoAggregationEvaluator extends Evaluator{
 		perf.printConfusionMatrix();
 	}	
 
-	private void evalMetricsForDay(List<Pair<LocalDateTime, Change>> predictions, List<Pair<LocalDateTime, BigDecimal>> targetMovement, PredictorPerformance perf) {
-		for (int i = 0; i < predictions.size(); i++) {
-			Pair<LocalDateTime, Change> curPrediction = predictions.get(i);
-			Change actualValue = getActualValue(curPrediction.getFirst(),targetMovement);
-			perf.addTestExample(curPrediction.getSecond(), actualValue);
-		}
-	}
-
-	/***
-	 * only public so we can unit-test!
-	 * @param predictionTime
-	 * @param targetMovement
-	 * @return
-	 */
-	public Change getActualValue(LocalDateTime predictionTime, List<Pair<LocalDateTime, BigDecimal>> targetMovement) {
-		int i=0;
-		Pair<LocalDateTime, BigDecimal> curElem = targetMovement.get(i);
-		while(curElem.getFirst().compareTo(predictionTime)<=0 && i+1<targetMovement.size()){
-			i++;
-			curElem = targetMovement.get(i);
-		}
-		BigDecimal initial;
-		if(curElem.getFirst().compareTo(predictionTime)<=0){
-			assert(i+1==targetMovement.size());
-			initial = targetMovement.get(i).getSecond();
-		} else if(i==0){
-			initial = targetMovement.get(i).getSecond(); //hotfix - this should be a rare problem?
-		} else{
-			initial = targetMovement.get(i-1).getSecond();
-		}
-		BigDecimal end = targetMovement.get(i).getSecond();
-		while(curElem.getFirst().compareTo(predictionTime.plus(d,ChronoUnit.SECONDS))  <= 0 && i+1<targetMovement.size()){
-			i++;
-			curElem = targetMovement.get(i);
-			end = curElem.getSecond();
-		}
-		if(curElem.getFirst().compareTo(predictionTime.plus(d,ChronoUnit.SECONDS)) <=0){
-			assert(i+1==targetMovement.size());
-		} else if(i==0){
-			end = targetMovement.get(i).getSecond(); //hotfix - this should be a rare problem?
-		} else{
-			end = targetMovement.get(i-1).getSecond();
-		}
-		if(end.compareTo(initial) > 0){
-			return Change.UP;
-		} else if(initial.compareTo(end)>0){
-			return Change.DOWN;
-		} else{
-			return Change.EQUAL;
-		}
-	}
-
-	/***
-	 * only public so we can unit-test
-	 * @param pred
-	 * @param targetMovement
-	 * @param tracker
-	 */
-	public void evalRateOfReturnForDay(List<Pair<LocalDateTime, Change>> pred,List<Pair<LocalDateTime, BigDecimal>> targetMovement, InvestmentTracker tracker) {
-		Collections.sort(pred, (a,b) -> a.getFirst().compareTo(b.getFirst()));
-		Collections.sort(targetMovement, (a,b) -> a.getFirst().compareTo(b.getFirst()));
-		int predIndex = 0;
-		int targetMovementIndex = 0;
-		while(true){
-			if(predIndex==pred.size() && targetMovementIndex == targetMovement.size()){
-				break;
-			} else if(predIndex==pred.size()){
-				Pair<LocalDateTime, BigDecimal> targetMovementEventPair = targetMovement.get(targetMovementIndex);
-				processTargetMovement(tracker, targetMovementEventPair);
-				targetMovementIndex++;
-			} else if(targetMovementIndex == targetMovement.size()){
-				Pair<LocalDateTime, Change> predEventPair = pred.get(predIndex);
-				processPredictionEvent(tracker, predEventPair);
-				predIndex++;
-			} else{
-				LocalDateTime predElement = pred.get(predIndex).getFirst();
-				LocalDateTime targetElement = targetMovement.get(targetMovementIndex).getFirst();
-				if(predElement.compareTo(targetElement)<0){
-					//process predElement
-					Pair<LocalDateTime, Change> predEventPair = pred.get(predIndex);
-					processPredictionEvent(tracker, predEventPair);
-					predIndex++;
-				} else{
-					//process targetElement
-					Pair<LocalDateTime, BigDecimal> targetMovementEventPair = targetMovement.get(targetMovementIndex);
-					processTargetMovement(tracker, targetMovementEventPair);
-					targetMovementIndex++;
-				}
-			}
-		}
-		tracker.sellIfPossible();
-	}
-
-	private void processPredictionEvent(InvestmentTracker tracker, Pair<LocalDateTime, Change> predEventPair) {
-		if(predEventPair.getSecond()==Change.UP){
-			tracker.buyIfPossible();
-		} else if(predEventPair.getSecond()==Change.DOWN){
-			tracker.sellIfPossible();
-		} else{
-			//hold
-		}
-	}
-
-	private void processTargetMovement(InvestmentTracker tracker,Pair<LocalDateTime, BigDecimal> targetMovement) {
-		tracker.setPrice(targetMovement.getSecond());
-	}
-
-	private boolean isInTimeBounds(LocalDateTime first) {
-		LocalTime border = LocalTime.of(15, 0);
-		return LocalTime.from(first).compareTo(border) > 0;
-	}
+	
 
 }

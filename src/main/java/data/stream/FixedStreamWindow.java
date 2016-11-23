@@ -4,12 +4,8 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import data.AnnotatedEvent;
-import episode.finance.EpisodePattern;
-import episode.finance.recognition.SimpleEpisodeRecognitionDFA;
 import util.Pair;
 
 public class FixedStreamWindow extends AbstractStreamWindow {

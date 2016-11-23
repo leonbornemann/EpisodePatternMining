@@ -8,10 +8,13 @@ import prediction.mining.Method;
 public class Main {
 
 	public static void main(String[] args) throws ClassNotFoundException, IOException {
-		File resultDir = new File("C:\\Users\\Leon Bornemann\\Desktop\\base Folder\\Normal Runs\\Run 1");
-		EvaluationConfig config = new EvaluationConfig(100, 90, false, 0.75, 0.75, 20);
-		ExperimentExecutor executor = new ExperimentExecutor(config, resultDir);
-		executor.printEvaluationResult(Method.PERMS);
+//		File resultDir = new File("C:\\Users\\Leon Bornemann\\Desktop\\base Folder\\Toy stuff\\Run 1");
+//		EvaluationConfig config = new EvaluationConfig(100, 90, false, 0.75, 0.75, 20);
+//		ExperimentExecutor executor = new ExperimentExecutor(config, resultDir);
+//		executor.execute(Method.RandomGuessing);
+//		executor.printEvaluationResult(Method.RandomGuessing);
+		//supportSerialRuns();
+		numerOfWindowsRuns();
 		//semanticRuns();
 //		File resultDir = new File("C:\\Users\\Leon Bornemann\\Desktop\\base Folder\\Run 1");
 //		resultDir.mkdir();
@@ -134,6 +137,75 @@ public class Main {
 //		config = new EvaluationConfig(100, 90, false, 0.8, 0.5, 1000);
 //		executor = new ExperimentExecutor(config, resultDir);
 //		executor.execute();
+	}
+
+	private static void numerOfWindowsRuns() throws ClassNotFoundException, IOException {
+		String dirPath = "C:\\Users\\Leon Bornemann\\Desktop\\base Folder\\Final Runs\\Number Of Windows\\";
+		File resultDir = new File(dirPath+"Run 2");
+		resultDir.mkdir();
+		EvaluationConfig config = new EvaluationConfig(100, 90, false, 0.8, 0.8, 20);
+		ExperimentExecutor executor = new ExperimentExecutor(config, resultDir);
+		executor.execute();
+		resultDir = new File(dirPath+"Run 9");
+		resultDir.mkdir();
+		config = new EvaluationConfig(150, 90, false, 0.8, 0.8, 20);
+		executor = new ExperimentExecutor(config, resultDir);
+		executor.execute();
+		resultDir = new File(dirPath+"Run 10");
+		resultDir.mkdir();
+		config = new EvaluationConfig(200, 90, false, 0.8, 0.8, 20);
+		executor = new ExperimentExecutor(config, resultDir);
+		executor.execute();
+		resultDir = new File(dirPath+"Run 11");
+		resultDir.mkdir();
+		config = new EvaluationConfig(250, 90, false, 0.8, 0.8, 20);
+		executor = new ExperimentExecutor(config, resultDir);
+		executor.execute();
+		resultDir = new File(dirPath+"Run 12");
+		resultDir.mkdir();
+		config = new EvaluationConfig(300, 90, false, 0.8, 0.8, 20);
+		executor = new ExperimentExecutor(config, resultDir);
+		executor.execute();
+		resultDir = new File(dirPath+"Run 13");
+		resultDir.mkdir();
+		config = new EvaluationConfig(350, 90, false, 0.8, 0.8, 20);
+		executor = new ExperimentExecutor(config, resultDir);
+		executor.execute();
+		resultDir = new File(dirPath+"Run 14");
+		resultDir.mkdir();
+		config = new EvaluationConfig(400, 90, false, 0.8, 0.8, 20);
+		executor = new ExperimentExecutor(config, resultDir);
+		executor.execute();
+	}
+
+	private static void supportSerialRuns() throws ClassNotFoundException, IOException {
+		String dirPath = "C:\\Users\\Leon Bornemann\\Desktop\\base Folder\\Final Runs\\Support Serial Modified\\";
+		File resultDir = new File(dirPath + "Run 2");
+		resultDir.mkdir();
+		EvaluationConfig config = new EvaluationConfig(100, 90, false, 0.8, 0.8, 20);
+		ExperimentExecutor executor = new ExperimentExecutor(config, resultDir);
+		executor.execute();
+		resultDir = new File(dirPath + "Run 3");
+		resultDir.mkdir();
+		config = new EvaluationConfig(100, 90, false, 0.8, 0.7, 20);
+		executor = new ExperimentExecutor(config, resultDir);
+		executor.execute();
+		resultDir = new File(dirPath + "Run 4");
+		resultDir.mkdir();
+		config = new EvaluationConfig(100, 90, false, 0.8, 0.6, 20);
+		executor = new ExperimentExecutor(config, resultDir);
+		executor.execute();
+		resultDir = new File(dirPath + "Run 5");
+		resultDir.mkdir();
+		config = new EvaluationConfig(100, 90, false, 0.8, 0.5, 20);
+		executor = new ExperimentExecutor(config, resultDir);
+		executor.execute();
+		resultDir = new File(dirPath + "Run 6");
+		resultDir.mkdir();
+		config = new EvaluationConfig(100, 90, false, 0.8, 0.4, 20);
+		executor = new ExperimentExecutor(config, resultDir);
+		executor.execute();
+		
 	}
 
 	private static void semanticRuns() throws ClassNotFoundException, IOException {

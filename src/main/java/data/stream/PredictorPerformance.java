@@ -1,7 +1,6 @@
 package data.stream;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.util.Collection;
 
 import data.Change;
@@ -103,6 +102,22 @@ public class PredictorPerformance implements Serializable{
 			j = toIndex(Change.DOWN);
 		}
 		return confusionMatrix[j][i] / (double)(confusionMatrix[j][0] + confusionMatrix[j][1] + confusionMatrix[j][2]);
+	}
+
+	public int getUp_UP() {
+		return confusionMatrix[toIndex(Change.UP)][toIndex(Change.UP)];
+	}
+
+	public int getUp_DOWN() {
+		return confusionMatrix[toIndex(Change.UP)][toIndex(Change.DOWN)];
+	}
+	
+	public int getDOWN_DOWN() {
+		return confusionMatrix[toIndex(Change.DOWN)][toIndex(Change.DOWN)];
+	}
+
+	public int getDOWN_UP() {
+		return confusionMatrix[toIndex(Change.DOWN)][toIndex(Change.UP)];
 	}
 
 }

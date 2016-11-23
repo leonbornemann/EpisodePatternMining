@@ -26,8 +26,8 @@ public class TransformationMain {
 	public static void main(String[] args) throws IOException {
 		//laptop();
 		//desktop();
-		//timeSeriesToAnnotated();
-		smoothTimeSeries();
+		timeSeriesToAnnotated();
+		//smoothTimeSeries();
 	}
 
 	private static void smoothTimeSeries() throws IOException {

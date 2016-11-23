@@ -9,7 +9,6 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import data.AnnotatedEventType;
-import data.stream.FixedStreamWindow;
 import episode.finance.EpisodePattern;
 
 public class EpisodeTrie<T> implements Iterable<EpisodeIdentifier<T>>{

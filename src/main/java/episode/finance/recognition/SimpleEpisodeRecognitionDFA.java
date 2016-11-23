@@ -1,7 +1,6 @@
 package episode.finance.recognition;
 
 import data.AnnotatedEventType;
-import episode.finance.EpisodePattern;
 import episode.finance.storage.EpisodeIdentifier;
 
 public interface SimpleEpisodeRecognitionDFA<T> {

@@ -1,6 +1,5 @@
 package episode.finance.storage;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import data.AnnotatedEventType;

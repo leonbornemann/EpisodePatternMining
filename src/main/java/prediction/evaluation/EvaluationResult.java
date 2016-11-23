@@ -10,15 +10,12 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
 import data.stream.PredictorPerformance;
-import episode.finance.EpisodePattern;
 
 public class EvaluationResult implements Serializable{
 
@@ -26,14 +23,13 @@ public class EvaluationResult implements Serializable{
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	private Map<LocalDate,BigDecimal> returnsByDay = new HashMap<>();
-	private Map<LocalDate,BigDecimal> smoothedReturnsByDay = new HashMap<>();
+	private Map<LocalDate,BigDecimal> relativeReturnsByDay = new HashMap<>();
+	private Map<LocalDate,BigDecimal> relativeSmoothedReturnsByDay = new HashMap<>();
+	private Map<LocalDate,BigDecimal> absoluteReturnsByDay = new HashMap<>();
+	private Map<LocalDate,BigDecimal> absoluteSmoothedReturnsByDay = new HashMap<>();
 	private Map<LocalDate,PredictorPerformance> performanceByDay = new HashMap<>();
-	private Map<LocalDate,PredictorPerformance> improvedPerformanceByDay = new HashMap<>();
-	private BigDecimal totalReturn;
 	private long trainingTimeNs;
 	private long testTimeNs;
-	private List<String> warnings = new ArrayList<>();
 	
 	public EvaluationResult(){}
 	
@@ -59,15 +55,11 @@ public class EvaluationResult implements Serializable{
 	}
 
 	public void putReturnOfInvestment(LocalDate day, BigDecimal rateOfReturn) {
-		returnsByDay.put(day, rateOfReturn);
+		relativeReturnsByDay.put(day, rateOfReturn);
 	}
 
-	public void putMetricPerformance(LocalDate day, PredictorPerformance perf) {
+	public void putPredictorPerformance(LocalDate day, PredictorPerformance perf) {
 		performanceByDay.put(day, perf);
-	}
-
-	public void setTotalReturnOfInvestment(BigDecimal rateOfReturn) {
-		totalReturn = rateOfReturn;
 	}
 
 	public void serialize(File file) throws FileNotFoundException, IOException {
@@ -83,12 +75,12 @@ public class EvaluationResult implements Serializable{
 		return result;
 	}
 
-	public BigDecimal getTotalReturn() {
-		return totalReturn;
+	public BigDecimal getSummedReturn() {
+		return getSum(relativeReturnsByDay);
 	}
 
-	public BigDecimal getSummedReturn() {
-		Optional<BigDecimal> sum = returnsByDay.values().stream().reduce((a,b)->a.add(b));
+	private BigDecimal getSum(Map<LocalDate, BigDecimal> map) {
+		Optional<BigDecimal> sum = map.values().stream().reduce((a,b)->a.add(b));
 		if(sum.isPresent()){
 			return sum.get();
 		} else{
@@ -100,50 +92,55 @@ public class EvaluationResult implements Serializable{
 		return new PredictorPerformance(performanceByDay.values());
 	}
 	
-	public PredictorPerformance getTotalImprovedPerformance(){
-		return new PredictorPerformance(improvedPerformanceByDay.values());
-	}
-
-	public void addWarning(String string) {
-		warnings.add(string);
-	}
 
 	public Set<LocalDate> getAllDays(){
-		assert(performanceByDay.keySet().equals(returnsByDay.keySet()));
+		assert(performanceByDay.keySet().equals(relativeReturnsByDay.keySet()));
 		return performanceByDay.keySet();
 	}
 
 	public BigDecimal getReturn(LocalDate date) {
-		return returnsByDay.get(date);
+		return relativeReturnsByDay.get(date);
 	}
 
 	public PredictorPerformance getPerformance(LocalDate date) {
 		return performanceByDay.get(date);
 	}
 
-	public void putImprovedMetricPerformance(LocalDate day, PredictorPerformance performance) {
-		improvedPerformanceByDay.put(day, performance);
-	}
-
-	public PredictorPerformance getImprovedPerformance(LocalDate date) {
-		return improvedPerformanceByDay.get(date);
-	}
-
 	public BigDecimal getSummedSmoothedReturn() {
-		Optional<BigDecimal> sum = smoothedReturnsByDay.values().stream().reduce((a,b)->a.add(b));
-		if(sum.isPresent()){
-			return sum.get();
-		} else{
-			return BigDecimal.ZERO;
-		}
+		return getSum(relativeSmoothedReturnsByDay);
 	}
 
 	public BigDecimal getSmoothedReturn(LocalDate date) {
-		return smoothedReturnsByDay.get(date);
+		return relativeSmoothedReturnsByDay.get(date);
 	}
 
 	public void putSmoothedReturnOfInvestment(LocalDate day, BigDecimal rateOfReturn) {
-		smoothedReturnsByDay.put(day, rateOfReturn);
+		relativeSmoothedReturnsByDay.put(day, rateOfReturn);
+	}
+
+	public void putAbsoluteReturn(LocalDate day, BigDecimal totalReturn) {
+		absoluteReturnsByDay.put(day, totalReturn);		
+	}
+
+	public void putAbsoluteSmoothedReturn(LocalDate day, BigDecimal totalSmoothedReturn) {
+		absoluteSmoothedReturnsByDay.put(day, totalSmoothedReturn);
+		
+	}
+
+	public BigDecimal getSummedAbsoluteReturn() {
+		return getSum(absoluteReturnsByDay);
+	}
+
+	public BigDecimal getSummedAbsoluteSmoothedReturn() {
+		return getSum(absoluteSmoothedReturnsByDay);
+	}
+
+	public BigDecimal getAbsoluteReturn(LocalDate date) {
+		return absoluteReturnsByDay.get(date);
+	}
+
+	public BigDecimal getAbsoluteSmoothedReturn(LocalDate date) {
+		return absoluteSmoothedReturnsByDay.get(date);
 	}
 	
 

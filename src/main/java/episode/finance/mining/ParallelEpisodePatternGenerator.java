@@ -3,7 +3,6 @@ package episode.finance.mining;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -11,7 +10,6 @@ import java.util.stream.Collectors;
 
 import data.AnnotatedEventType;
 import episode.finance.ParallelEpisodePattern;
-import episode.finance.storage.EpisodeIdentifier;
 import episode.finance.storage.EpisodeTrie;
 
 public class ParallelEpisodePatternGenerator extends EpisodePatternGenerator<ParallelEpisodePattern>{

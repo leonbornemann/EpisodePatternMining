@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 import data.AnnotatedEvent;
 import episode.finance.EpisodePattern;
 import episode.finance.recognition.SimpleEpisodeRecognitionDFA;
-import util.Pair;
 
 public abstract class AbstractStreamWindow implements StreamWindow {
 

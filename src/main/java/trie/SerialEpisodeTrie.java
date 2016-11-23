@@ -2,11 +2,10 @@ package trie;
 
 import java.util.Iterator;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import episode.lossy_counting.EventType;
 import episode.lossy_counting.SerialEpisode;
-
-import java.util.Set;
 
 public class SerialEpisodeTrie<T> {
 

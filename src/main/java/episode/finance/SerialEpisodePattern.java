@@ -9,7 +9,6 @@ import java.util.Set;
 import data.AnnotatedEventType;
 import episode.finance.recognition.ContinousSerialEpisodeRecognitionDFA;
 import episode.finance.recognition.SimpleEpisodeRecognitionDFA;
-import episode.finance.recognition.SimpleParallelEpisodeIdentifierRecognitionDFA;
 import episode.finance.recognition.SimpleSerialEpisodeIdentifierRecognitionDFA;
 import episode.finance.storage.EpisodeTrie;
 

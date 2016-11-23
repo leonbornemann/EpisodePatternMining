@@ -8,19 +8,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import data.AnnotatedEvent;
 import data.AnnotatedEventType;
 import data.stream.FixedStreamWindow;
 import data.stream.StreamWindow;
-import episode.finance.EpisodePattern;
 import episode.finance.SerialEpisodePattern;
-import episode.finance.recognition.SimpleParallelEpisodeIdentifierRecognitionDFA;
 import episode.finance.recognition.SimpleSerialEpisodeIdentifierRecognitionDFA;
 import episode.finance.storage.EpisodeIdentifier;
-import episode.finance.storage.EpisodeTrie;
-import prediction.util.StandardDateTimeFormatter;
 
 public class SerialEpisodePatternMiner extends EpisodePatternMiner<SerialEpisodePattern>{
 

@@ -9,7 +9,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.PriorityQueue;
@@ -34,7 +33,6 @@ import episode.finance.ParallelEpisodePattern;
 import episode.finance.SerialEpisodePattern;
 import episode.finance.storage.EpisodeIdentifier;
 import episode.finance.storage.EpisodeTrie;
-import episode.lossy_counting.SerialEpisode;
 import util.Pair;
 
 public class FBSWCModel implements PredictiveModel {

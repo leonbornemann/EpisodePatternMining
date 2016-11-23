@@ -1,25 +1,22 @@
 package prediction.evaluation;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.List;
 
 import data.Change;
 import data.stream.PredictorPerformance;
-import prediction.util.StandardDateTimeFormatter;
+import prediction.util.IOService;
 import util.Pair;
 
 
 public class AggregatedEvaluator extends Evaluator{
 
 	public void eval(int d, File predictionsTargetFile, File targetMovementTargetFile) throws IOException {
-		List<Pair<LocalDateTime, Change>> predictions = deserializePairList(predictionsTargetFile);
-		List<Pair<LocalDateTime, Change>> targetMovement = deserializePairList(targetMovementTargetFile);
+		List<Pair<LocalDateTime, Change>> predictions = IOService.deserializePairList(predictionsTargetFile);
+		List<Pair<LocalDateTime, Change>> targetMovement = IOService.deserializePairList(targetMovementTargetFile);
 		evalRateOfReturn(predictions, targetMovement);
 		evalMetrics(predictions,targetMovement,d);
 	}

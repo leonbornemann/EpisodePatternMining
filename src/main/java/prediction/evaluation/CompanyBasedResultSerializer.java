@@ -5,8 +5,6 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,8 +26,11 @@ public class CompanyBasedResultSerializer extends ResultSerializer{
 		}
 		File csvResultFile = IOService.getTotalResultByCompanyCsvFile(method,resultDir);
 		PrintWriter writer = new PrintWriter(new FileWriter(csvResultFile));
-		writer.println("company,return,smoothedReturn,Precision_UP,Precision_DOWN,PrecisionIgnoreEqual_UP,PrecisionIgnoreEqual_DOWN,Accuracy,AccuracyIngoreEqual,"
-				+ "ImprovedPrecision_UP,ImprovedPrecision_DOWN,ImprovedPrecisionIgnoreEqual_UP,ImprovedPrecisionIgnoreEqual_DOWN,ImprovedAccuracy,ImprovedAccuracyIngoreEqual,trainingTimeNs,testTimeNS");
+		writer.println("company,"
+				+ "return,smoothedReturn,absoluteReturn,absoluteSmoothedReturn,"
+				+ "PrecisionIgnoreEqual_UP,PrecisionIgnoreEqual_DOWN,AccuracyIngoreEqual,"
+				+ "Recall_UP,Recall_DOWN,"
+				+"trainingTimeNs,testTimeNS");
 		for(int i=0;i<orderedCompanyCodes.size();i++){
 			String id = orderedCompanyCodes.get(i);
 			if(i==orderedCompanyCodes.size()-1){
@@ -43,24 +44,18 @@ public class CompanyBasedResultSerializer extends ResultSerializer{
 
 	private String buildTotalResultString(EvaluationResult evaluationResult) {
 		PredictorPerformance total = evaluationResult.getTotalPerformance();
-		PredictorPerformance totalImproved = evaluationResult.getTotalImprovedPerformance();
 		int roundTo = 5;
 		return getAsRoundedString(evaluationResult.getSummedReturn(),roundTo) + "," +
 				getAsRoundedString(evaluationResult.getSummedSmoothedReturn(),roundTo) + "," +
-				getAsRoundedString(total.getPrecision(Change.UP), roundTo) + "," +
-				getAsRoundedString(total.getPrecision(Change.DOWN), roundTo) + "," +
+				getAsRoundedString(evaluationResult.getSummedAbsoluteReturn(),roundTo) + "," +
+				getAsRoundedString(evaluationResult.getSummedAbsoluteSmoothedReturn(),roundTo) + "," +
+				
 				getAsRoundedString(total.getEqualIgnoredPrecision(Change.UP), roundTo) + "," +
 				getAsRoundedString(total.getEqualIgnoredPrecision(Change.DOWN), roundTo) + "," +
-				getAsRoundedString(total.getAccuracy(), roundTo) + "," +
 				getAsRoundedString(total.getEqualIgnoredAccuracy(), roundTo) + "," + 
+				getAsRoundedString(total.getEqualIgnoredRecall(Change.UP), roundTo) + "," + 
+				getAsRoundedString(total.getEqualIgnoredRecall(Change.DOWN), roundTo) + "," + 
 				
-				getAsRoundedString(totalImproved.getPrecision(Change.UP), roundTo) + "," +
-				getAsRoundedString(totalImproved.getPrecision(Change.DOWN), roundTo) + "," +
-				getAsRoundedString(totalImproved.getEqualIgnoredPrecision(Change.UP), roundTo) + "," +
-				getAsRoundedString(totalImproved.getEqualIgnoredPrecision(Change.DOWN), roundTo) + "," +
-				getAsRoundedString(totalImproved.getAccuracy(), roundTo) + "," +
-				getAsRoundedString(totalImproved.getEqualIgnoredAccuracy(), roundTo) + "," +
-		
 				evaluationResult.getTrainingTimeNs() + "," +
 				evaluationResult.getTestTimeNs();
 	}

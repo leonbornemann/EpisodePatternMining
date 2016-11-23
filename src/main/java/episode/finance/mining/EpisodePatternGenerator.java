@@ -9,8 +9,6 @@ import java.util.stream.Collectors;
 
 import data.AnnotatedEventType;
 import episode.finance.EpisodePattern;
-import episode.finance.ParallelEpisodePattern;
-import episode.finance.SerialEpisodePattern;
 import episode.finance.storage.EpisodeIdentifier;
 import episode.finance.storage.EpisodeTrie;
 

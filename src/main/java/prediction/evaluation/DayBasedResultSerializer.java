@@ -44,8 +44,8 @@ public class DayBasedResultSerializer extends ResultSerializer{
 		List<LocalDate> allDatesOrdered = results.values().stream().flatMap(r -> r.getAllDays().stream()).sorted().distinct().collect(Collectors.toList());
 		File target = IOService.getTotalResultByDayCsvFile(method,resultDir);
 		PrintWriter writer = new PrintWriter(new FileWriter(target));
-		writer.println("date,avgReturn,avgSmoothedReturn,avgPrecision_UP,avgPrecision_DOWN,avgPrecisionIgnoreEqual_UP,avgPrecisionIgnoreEqual_DOWN,Accuracy,AccuracyIngoreEqual,"
-				+ "avgImprovedPrecision_UP,avgImprovedPrecision_DOWN,avgImprovedPrecisionIgnoreEqual_UP,avgImprovedPrecisionIgnoreEqual_DOWN,ImprovedAccuracy,ImprovedAccuracyIngoreEqual");
+		writer.println("date,avgReturn,avgSmoothedReturn,avgAbsoluteReturn,avgSmoothedSbsoluteReturn"
+				+ "avgPrecisionIgnoreEqual_UP,avgPrecisionIgnoreEqual_DOWN,avgAccuracyIngoreEqual,");
 		for(int i=0;i<allDatesOrdered.size();i++){
 			LocalDate date = allDatesOrdered.get(i);
 			String dateString = date.format(StandardDateTimeFormatter.getStandardDateFormatter());
@@ -81,107 +81,58 @@ public class DayBasedResultSerializer extends ResultSerializer{
 		String avgReturnString = getAvgAsRoundedString(returns);
 		List<BigDecimal> avgSmoothedreturns = validResults.stream().
 				map(r -> r.getSmoothedReturn(date)).collect(Collectors.toList());
-			String avgSmoothedReturnString = getAvgAsRoundedString(avgSmoothedreturns);
-		List<Double> upPrecisions = validResults.stream().map(r -> r.getPerformance(date).getPrecision(Change.UP)).
-				filter(d -> !d.isNaN()).collect(Collectors.toList());
-		String avgUpPrecisionString = getAvgAsRoundedStringForDoubleList(upPrecisions);
-		List<Double> downPrecisions = validResults.stream().map(r -> r.getPerformance(date).getPrecision(Change.DOWN)).
-				filter(d -> !d.isNaN()).collect(Collectors.toList());
-		String avgDownPrecisionString = getAvgAsRoundedStringForDoubleList(downPrecisions);
+		String avgSmoothedReturnString = getAvgAsRoundedString(avgSmoothedreturns);
+		List<BigDecimal> absoluteReturns = validResults.stream().
+				map(r -> r.getAbsoluteReturn(date)).collect(Collectors.toList());
+		String avgAbsoluteReturnString = getAvgAsRoundedString(absoluteReturns);
+		List<BigDecimal> avgAbsoluteSmoothedreturns = validResults.stream().
+				map(r -> r.getAbsoluteSmoothedReturn(date)).collect(Collectors.toList());
+		String avgAbsoluteSmoothedReturnString = getAvgAsRoundedString(avgAbsoluteSmoothedreturns);
+
 		List<Double> upPrecisionsIgnoreEqual = validResults.stream().map(r -> r.getPerformance(date).getEqualIgnoredPrecision(Change.UP)).
 				filter(d -> !d.isNaN()).collect(Collectors.toList());
 		String avgUpPrecisionsIgnoreEqualString = getAvgAsRoundedStringForDoubleList(upPrecisionsIgnoreEqual);
 		List<Double> downPrecisionsIgnoreEqual = validResults.stream().map(r -> r.getPerformance(date).getEqualIgnoredPrecision(Change.DOWN)).
 				filter(d -> !d.isNaN()).collect(Collectors.toList());
 		String avgDownPrecisionsIgnoreEqualString = getAvgAsRoundedStringForDoubleList(downPrecisionsIgnoreEqual);
-		String avgAccuracyString = getAvgAsRoundedStringForDoubleList(validResults.stream().map(r -> r.getPerformance(date).getAccuracy()).
-				filter(d -> !d.isNaN()).collect(Collectors.toList()));
 		String avgAccuracyIgnoreEqualString = getAvgAsRoundedStringForDoubleList(validResults.stream().map(r -> r.getPerformance(date).getEqualIgnoredAccuracy()).
-				filter(d -> !d.isNaN()).collect(Collectors.toList()));
-		
-		List<Double> upPrecisionsImproved = validResults.stream().map(r -> r.getImprovedPerformance(date).getPrecision(Change.UP)).
-				filter(d -> !d.isNaN()).collect(Collectors.toList());
-		String avgUpPrecisionImprovedString = getAvgAsRoundedStringForDoubleList(upPrecisionsImproved);
-		List<Double> downPrecisionsImproved = validResults.stream().map(r -> r.getImprovedPerformance(date).getPrecision(Change.DOWN)).
-				filter(d -> !d.isNaN()).collect(Collectors.toList());
-		String avgDownPrecisionImprovedString = getAvgAsRoundedStringForDoubleList(downPrecisionsImproved);
-		List<Double> upPrecisionsIgnoreEqualImproved = validResults.stream().map(r -> r.getImprovedPerformance(date).getEqualIgnoredPrecision(Change.UP)).
-				filter(d -> !d.isNaN()).collect(Collectors.toList());
-		String avgUpPrecisionsIgnoreEqualImprovedString = getAvgAsRoundedStringForDoubleList(upPrecisionsIgnoreEqualImproved);
-		List<Double> downPrecisionsIgnoreEqualImproved = validResults.stream().map(r -> r.getImprovedPerformance(date).getEqualIgnoredPrecision(Change.DOWN)).
-				filter(d -> !d.isNaN()).collect(Collectors.toList());
-		String avgDownPrecisionsIgnoreEqualImprovedString = getAvgAsRoundedStringForDoubleList(downPrecisionsIgnoreEqualImproved);
-		String avgAccuracyImprovedString = getAvgAsRoundedStringForDoubleList(validResults.stream().map(r -> r.getImprovedPerformance(date).getAccuracy()).
-				filter(d -> !d.isNaN()).collect(Collectors.toList()));
-		String avgAccuracyIgnoreEqualImprovedString = getAvgAsRoundedStringForDoubleList(validResults.stream().map(r -> r.getImprovedPerformance(date).getEqualIgnoredAccuracy()).
 				filter(d -> !d.isNaN()).collect(Collectors.toList()));
 		
 		return avgReturnString + "," + 
 			avgSmoothedReturnString + "," + 
-			avgUpPrecisionString + "," + 
-			avgDownPrecisionString + "," + 
+			avgAbsoluteReturnString + "," + 
+			avgAbsoluteSmoothedReturnString + "," +
+			
 			avgUpPrecisionsIgnoreEqualString + "," + 
 			avgDownPrecisionsIgnoreEqualString + "," + 
-			avgAccuracyString + "," + 
-			avgAccuracyIgnoreEqualString + "," + 
-			avgUpPrecisionImprovedString + "," + 
-			avgDownPrecisionImprovedString + "," + 
-			avgUpPrecisionsIgnoreEqualImprovedString + "," + 
-			avgDownPrecisionsIgnoreEqualImprovedString + "," + 
-			avgAccuracyImprovedString + "," + 
-			avgAccuracyIgnoreEqualImprovedString;
+			avgAccuracyIgnoreEqualString;
 	}
 	
 	private String buildResultString(LocalDate date,EvaluationResult evaluationResult) {
 		int roundTo = 5;
 		String dateString = date.format(StandardDateTimeFormatter.getStandardDateFormatter());
 		assert(evaluationResult.getAllDays().contains(date));
-		BigDecimal a = evaluationResult.getReturn(date);
 		return dateString+ "," +
 				getAsRoundedString(evaluationResult.getReturn(date),roundTo) + "," +
-				getAsRoundedString(evaluationResult.getPerformance(date).getPrecision(Change.UP),roundTo) + "," +
-				getAsRoundedString(evaluationResult.getPerformance(date).getPrecision(Change.DOWN),roundTo) + "," + 
-				getAsRoundedString(evaluationResult.getPerformance(date).getRecall(Change.UP),roundTo) + ","  + 
-				getAsRoundedString(evaluationResult.getPerformance(date).getRecall(Change.DOWN),roundTo) + ","  + 
+				getAsRoundedString(evaluationResult.getSmoothedReturn(date),roundTo) + "," +
+				getAsRoundedString(evaluationResult.getAbsoluteReturn(date),roundTo) + "," +
+				getAsRoundedString(evaluationResult.getAbsoluteSmoothedReturn(date),roundTo) + "," +
 				getAsRoundedString(evaluationResult.getPerformance(date).getEqualIgnoredPrecision(Change.UP),roundTo) + ","  + 
 				getAsRoundedString(evaluationResult.getPerformance(date).getEqualIgnoredPrecision(Change.DOWN),roundTo) + ","  + 
-				getAsRoundedString(evaluationResult.getPerformance(date).getEqualIgnoredRecall(Change.UP),roundTo) + ","  + 
-				getAsRoundedString(evaluationResult.getPerformance(date).getEqualIgnoredRecall(Change.DOWN),roundTo) + "," +
-				
-				getAsRoundedString(evaluationResult.getImprovedPerformance(date).getPrecision(Change.UP),roundTo) + "," +
-				getAsRoundedString(evaluationResult.getImprovedPerformance(date).getPrecision(Change.DOWN),roundTo) + "," + 
-				getAsRoundedString(evaluationResult.getImprovedPerformance(date).getRecall(Change.UP),roundTo) + ","  + 
-				getAsRoundedString(evaluationResult.getImprovedPerformance(date).getRecall(Change.DOWN),roundTo) + ","  + 
-				getAsRoundedString(evaluationResult.getImprovedPerformance(date).getEqualIgnoredPrecision(Change.UP),roundTo) + ","  + 
-				getAsRoundedString(evaluationResult.getImprovedPerformance(date).getEqualIgnoredPrecision(Change.DOWN),roundTo) + ","  + 
-				getAsRoundedString(evaluationResult.getImprovedPerformance(date).getEqualIgnoredRecall(Change.UP),roundTo) + ","  + 
-				getAsRoundedString(evaluationResult.getImprovedPerformance(date).getEqualIgnoredRecall(Change.DOWN),roundTo);
+				getAsRoundedString(evaluationResult.getPerformance(date).getEqualIgnoredAccuracy(),roundTo);
 	}
 
 	private String buildHeadLine() {
 		String result = "date,"+
-				"returnOfInvestment" + "," +
-				"precision_" + Change.UP + "," +
-				"precision_" + Change.DOWN + "," +
-				"recall_" + Change.UP + "," +
-				"recall_" + Change.DOWN + "," +
-				"precisionIgnoreEqual_" + Change.UP + "," +
-				"precisionIgnoreEqual_" + Change.DOWN + "," +
-				"recallIgnoreEqual_" + Change.UP + "," +
-				"recallIgnoreEqual_" + Change.DOWN + "," +
-				"Accuracy" + "," +
-				"AccuracyIgnoreEqual" + "," +
+				"Return" + "," +
+				"SmoothedReturn" + "," +
+				"AbsoluteReturn" + "," +
+				"SmoothedSbsoluteReturn" + "," +
+				"PrecisionIgnoreEqual_UP" + "," +
+				"PrecisionIgnoreEqual_DOWN" + "," +
+				"AccuracyIngoreEqual";
 				
-				"improvedPrecision_" + Change.UP + "," +
-				"improvedPrecision_" + Change.DOWN + "," +
-				"improvedRecall_" + Change.UP + "," +
-				"improvedRecall_" + Change.DOWN + "," +
-				"improvedPrecisionIgnoreEqual_" + Change.UP + "," +
-				"improvedPrecisionIgnoreEqual_" + Change.DOWN + "," +
-				"improvedRecallIgnoreEqual_" + Change.UP + "," +
-				"improvedRecallIgnoreEqual_" + Change.DOWN + "," +
-				"improvedAccuracy" + "," +
-				"improvedAccuracyIgnoerEqual";
+			
 		System.out.println(result);
 		return result;
 	}

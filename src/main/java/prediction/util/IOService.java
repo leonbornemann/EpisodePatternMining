@@ -6,10 +6,12 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -19,9 +21,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
-import data.AnnotatedEventType;
+import data.Change;
 import episode.finance.EpisodePattern;
 import prediction.mining.Method;
 import util.Pair;
@@ -131,8 +134,10 @@ public class IOService {
 		File programState = getOrCreateProgramStateDir(comp);
 		if(method==Method.PERMS){
 			return new File(programState.getAbsolutePath() + File.separator + "evaluationResult.obj");
-		} else{
+		} else if ( method == Method.FBSWC){
 			return new File(programState.getAbsolutePath() + File.separator + Method.FBSWC + "_evaluationResult.obj");
+		} else{
+			return new File(programState.getAbsolutePath() + File.separator + Method.RandomGuessing + "_evaluationResult.obj");
 		}
 	}
 	
@@ -141,8 +146,10 @@ public class IOService {
 		File companyDir = getOrCreateCompanyDir(companyId,parentDir);
 		if(method==Method.PERMS){
 			return new File(companyDir.getAbsolutePath() + File.separator + "targetMovement.csv");
-		} else{
+		} else if ( method == Method.FBSWC){
 			return new File(companyDir.getAbsolutePath() + File.separator + Method.FBSWC + "_targetMovement.csv");
+		} else{
+			return new File(companyDir.getAbsolutePath() + File.separator + Method.RandomGuessing + "_targetMovement.csv");
 		}
 	}
 
@@ -151,8 +158,10 @@ public class IOService {
 		File companyDir = getOrCreateCompanyDir(companyId,parentDir);
 		if(method==Method.PERMS){
 			return new File(companyDir.getAbsolutePath() + File.separator + "predictions.csv");
-		} else{
+		} else if ( method == Method.FBSWC){
 			return new File(companyDir.getAbsolutePath() + File.separator + Method.FBSWC + "_predictions.csv");
+		} else{
+			return new File(companyDir.getAbsolutePath() + File.separator + Method.RandomGuessing + "_predictions.csv");
 		}
 	}
 
@@ -244,9 +253,48 @@ public class IOService {
 		File companyDir = getOrCreateCompanyDir(companyID,parentDir);
 		if(method==Method.PERMS){
 			return new File(companyDir.getAbsolutePath() + File.separator + "runtimePerformance.csv");
-		} else{
+		} else if(method == Method.FBSWC){
 			return new File(companyDir.getAbsolutePath() + File.separator + Method.FBSWC + "runtimePerformance.csv");
+		} else{
+			return new File(companyDir.getAbsolutePath() + File.separator + Method.RandomGuessing + "runtimePerformance.csv");
 		}
 	}
 
+	public static void serializePairList(List<Pair<LocalDateTime, Change>> predictions,File file) throws IOException {
+		PrintWriter pr = new PrintWriter(new FileWriter(file));
+		for (Pair<LocalDateTime, Change> pair : predictions) {
+			pr.println(pair.getFirst().format(StandardDateTimeFormatter.getStandardDateTimeFormatter())+ "," + pair.getSecond());
+		}
+		pr.close();
+	}
+
+	public static List<Pair<LocalDateTime, Change>> deserializePairList(File file) throws IOException {
+		BufferedReader reader = new BufferedReader(new FileReader(file));
+		String line = reader.readLine();
+		List<Pair<LocalDateTime, Change>> list = new ArrayList<>();
+		while(line!=null){
+			String[] tokens = line.split(",");
+			assert(tokens.length==2);
+			list.add(new Pair<LocalDateTime, Change>(LocalDateTime.parse(tokens[0], StandardDateTimeFormatter.getStandardDateTimeFormatter()),Change.valueOf(tokens[1])));
+			line = reader.readLine();
+		}
+		reader.close();
+		return list;
+	}
+
+	public static TreeMap<LocalDateTime,BigDecimal> readTimeSeries(String cmpId, File timeSeriesDirectory) throws IOException {
+		List<File> matchingFiles = Arrays.asList(timeSeriesDirectory.listFiles()).stream().filter(f -> f.getName().equals(cmpId +".csv")).collect(Collectors.toList());
+		assert(matchingFiles.size()==1);
+		TreeMap<LocalDateTime,BigDecimal> timeSeries = new TreeMap<>();
+		List<Pair<LocalDateTime, BigDecimal>> asList = readTimeSeriesData(matchingFiles.get(0));
+		asList.stream().forEach(p -> timeSeries.put(p.getFirst(), p.getSecond()));
+		return timeSeries;
+	}
+	
+	public static TreeMap<LocalDateTime,BigDecimal> readTimeSeries(File file) throws IOException {
+		TreeMap<LocalDateTime,BigDecimal> timeSeries = new TreeMap<>();
+		List<Pair<LocalDateTime, BigDecimal>> asList = readTimeSeriesData(file);
+		asList.stream().forEach(p -> timeSeries.put(p.getFirst(), p.getSecond()));
+		return timeSeries;
+	}
 }

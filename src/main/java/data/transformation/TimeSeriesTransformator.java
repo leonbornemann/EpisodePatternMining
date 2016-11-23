@@ -1,21 +1,16 @@
 package data.transformation;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import data.AnnotatedEvent;
 import data.Change;
-import data.LowLevelEvent;
 import prediction.util.IOService;
-import prediction.util.StandardDateTimeFormatter;
 import util.Pair;
 
 public class TimeSeriesTransformator {

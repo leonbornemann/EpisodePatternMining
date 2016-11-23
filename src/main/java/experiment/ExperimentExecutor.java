@@ -11,11 +11,10 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -33,12 +32,12 @@ import prediction.evaluation.EvaluationResult;
 import prediction.evaluation.NoAggregationEvaluator;
 import prediction.mining.FBSWCModel;
 import prediction.mining.Method;
-import prediction.mining.PERSMModel;
 import prediction.mining.PERMSTrainer;
+import prediction.mining.PERSMModel;
 import prediction.mining.PredictiveModel;
+import prediction.mining.RandomGuessingModel;
 import prediction.mining.WindowMiner;
 import prediction.util.IOService;
-import prediction.util.StandardDateTimeFormatter;
 import semantic.SemanticKnowledgeCollector;
 import util.Pair;
 
@@ -81,7 +80,7 @@ public class ExperimentExecutor {
 		execute(Method.PERMS);
 	}
 
-	private void execute(Method method) throws ClassNotFoundException, IOException {
+	public void execute(Method method) throws ClassNotFoundException, IOException {
 		//Map<String, Pair<Long, Long>> times = buildAndApplyModel(method);
 		Map<String, Pair<Long, Long>> times = new HashMap<String, Pair<Long, Long>>();
 		for(String id : annotatedCompanyCodes){
@@ -110,12 +109,6 @@ public class ExperimentExecutor {
 			System.out.println("Accuracy: " + a.getTotalPerformance().getAccuracy());
 			System.out.println("Accuracy without equal: " + a.getTotalPerformance().getEqualIgnoredAccuracy());
 			a.getTotalPerformance().printConfusionMatrix();
-			System.out.println("Improved Performance Metric:");
-			System.out.println("Up-Precision: " + a.getTotalImprovedPerformance().getPrecision(Change.UP));
-			System.out.println("DOWN-Precision: " + a.getTotalImprovedPerformance().getPrecision(Change.DOWN));
-			System.out.println("Up-Recall: " + a.getTotalImprovedPerformance().getRecall(Change.UP));
-			System.out.println("DOWN-Recall: " + a.getTotalImprovedPerformance().getRecall(Change.DOWN));
-			a.getTotalImprovedPerformance().printConfusionMatrix();
 			System.out.println("-----------------------------------------------------------------------------");
 		}
 		System.out.println("avg Return: " + avg.divide(new BigDecimal(annotatedCompanyCodes.size()),100,RoundingMode.FLOOR));
@@ -160,8 +153,11 @@ public class ExperimentExecutor {
 			PredictiveModel model = null;
 			if(method==Method.PERMS){
 				model = perms(stream,toPredict, winMiner,eventAlphabet);
-			} else{
+			} else if(method == Method.FBSWC){
 				model = fbscw(stream,toPredict, winMiner,eventAlphabet);
+			} else{
+				assert(method == Method.RandomGuessing);
+				model = new RandomGuessingModel(new Random(13));
 			}
 			long afterTrainingNs = getCpuTime();
 			long trainingTimeNs = afterTrainingNs - beforeTrainingNs;
@@ -199,15 +195,7 @@ public class ExperimentExecutor {
 			slider.slideForward();
 		}
 		//serialize results
-		serializePairList(predictions,IOService.buildPredictionsTargetFile(toPredict.getCompanyID(),method,resultDir));
-	}
-
-	private void serializePairList(List<Pair<LocalDateTime, Change>> predictions,File file) throws IOException {
-		PrintWriter pr = new PrintWriter(new FileWriter(file));
-		for (Pair<LocalDateTime, Change> pair : predictions) {
-			pr.println(pair.getFirst().format(StandardDateTimeFormatter.getStandardDateTimeFormatter())+ "," + pair.getSecond());
-		}
-		pr.close();
+		IOService.serializePairList(predictions,IOService.buildPredictionsTargetFile(toPredict.getCompanyID(),method,resultDir));
 	}
 	
 	private FBSWCModel fbscw(AnnotatedEventStream stream,AnnotatedEventType toPredict,WindowMiner winMiner,Set<AnnotatedEventType> eventAlphabet) throws IOException, ClassNotFoundException {
