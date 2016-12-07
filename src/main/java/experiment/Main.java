@@ -2,6 +2,8 @@ package experiment;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 import prediction.mining.Method;
 
@@ -14,9 +16,12 @@ public class Main {
 //		executor.execute(Method.RandomGuessing);
 //		executor.printEvaluationResult(Method.RandomGuessing);
 		//supportSerialRuns();
-		numerOfWindowsRuns();
-		//semanticRuns();
-//		File resultDir = new File("C:\\Users\\Leon Bornemann\\Desktop\\base Folder\\Run 1");
+		//numerOfWindowsRuns();
+		//permsOnly();
+		//semanticCounterpartRuns();
+		//avgForecastingRun();
+		ThresholdRun();
+		//		File resultDir = new File("C:\\Users\\Leon Bornemann\\Desktop\\base Folder\\Run 1");
 //		resultDir.mkdir();
 //		EvaluationConfig config = new EvaluationConfig(100, 90, false, 0.75, 0.75, 20);
 //		ExperimentExecutor executor = new ExperimentExecutor(config, resultDir);
@@ -139,6 +144,110 @@ public class Main {
 //		executor.execute();
 	}
 
+	private static void ThresholdRun() throws ClassNotFoundException, IOException {
+		String dirPath = "C:\\Users\\Leon Bornemann\\Desktop\\base Folder\\Final Runs\\New Experiments\\Threshold\\";
+//		File resultDir = new File(dirPath + "Run 1");
+//		resultDir.mkdir();
+//		EvaluationConfig config = new EvaluationConfig(100, 90, false, 0.2, 0.2, 20);
+//		File annotatedDir = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Time Series 20 Percent\\");
+//		File annotatedSectorDir = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Sector Time Series 20 Percent\\");
+//		ExperimentExecutor executor = new ExperimentExecutor(config, resultDir, annotatedDir,annotatedSectorDir);
+//		executor.execute(Method.PERMS);
+		//more support
+//		File resultDir = new File(dirPath + "Run 2");
+//		resultDir.mkdir();
+//		EvaluationConfig config = new EvaluationConfig(100, 180, false, 0.6, 0.4, 1000);
+//		File annotatedDir = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Time Series 20 Percent\\");
+//		File annotatedSectorDir = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Sector Time Series 20 Percent\\");
+//		ExperimentExecutor executor = new ExperimentExecutor(config, resultDir, annotatedDir,annotatedSectorDir);
+//		executor.execute();
+//		File resultDir = new File(dirPath + "Run 3");
+//		resultDir.mkdir();
+//		EvaluationConfig config = new EvaluationConfig(100, 90, true, 0.4, 0.1, 100);
+//		File annotatedDir = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Time Series 20 Percent\\");
+//		File annotatedSectorDir = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Sector Time Series 20 Percent\\");
+//		ExperimentExecutor executor = new ExperimentExecutor(config, resultDir, annotatedDir,annotatedSectorDir);
+//		executor.execute();
+//		File resultDir = new File(dirPath + "Run 4");
+//		resultDir.mkdir();
+//		EvaluationConfig config = new EvaluationConfig(100, 180, false, 0.7, 0.7, 20);
+//		File annotatedDir = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Time Series 20 Percent\\");
+//		File annotatedSectorDir = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Sector Time Series 20 Percent\\");
+//		ExperimentExecutor executor = new ExperimentExecutor(config, resultDir, annotatedDir,annotatedSectorDir);
+//		executor.execute();
+		File resultDir = new File(dirPath + "Run 5");
+		resultDir.mkdir();
+		EvaluationConfig config = new EvaluationConfig(100, 180, true, 0.7, 0.7, 20);
+		File annotatedDir = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Time Series 20 Percent\\");
+		File annotatedSectorDir = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Sector Time Series 20 Percent\\");
+		ExperimentExecutor executor = new ExperimentExecutor(config, resultDir, annotatedDir,annotatedSectorDir);
+		executor.execute();
+		
+	}
+
+	private static void avgForecastingRun() throws ClassNotFoundException, IOException {
+		String dirPath = "C:\\Users\\Leon Bornemann\\Desktop\\base Folder\\Final Runs\\Average Forecasting\\";
+		File resultDir = new File(dirPath + "Run 1");
+		resultDir.mkdir();
+		EvaluationConfig config = new EvaluationConfig(100, 90, false, 0.95, 0.8, 20);
+		ExperimentExecutor executor = new ExperimentExecutor(config, resultDir);
+		executor.execute(Method.SimpleAverageForecasting);
+	}
+
+	private static void permsOnly() throws ClassNotFoundException, IOException {
+		String dirPath = "C:\\Users\\Leon Bornemann\\Desktop\\base Folder\\Final Runs\\Perms Only\\";
+		File resultDir = new File(dirPath +"Run 15");
+		resultDir.mkdir();
+		EvaluationConfig config = new EvaluationConfig(100, 90, false, 0.8, 0.5, 10);
+		ExperimentExecutor executor = new ExperimentExecutor(config, resultDir);
+		executor.execute();
+		resultDir = new File(dirPath +"Run 16");
+		resultDir.mkdir();
+		config = new EvaluationConfig(100, 90, false, 0.8, 0.5, 30);
+		executor = new ExperimentExecutor(config, resultDir);
+		executor.execute();
+		resultDir = new File(dirPath +"Run 17");
+		resultDir.mkdir();
+		config = new EvaluationConfig(100, 90, false, 0.8, 0.5, 40);
+		executor = new ExperimentExecutor(config, resultDir);
+		executor.execute();
+		resultDir = new File(dirPath +"Run 18");
+		resultDir.mkdir();
+		config = new EvaluationConfig(100, 90, false, 0.8, 0.5, 50);
+		executor = new ExperimentExecutor(config, resultDir);
+		executor.execute();
+		resultDir = new File(dirPath +"Run 19");
+		resultDir.mkdir();
+		config = new EvaluationConfig(100, 90, false, 0.8, 0.5, 100);
+		executor = new ExperimentExecutor(config, resultDir);
+		executor.execute();
+		resultDir = new File(dirPath +"Run 20");
+		resultDir.mkdir();
+		config = new EvaluationConfig(100, 90, false, 0.8, 0.5, 200);
+		executor = new ExperimentExecutor(config, resultDir);
+		executor.execute();
+		resultDir = new File(dirPath +"Run 21");
+		resultDir.mkdir();
+		config = new EvaluationConfig(100, 90, false, 0.8, 0.5, 300);
+		executor = new ExperimentExecutor(config, resultDir);
+		executor.execute();
+		resultDir = new File(dirPath +"Run 22");
+		resultDir.mkdir();
+		config = new EvaluationConfig(100, 90, false, 0.8, 0.5, 400);
+		executor = new ExperimentExecutor(config, resultDir);
+		executor.execute();
+		resultDir = new File(dirPath +"Run 23");
+		resultDir.mkdir();
+		config = new EvaluationConfig(100, 90, false, 0.8, 0.5, 500);
+		executor = new ExperimentExecutor(config, resultDir);
+		executor.execute();
+		resultDir = new File(dirPath +"Run 24");
+		resultDir.mkdir();
+		config = new EvaluationConfig(100, 90, false, 0.8, 0.5, 1000);
+		executor = new ExperimentExecutor(config, resultDir);
+		executor.execute();
+	}
+
 	private static void numerOfWindowsRuns() throws ClassNotFoundException, IOException {
 		String dirPath = "C:\\Users\\Leon Bornemann\\Desktop\\base Folder\\Final Runs\\Number Of Windows\\";
 		File resultDir = new File(dirPath+"Run 2");
@@ -209,34 +318,39 @@ public class Main {
 	}
 
 	private static void semanticRuns() throws ClassNotFoundException, IOException {
-//		File resultDir = new File("C:\\Users\\Leon Bornemann\\Desktop\\base Folder\\Using semantics\\Run 1");
-//		resultDir.mkdir();
-//		EvaluationConfig config = new EvaluationConfig(100, 90, true, 0.95, 0.8, 20);
-//		ExperimentExecutor executor = new ExperimentExecutor(config, resultDir);
-//		executor.execute();
-		File resultDir = new File("C:\\Users\\Leon Bornemann\\Desktop\\base Folder\\Using semantics\\Run 2");
+		String dirPath = "C:\\Users\\Leon Bornemann\\Desktop\\base Folder\\Final Runs\\Using semantics\\";
+		File resultDir = new File(dirPath + "Run 1");
 		resultDir.mkdir();
-		EvaluationConfig config = new EvaluationConfig(100, 90, true, 0.95, 0.7, 20);
+		EvaluationConfig config = new EvaluationConfig(100, 90, true, 0.95, 0.8, 20);
 		ExperimentExecutor executor = new ExperimentExecutor(config, resultDir);
 		executor.execute();
-		resultDir = new File("C:\\Users\\Leon Bornemann\\Desktop\\base Folder\\Using semantics\\Run 3");
+		resultDir = new File(dirPath + "Run 2");
+		resultDir.mkdir();
+		config = new EvaluationConfig(100, 90, true, 0.95, 0.7, 20);
+		executor = new ExperimentExecutor(config, resultDir);
+		executor.execute();
+		resultDir = new File(dirPath + "Run 3");
 		resultDir.mkdir();
 		config = new EvaluationConfig(100, 90, true, 0.95, 0.6, 20);
 		executor = new ExperimentExecutor(config, resultDir);
 		executor.execute();
-		resultDir = new File("C:\\Users\\Leon Bornemann\\Desktop\\base Folder\\Using semantics\\Run 4");
+	}
+	
+	private static void semanticCounterpartRuns() throws ClassNotFoundException, IOException {
+		String dirPath = "C:\\Users\\Leon Bornemann\\Desktop\\base Folder\\Final Runs\\Using semantics Counterpart\\";
+		File resultDir = new File(dirPath + "Run 1");
 		resultDir.mkdir();
-		config = new EvaluationConfig(150, 90, true, 0.95, 0.6, 20);
+		EvaluationConfig config = new EvaluationConfig(100, 90, false, 0.95, 0.8, 20);
+		ExperimentExecutor executor = new ExperimentExecutor(config, resultDir);
+		executor.execute();
+		resultDir = new File(dirPath + "Run 2");
+		resultDir.mkdir();
+		config = new EvaluationConfig(100, 90, false, 0.95, 0.7, 20);
 		executor = new ExperimentExecutor(config, resultDir);
 		executor.execute();
-		resultDir = new File("C:\\Users\\Leon Bornemann\\Desktop\\base Folder\\Using semantics\\Run 5");
+		resultDir = new File(dirPath + "Run 3");
 		resultDir.mkdir();
-		config = new EvaluationConfig(200, 90, true, 0.95, 0.6, 20);
-		executor = new ExperimentExecutor(config, resultDir);
-		executor.execute();
-		resultDir = new File("C:\\Users\\Leon Bornemann\\Desktop\\base Folder\\Using semantics\\Run 6");
-		resultDir.mkdir();
-		config = new EvaluationConfig(250, 90, true, 0.95, 0.6, 20);
+		config = new EvaluationConfig(100, 90, false, 0.95, 0.6, 20);
 		executor = new ExperimentExecutor(config, resultDir);
 		executor.execute();
 	}

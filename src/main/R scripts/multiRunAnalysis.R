@@ -1,4 +1,4 @@
-getResultFrame = function(){
+getResultFrame = function(categoryName){
   fbswcResultPath = "\\resources\\AveragedResults\\FBSWC_byCompany.csv"
   permsResultPath = "\\resources\\AveragedResults\\PERMS_byCompany.csv"
   lowDiscrepancyCompanies = c("ON","VA","TECH","FCS","CTSH","AAPL","ISSC","INTC","CSCO","SNDK") #,"VOD","MSFT","ELNK","EBAY","TXN","YHOO","CGEN"
@@ -11,6 +11,7 @@ getResultFrame = function(){
     type = character(size),
     run = character(size),
     smoothedRet = numeric(size),
+    category= character(size),
     stringsAsFactors = FALSE
   )
   for(i in 1:length(dirs)){
@@ -32,16 +33,15 @@ getResultFrame = function(){
     resultFrame$run[i*2] = dir
     resultFrame$type[i*2] = "perms"
   }
+  resultFrame$category = categoryName
   return(resultFrame)
 }
 
 library(lattice)
-setwd("C:\\Users\\Leon Bornemann\\Desktop\\base Folder\\Final Runs\\Support Serial Modified")
-resultFrame = getResultFrame()
-setwd("C:\\Users\\Leon Bornemann\\Desktop\\base Folder\\Final Runs\\Number Of Windows")
-resultFrame = rbind(resultFrame,getResultFrame())
-
-
+setwd("C:\\Users\\Leon Bornemann\\Desktop\\base Folder\\Final Runs\\Using semantics")
+resultFrame = getResultFrame("semantic")
+setwd("C:\\Users\\Leon Bornemann\\Desktop\\base Folder\\Final Runs\\Using semantics Counterpart")
+resultFrame = rbind(resultFrame,getResultFrame("non-semantic"))
 
 resultFrame = resultFrame[order(resultFrame$meanImprovedAccuracy),]
 

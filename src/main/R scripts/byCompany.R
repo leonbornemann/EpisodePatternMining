@@ -9,9 +9,8 @@ filterOutSectors = function(x){
 }
 
 library(lattice)
-setwd("C:\\Users\\Leon Bornemann\\git\\EpisodePatternMining\\resources\\AveragedResults\\")
+setwd("C:\\Users\\Leon Bornemann\\Desktop\\base Folder\\Final Runs\\Support Serial Modified\\Run 2\\resources\\AveragedResults\\")
 
-setwd("C:\\Users\\Leon Bornemann\\Desktop\\base Folder\\Run 7\\resources\\AveragedResults\\")
 #by company
 
 fbswc = read.table("FBSWC_byCompany.csv",header=T,sep=",")
@@ -28,16 +27,38 @@ mean(fbswc$smoothedReturn)
 mean(perms$smoothedReturn)
 mean(perms$return)
 
+sd(fbswc$return)
+sd(fbswc$smoothedReturn)
+sd(perms$smoothedReturn)
+sd(perms$return)
+
+boxplot(return*100~method,data=totalTable,
+        ylab="Total Return [%]",ylim = c(-250,500))
+boxplot(AccuracyIngoreEqual*100~method,data=totalTable,
+        ylab="Accuracy (Ignore Equal) [%]")
+
+barchart(AccuracyIngoreEqual*100~company,
+         data=totalTable,
+         groups=method,
+         par.settings=list(superpose.polygon=list(col=colors)),
+         origin = 50,
+         ylab = list(label="Accuracy (Ignore Equal) [%]",cex = 1.5),
+         auto.key=list(space="top", columns=2, cex.title=1),
+         scales=list(x=list(rot=90,cex = 1.1),y=list(rot=0,cex=1.2)),
+         main=list(label = "Accuracy (IE) by Company",cex = 1.25)
+)
+
 barchart(return*100~company,
          data=totalTable,
          groups=method,
          par.settings=list(superpose.polygon=list(col=colors)),
          origin = 0,
-         xlab = "companies",
-         ylab = "total Return [%]",
-         auto.key=list(space="top", columns=2, cex.title=1),
-         scales=list(x=list(rot=90)),
-         main="Return by Company"
+         #xlab = list(label="companies",cex = 1.5),
+         ylab = list(label="Total Return [%]",cex = 1.5),
+         auto.key=list(space="top", columns=2, cex.title=1.25),
+         scales=list(x=list(rot=90,cex = 1.1),y=list(rot=0,cex=1.2)),
+         main=list(label = "Return by Company",cex = 1.25),
+         ylim = c(-260,550)
          )
 
 barchart(smoothedReturn*100~company,
@@ -45,11 +66,12 @@ barchart(smoothedReturn*100~company,
          groups=method,
          par.settings=list(superpose.polygon=list(col=colors)),
          origin = 0,
-         xlab = "companies",
-         ylab = "total Smoothed Return [%]",
-         auto.key=list(space="top", columns=2, cex.title=1),
-         scales=list(x=list(rot=90)),
-         main="Smoothed Return by Company"
+         #xlab = list(label="companies",cex = 1.5),
+         ylab = list(label="Total Corrected Return [%]",cex = 1.5),
+         auto.key=list(space="top", columns=2, cex.title=1.25),
+         scales=list(x=list(rot=90,cex = 1.1),y=list(rot=0,cex=1.2)),
+         main=list(label = "Corrected Return by Company",cex = 1.25),
+         ylim = c(-260,550)
 )
 
 barchart(Precision_UP*100~company,
@@ -206,9 +228,9 @@ perms = read.table("PERMS.csv",header=T,sep=",")
 fbswc$method = "fbswc"
 perms$method = "perms"
 totalTable = rbind(fbswc,perms)
-totalTable = totalTable[totalTable$date != "2016-05-11",]
+lowDiscrepancyCompanies = c("ON","VA","TECH","FCS","CTSH","AAPL","ISSC","INTC","CSCO","SNDK") #,"VOD","MSFT","ELNK","EBAY","TXN","YHOO","CGEN"
 
-barchart(avgReturn*100~date,
+barchart(avgAccuracyIngoreEqual*100~date,
          data=totalTable,
          groups=method,
          par.settings=list(superpose.polygon=list(col=colors)),

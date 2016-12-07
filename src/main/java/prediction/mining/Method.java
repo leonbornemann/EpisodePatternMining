@@ -1,5 +1,5 @@
 package prediction.mining;
 
 public enum Method {
-	PERMS,FBSWC, RandomGuessing
+	PERMS,FBSWC, RandomGuessing, SimpleAverageForecasting
 }

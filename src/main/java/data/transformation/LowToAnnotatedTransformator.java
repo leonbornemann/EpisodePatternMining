@@ -22,6 +22,8 @@ public class LowToAnnotatedTransformator {
 	private File illegalFormatDir;
 	private BigDecimal relativeDelta;
 	private boolean aggregate = false;
+	private boolean thresholdIsSet = true;
+	private double threshold = 0.0001;
 
 	public LowToAnnotatedTransformator(File inputDir, File outputDir,File illegalFormatDir, BigDecimal relativeDelta){
 		this.inputDir = inputDir;
@@ -83,9 +85,16 @@ public class LowToAnnotatedTransformator {
 		}
 		if(aggregate){
 			return aggregateToAnnotated(lowLevelEvents);
+		} else if(thresholdIsSet){
+			return transformToAnnotated(lowLevelEvents,threshold);
 		} else{
 			return transformToAnnotated(lowLevelEvents);
 		}
+	}
+
+	private List<AnnotatedEvent> transformToAnnotated(List<LowLevelEvent> lowLevelEvents, double threshold2) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	//TODO: refactor!

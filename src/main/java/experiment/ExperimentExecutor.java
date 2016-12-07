@@ -11,7 +11,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -36,6 +38,7 @@ import prediction.mining.PERMSTrainer;
 import prediction.mining.PERSMModel;
 import prediction.mining.PredictiveModel;
 import prediction.mining.RandomGuessingModel;
+import prediction.mining.SimpleAverageForecastingModel;
 import prediction.mining.WindowMiner;
 import prediction.util.IOService;
 import semantic.SemanticKnowledgeCollector;
@@ -51,41 +54,56 @@ import util.Pair;
  */
 public class ExperimentExecutor {
 
-	private static File annotatedStreamDirDesktop = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Time Series\\");
-	private static File annotatedSectorStreamDirDesktop = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Sector Time Series\\");
+	private File annotatedStreamDirDesktop = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Time Series\\");
+	private File annotatedSectorStreamDirDesktop = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Sector Time Series\\");
 	
-	private static File lowLevelStreamDirDesktop = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Time Series\\");
-	private static File lowLevelSectorStreamDirDesktop = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Sector Time Series\\");
+	private File lowLevelStreamDirDesktop = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Time Series\\");
+	private File lowLevelSectorStreamDirDesktop = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Sector Time Series\\");
 	
-	private static File lowLevelSmoothedStreamDirDesktop = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Time Series Smoothed\\");
-	private static File lowLevelSmoothedSectorStreamDirDesktop = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Sector Time Series Smoothed\\");
+	private File lowLevelSmoothedStreamDirDesktop = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Time Series Smoothed\\");
+	private File lowLevelSmoothedSectorStreamDirDesktop = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Sector Time Series Smoothed\\");
 	
 	private EvaluationConfig config;
 	private Set<String> annotatedCompanyCodes;
 	private File resultDir;
+	private Set<String> toIgnore = new HashSet<>();
 	
 	public ExperimentExecutor(EvaluationConfig config,File resultDir) throws IOException, ClassNotFoundException{
 		this.config = config;
+		initAllCmpCodes();
+		this.resultDir = resultDir;
+	}
+	
+	public ExperimentExecutor(EvaluationConfig config, File resultDir, File annotatedDir, File sectorAnnotatedDir) throws IOException {
+		this.config = config;
+		initAllCmpCodes();
+		this.annotatedStreamDirDesktop = annotatedDir;
+		this.annotatedSectorStreamDirDesktop = sectorAnnotatedDir;
+		this.resultDir = resultDir;
+	}
+
+	private void initAllCmpCodes() throws IOException {
 		SemanticKnowledgeCollector collector = new SemanticKnowledgeCollector();
 		annotatedCompanyCodes = collector.getAnnotatedCompanyCodes();
 		if(config.isUseSemantics()){
 			annotatedCompanyCodes.addAll(collector.getSectorCodes());
 		}
-		this.resultDir = resultDir;
 	}
-	
+
 	public void execute() throws ClassNotFoundException, IOException{
 		config.serialize(new File(resultDir.getAbsoluteFile()+File.separator+"config.prop"));
 		execute(Method.FBSWC);
+		initAllCmpCodes();
 		execute(Method.PERMS);
 	}
 
 	public void execute(Method method) throws ClassNotFoundException, IOException {
-		//Map<String, Pair<Long, Long>> times = buildAndApplyModel(method);
-		Map<String, Pair<Long, Long>> times = new HashMap<String, Pair<Long, Long>>();
-		for(String id : annotatedCompanyCodes){
-			times.put(id, new Pair<>(-1L,-1L));
-		}
+		Map<String, Pair<Long, Long>> times = buildAndApplyModel(method);
+//		Map<String, Pair<Long, Long>> times = new HashMap<String, Pair<Long, Long>>();
+//		for(String id : annotatedCompanyCodes){
+//			times.put(id, new Pair<>(-1L,-1L));
+//		}
+		annotatedCompanyCodes.removeAll(toIgnore);
 		runEvaluation(method,times);
 		printEvaluationResult(method);
 		DayBasedResultSerializer dayBasedSerializer = new DayBasedResultSerializer();
@@ -132,7 +150,8 @@ public class ExperimentExecutor {
 	
 	private Map<String, Pair<Long, Long>> buildAndApplyModel(Method method) throws IOException, ClassNotFoundException {
 		Set<AnnotatedEventType> eventAlphabet = AnnotatedEventType.loadEventAlphabet(annotatedCompanyCodes);
-		List<AnnotatedEventType> toDo = eventAlphabet.stream().filter(e -> e.getChange()==Change.UP).collect(Collectors.toList());
+		//List<String> done = Arrays.asList("AAPL","ALSK","CERN","CSCO","CSTE","EA","ELNK","EYES","GNCMA","NK","OHGI","ON","OPTT","SODA","SP");
+		List<AnnotatedEventType> toDo = eventAlphabet.stream().filter(e -> e.getChange()==Change.UP ).collect(Collectors.toList());
 		Map<String,Pair<Long,Long>> times = new HashMap<>();
 		for(int i=0;i<toDo.size();i++){
 			AnnotatedEventType toPredict = toDo.get(i);
@@ -149,25 +168,33 @@ public class ExperimentExecutor {
 			long beforeTrainingNs = getCpuTime();
 			WindowMiner winMiner = new WindowMiner(stream,toPredict,config.getNumWindows(),config.getWindowSizeInSeconds());
 			System.out.println("done mining windows");
-			//perms(d, s, eventAlphabet, stream,toPredict, winMiner);
-			PredictiveModel model = null;
-			if(method==Method.PERMS){
-				model = perms(stream,toPredict, winMiner,eventAlphabet);
-			} else if(method == Method.FBSWC){
-				model = fbscw(stream,toPredict, winMiner,eventAlphabet);
+			if(winMiner.getInversePredictiveWindows().size()!=config.getNumWindows() || winMiner.getNeutralWindows().size()!=config.getNumWindows() || winMiner.getPredictiveWindows().size()!= config.getNumWindows()){
+				System.out.println("skipping Company");
+				times.put(toPredict.getCompanyID(), new Pair<>(0L,0L));
+				toIgnore.add(toPredict.getCompanyID());
 			} else{
-				assert(method == Method.RandomGuessing);
-				model = new RandomGuessingModel(new Random(13));
+				//perms(d, s, eventAlphabet, stream,toPredict, winMiner);
+				PredictiveModel model = null;
+				if(method==Method.PERMS){
+					model = perms(stream,toPredict, winMiner,eventAlphabet);
+				} else if(method == Method.FBSWC){
+					model = fbscw(stream,toPredict, winMiner,eventAlphabet);
+				} else if(method==Method.RandomGuessing){
+					assert(method == Method.RandomGuessing);
+					model = new RandomGuessingModel(new Random(13));
+				} else if(method == Method.SimpleAverageForecasting){
+					model = new SimpleAverageForecastingModel(toPredict,lowLevelStreamDirDesktop,config.getWindowSizeInSeconds());
+				}
+				long afterTrainingNs = getCpuTime();
+				long trainingTimeNs = afterTrainingNs - beforeTrainingNs;
+				long beforeTestTimeNs = getCpuTime();
+				applyPredictor(toPredict, stream, model,method);
+				long afterTestTimeNs = getCpuTime();
+				long testTimeNs = afterTestTimeNs - beforeTestTimeNs;
+				//TODO: use training and test time?
+				serializeTimes(trainingTimeNs,testTimeNs,IOService.buildTimeTargetFile(toPredict.getCompanyID(),method,resultDir));
+				times.put(toPredict.getCompanyID(), new Pair<>(trainingTimeNs,testTimeNs));
 			}
-			long afterTrainingNs = getCpuTime();
-			long trainingTimeNs = afterTrainingNs - beforeTrainingNs;
-			long beforeTestTimeNs = getCpuTime();
-			applyPredictor(toPredict, stream, model,method);
-			long afterTestTimeNs = getCpuTime();
-			long testTimeNs = afterTestTimeNs - beforeTestTimeNs;
-			//TODO: use training and test time?
-			serializeTimes(trainingTimeNs,testTimeNs,IOService.buildTimeTargetFile(toPredict.getCompanyID(),method,resultDir));
-			times.put(toPredict.getCompanyID(), new Pair<>(trainingTimeNs,testTimeNs));
 		}
 		return times;
 	}

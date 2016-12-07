@@ -23,6 +23,13 @@ public class TransformationMain {
 	private static String smoothedTimeSeriesLocation = "D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Time Series Smoothed\\";
 	private static String smoothedSectorTimeSeriesLocation = "D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Sector Time Series Smoothed\\";
 	
+	private static String timeSeries20PercentTargetLocation = "D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Time Series 20 Percent\\";
+	private static String sectorTimeSeries20PercentTargetLocation = "D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Sector Time Series 20 Percent\\";
+	
+	private static String timeSeriesAggregatedTargetLocation = "D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Time Series Aggregated\\";
+	private static String sectorTimeSeriesAggregatedTargetLocation = "D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Sector Time Series Aggregated\\";
+	
+	
 	public static void main(String[] args) throws IOException {
 		//laptop();
 		//desktop();
@@ -37,9 +44,9 @@ public class TransformationMain {
 	}
 
 	private static void timeSeriesToAnnotated() {
-		TimeSeriesTransformator transformer = new TimeSeriesTransformator(timeSeriesSourceLocation,timeSeriesTargetLocation);
+		TimeSeriesTransformator transformer = new TimeSeriesTransformator(timeSeriesSourceLocation,timeSeriesAggregatedTargetLocation,true,0.001);
 		transformer.transform();
-		transformer = new TimeSeriesTransformator(sectorTimeSeriesSourceLocation,sectorTimeSeriesTargetLocation);
+		transformer = new TimeSeriesTransformator(sectorTimeSeriesSourceLocation,sectorTimeSeriesAggregatedTargetLocation,true,0.001);
 		transformer.transform();
 	}
 
