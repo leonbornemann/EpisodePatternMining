@@ -15,26 +15,28 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import data.AnnotatedEventType;
-import data.Change;
-import episode.finance.ParallelEpisodePattern;
-import episode.lossy_counting.EventType;
-import episode.lossy_counting.SerialEpisode;
-import trie.SerialEpisodeTrie;
+import data.events.CategoricalEventType;
+import data.events.Change;
+import episode.pattern.ParallelEpisodePattern;
+import episode.pattern.storage.EpisodeIdentifier;
+import episode.pattern.storage.EpisodeTrie;
+import episode.unstable_experimental_lossy_counting.EventType;
+import episode.unstable_experimental_lossy_counting.SerialEpisode;
+import episode.unstable_experimental_lossy_counting.trie.SerialEpisodeTrie;
 
 public class TrieTest {
 
-	private static AnnotatedEventType A = new AnnotatedEventType("foo", Change.UP);
-	private static AnnotatedEventType B = new AnnotatedEventType("bar", Change.EQUAL);
-	private static AnnotatedEventType C = new AnnotatedEventType("mystic", Change.DOWN);
-	private static AnnotatedEventType D = new AnnotatedEventType("mystic2", Change.DOWN);
-	private static AnnotatedEventType E = new AnnotatedEventType("mystic3", Change.DOWN);
-	private static AnnotatedEventType F = new AnnotatedEventType("mystic4", Change.DOWN);
-	private static AnnotatedEventType G = new AnnotatedEventType("mystic5", Change.DOWN);
-	private static AnnotatedEventType H = new AnnotatedEventType("mystic6", Change.DOWN);
-	private static AnnotatedEventType I = new AnnotatedEventType("mystic7", Change.DOWN);
-	private static AnnotatedEventType J = new AnnotatedEventType("mystic8", Change.DOWN);
-	private static AnnotatedEventType K = new AnnotatedEventType("mystic9", Change.DOWN);
+	private static CategoricalEventType A = new CategoricalEventType("foo", Change.UP);
+	private static CategoricalEventType B = new CategoricalEventType("bar", Change.EQUAL);
+	private static CategoricalEventType C = new CategoricalEventType("mystic", Change.DOWN);
+	private static CategoricalEventType D = new CategoricalEventType("mystic2", Change.DOWN);
+	private static CategoricalEventType E = new CategoricalEventType("mystic3", Change.DOWN);
+	private static CategoricalEventType F = new CategoricalEventType("mystic4", Change.DOWN);
+	private static CategoricalEventType G = new CategoricalEventType("mystic5", Change.DOWN);
+	private static CategoricalEventType H = new CategoricalEventType("mystic6", Change.DOWN);
+	private static CategoricalEventType I = new CategoricalEventType("mystic7", Change.DOWN);
+	private static CategoricalEventType J = new CategoricalEventType("mystic8", Change.DOWN);
+	private static CategoricalEventType K = new CategoricalEventType("mystic9", Change.DOWN);
 	
 	
 	@Test
@@ -73,7 +75,7 @@ public class TrieTest {
 		assertEquals(0, trie1.getValue(new ParallelEpisodePattern(A)).intValue());
 	}
 	
-	private HashMap<ParallelEpisodePattern, Integer> initPowerset(List<AnnotatedEventType> events) {
+	private HashMap<ParallelEpisodePattern, Integer> initPowerset(List<CategoricalEventType> events) {
 		HashMap<ParallelEpisodePattern,Integer> allPatterns = new HashMap<>();
 		int ansSize = (int)Math.pow(2, events.size());
 		for(int i= 0;i< ansSize;++i){
@@ -81,7 +83,7 @@ public class TrieTest {
 			while(bin.length() < events.size()){
 				bin = "0" + bin; //pad with 0's
 			}
-			List<AnnotatedEventType> thisComb = new ArrayList<>(); //place to put one combination
+			List<CategoricalEventType> thisComb = new ArrayList<>(); //place to put one combination
 			for(int j= 0;j< events.size();++j){
 				if(bin.charAt(j) == '1'){
 					thisComb.add(events.get(j));
@@ -94,7 +96,7 @@ public class TrieTest {
 		return allPatterns;
 	}
 
-	private HashMap<ParallelEpisodePattern, Integer> initPowerset(List<AnnotatedEventType> eventTypes,List<Integer> sizes) {
+	private HashMap<ParallelEpisodePattern, Integer> initPowerset(List<CategoricalEventType> eventTypes,List<Integer> sizes) {
 		HashMap<ParallelEpisodePattern,Integer> allPatterns = new HashMap<>();
 		for(int size:sizes){
 			allPatterns.putAll(initEpisodes(eventTypes,size));
@@ -102,7 +104,7 @@ public class TrieTest {
 		return allPatterns;
 	}
 
-	private Map<ParallelEpisodePattern,Integer> initEpisodes(List<AnnotatedEventType> eventTypes,int size) {
+	private Map<ParallelEpisodePattern,Integer> initEpisodes(List<CategoricalEventType> eventTypes,int size) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -168,8 +170,8 @@ public class TrieTest {
 			EpisodeIdentifier<Integer> entry = it.next();
 			ParallelEpisodePattern episode = new ParallelEpisodePattern(entry.getCanonicalEpisodeRepresentation());
 			assertEquals(new Integer(i),entry.getAssociatedValue());
-			List<AnnotatedEventType> canonicalOriginal = episodesSize2.get(i).getCanonicalListRepresentation();
-			List<AnnotatedEventType> canonicalFromTrie = episode.getCanonicalListRepresentation();
+			List<CategoricalEventType> canonicalOriginal = episodesSize2.get(i).getCanonicalListRepresentation();
+			List<CategoricalEventType> canonicalFromTrie = episode.getCanonicalListRepresentation();
 			assertEquals(canonicalOriginal.size(),canonicalFromTrie.size());
 			for(int j=0;j<canonicalOriginal.size();j++){
 				assertEquals(canonicalOriginal.get(j),canonicalFromTrie.get(j));

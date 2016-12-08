@@ -1,7 +1,5 @@
 package prediction.evaluation;
 
-import static org.junit.Assert.*;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -12,10 +10,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
@@ -23,22 +19,17 @@ import java.util.stream.Collectors;
 
 import org.junit.Test;
 
-import data.AnnotatedEventType;
-import data.Change;
-import data.stream.AnnotatedEventStream;
-import data.stream.InMemoryMultiTimeSeriesAnnotatedEventStream;
-import data.stream.PredictorPerformance;
+import data.events.CategoricalEventType;
+import data.events.Change;
+import data.stream.CategoricalEventStream;
 import data.stream.StreamWindow;
 import data.stream.StreamWindowSlider;
-import experiment.ConsistencyChecker;
+import evaluation.ConfusionMatrix;
 import experiment.EvaluationConfig;
-import experiment.ExperimentExecutor;
-import prediction.mining.Method;
-import prediction.mining.PredictiveModel;
-import prediction.mining.RandomGuessingModel;
-import prediction.mining.WindowMiner;
-import prediction.util.IOService;
+import prediction.models.Method;
+import prediction.models.PredictiveModel;
 import semantic.SemanticKnowledgeCollector;
+import util.IOService;
 import util.NumericUtil;
 import util.Pair;
 
@@ -63,12 +54,12 @@ public class ConsistencyTest {
 	public void test() throws ClassNotFoundException, IOException {
 		Set<String> annotatedCompanyCodes = new SemanticKnowledgeCollector().getAnnotatedCompanyCodes();
 		Random random = new Random(13);
-		Set<AnnotatedEventType> eventAlphabet = AnnotatedEventType.loadEventAlphabet(annotatedCompanyCodes);
-		List<AnnotatedEventType> toDo = eventAlphabet.stream().filter(e -> e.getChange()==Change.UP).collect(Collectors.toList());
+		Set<CategoricalEventType> eventAlphabet = CategoricalEventType.loadEventAlphabet(annotatedCompanyCodes);
+		List<CategoricalEventType> toDo = eventAlphabet.stream().filter(e -> e.getChange()==Change.UP).collect(Collectors.toList());
 		List<Double> results = new ArrayList<>();
 		writer = new PrintWriter(new FileWriter(targetFile));
 		writer.println("company,diff,expectedReturn,realReturn");
-		for(AnnotatedEventType event : toDo){
+		for(CategoricalEventType event : toDo){
 			String cmpId = event.getCompanyID();
 			System.out.println("doing "+cmpId);
 			List<File> streamDirs = new ArrayList<>();
@@ -110,7 +101,7 @@ public class ConsistencyTest {
 		}
 	}
 
-	private double getExpectedBalance(PredictorPerformance perf,double meanGain,double meanLoss,int numUp,int numDown){
+	private double getExpectedBalance(ConfusionMatrix perf,double meanGain,double meanLoss,int numUp,int numDown){
 		return perf.getUp_UP()*meanGain + perf.getUp_DOWN()*meanLoss - perf.getDOWN_DOWN()*meanLoss - perf.getDOWN_UP()*meanGain;
 		//return perf.getRecall(Change.UP)*meanGain*numUp + perf.getFalsePositiveRate(Change.UP)*meanLoss*numDown - perf.getRecall(Change.DOWN)*meanLoss*numDown - perf.getFalsePositiveRate(Change.DOWN)*meanGain*numDown;
 	}
@@ -138,7 +129,7 @@ public class ConsistencyTest {
 		File predictionsFile = IOService.buildPredictionsTargetFile(cmpId, Method.RandomGuessing, resultDir);
 		List<Pair<LocalDateTime, Change>> predictions = IOService.deserializePairList(predictionsFile);
 		TreeMap<LocalDateTime, BigDecimal> timeSeries = IOService.readTimeSeries(cmpId,lowLevelStreamDirDesktop);
-		PredictorPerformance result = new PredictorPerformance();
+		ConfusionMatrix result = new ConfusionMatrix();
 		List<BigDecimal> longResult = new ArrayList<>();
 		List<BigDecimal> shortResult = new ArrayList<>();
 		for(Pair<LocalDateTime, Change> pred : predictions){
@@ -190,7 +181,7 @@ public class ConsistencyTest {
 		}
 	}
 
-	private void applyPredictor(AnnotatedEventType toPredict, AnnotatedEventStream stream,PredictiveModel model, Method method) throws IOException {
+	private void applyPredictor(CategoricalEventType toPredict, CategoricalEventStream stream,PredictiveModel model, Method method) throws IOException {
 		StreamWindowSlider slider = new StreamWindowSlider(stream,config.getWindowSizeInSeconds());
 		List<Pair<LocalDateTime,Change>> predictions = new ArrayList<>();
 		while(slider.canSlide()){

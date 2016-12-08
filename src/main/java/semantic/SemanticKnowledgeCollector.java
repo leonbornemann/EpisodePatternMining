@@ -12,9 +12,15 @@ import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.ResultSet;
 
-import prediction.util.IOService;
+import util.IOService;
 import util.Pair;
 
+/***
+ * In theory this class uses the SPARQL-endpoint to connect to the dbpedia and retrieve the ids of those companies that have an entry in the dbpedia.
+ * However to speed things up and allow execution without internet connections, the 40 companies that were returned in the 21st of august are hardcoded here and simply returned.
+ * @author Leon Bornemann
+ *
+ */
 public class SemanticKnowledgeCollector {
 
 	private Set<String> allCompanyCodes;

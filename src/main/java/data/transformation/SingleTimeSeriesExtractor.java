@@ -10,9 +10,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import data.LowLevelEvent;
-import prediction.util.StandardDateTimeFormatter;
+import data.events.LowLevelEvent;
+import util.StandardDateTimeFormatter;
 
+/***
+ * Class that extracts the time series of a specific stock value (identified by the company id) from the raw data.
+ * @author Leon Bornemann
+ *
+ */
 public class SingleTimeSeriesExtractor extends TimeSeriesExtractor{
 
 	public SingleTimeSeriesExtractor(String dataBaseLocation) {

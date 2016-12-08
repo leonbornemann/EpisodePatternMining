@@ -4,9 +4,14 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.LinkedList;
 
-import data.AnnotatedEvent;
+import data.events.CategoricalEvent;
 import util.Pair;
 
+/***
+ * Implemements a Window that is slidable (content of the window can change by appending events at the end and removing events at the start)
+ * @author Leon Bornemann
+ *
+ */
 public class SlidableStreamWindow extends AbstractStreamWindow {
 
 	public SlidableStreamWindow(){
@@ -17,7 +22,7 @@ public class SlidableStreamWindow extends AbstractStreamWindow {
 	 * Appends a new event to the end of the window
 	 * @param e
 	 */
-	public void append(AnnotatedEvent e){
+	public void append(CategoricalEvent e){
 		if(window.size()!=0){
 			assert(window.get(window.size()-1).getTimestamp().compareTo(e.getTimestamp())<=0);
 		}
@@ -28,15 +33,15 @@ public class SlidableStreamWindow extends AbstractStreamWindow {
 	 * Removes the element at the start of the window
 	 * @return 
 	 */
-	public AnnotatedEvent removeStart(){
+	public CategoricalEvent removeStart(){
 		return window.remove(0);
 	}
 	
-	public AnnotatedEvent first(){
+	public CategoricalEvent first(){
 		return window.get(0);
 	}
 	
-	public AnnotatedEvent last(){
+	public CategoricalEvent last(){
 		return window.get(window.size()-1);
 	}
 	

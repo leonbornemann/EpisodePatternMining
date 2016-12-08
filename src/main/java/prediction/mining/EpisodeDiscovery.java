@@ -3,11 +3,11 @@ package prediction.mining;
 import java.util.List;
 import java.util.Set;
 
-import data.AnnotatedEventType;
+import data.events.CategoricalEventType;
 import data.stream.FixedStreamWindow;
-import episode.finance.mining.ParallelEpisodePatternMiner;
-import episode.finance.mining.SerialEpisodePatternMiner;
-import episode.finance.storage.EpisodeTrie;
+import episode.pattern.mining.ParallelEpisodePatternMiner;
+import episode.pattern.mining.SerialEpisodePatternMiner;
+import episode.pattern.storage.EpisodeTrie;
 import util.Pair;
 
 public class EpisodeDiscovery {
@@ -19,7 +19,7 @@ public class EpisodeDiscovery {
 	 * @param s
 	 * @return
 	 */
-	public Pair<EpisodeTrie<List<Boolean>>,EpisodeTrie<List<Boolean>>>  mineFrequentEpisodes(List<FixedStreamWindow> windows, Set<AnnotatedEventType> eventAlphabet,double sSerial,double sParallel){
+	public Pair<EpisodeTrie<List<Boolean>>,EpisodeTrie<List<Boolean>>>  mineFrequentEpisodes(List<FixedStreamWindow> windows, Set<CategoricalEventType> eventAlphabet,double sSerial,double sParallel){
 		SerialEpisodePatternMiner serialMiner = new SerialEpisodePatternMiner(windows, eventAlphabet);
 		EpisodeTrie<List<Boolean>> serialPatterns = serialMiner.mineFrequentEpisodePatterns(sSerial);
 		ParallelEpisodePatternMiner parallelMiner = new ParallelEpisodePatternMiner(windows, eventAlphabet);

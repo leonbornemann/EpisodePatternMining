@@ -5,7 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import data.Change;
+import data.events.Change;
 
 public class FeatureSelection {
 

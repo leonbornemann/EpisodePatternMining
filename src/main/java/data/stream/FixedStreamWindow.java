@@ -5,12 +5,17 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
-import data.AnnotatedEvent;
+import data.events.CategoricalEvent;
 import util.Pair;
 
+/***
+ * A fixed window of a categorical event stream that contains exactly one, unchanging window of the stream
+ * @author Leon Bornemann
+ *
+ */
 public class FixedStreamWindow extends AbstractStreamWindow {
 
-	public FixedStreamWindow(List<AnnotatedEvent> window) {
+	public FixedStreamWindow(List<CategoricalEvent> window) {
 		this.window = window;
 	}
 	
@@ -33,9 +38,9 @@ public class FixedStreamWindow extends AbstractStreamWindow {
 		}
 		int curIndex = startIndex;
 		LocalDateTime startTs = window.get(startIndex).getTimestamp();
-		ArrayList<AnnotatedEvent> newWindow = new ArrayList<AnnotatedEvent>();
+		ArrayList<CategoricalEvent> newWindow = new ArrayList<CategoricalEvent>();
 		while(curIndex < window.size()){
-			AnnotatedEvent curEvent = window.get(curIndex);
+			CategoricalEvent curEvent = window.get(curIndex);
 			if(ChronoUnit.SECONDS.between(startTs,curEvent.getTimestamp())<=windowDuration){
 				newWindow.add(curEvent);
 			} else{

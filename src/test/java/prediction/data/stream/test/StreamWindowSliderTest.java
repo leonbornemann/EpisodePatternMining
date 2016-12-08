@@ -7,11 +7,11 @@ import java.util.List;
 
 import org.junit.Test;
 
-import data.AnnotatedEvent;
-import data.AnnotatedEventType;
-import data.Change;
-import data.stream.AnnotatedEventStream;
-import data.stream.InMemoryAnnotatedEventStream;
+import data.events.CategoricalEvent;
+import data.events.CategoricalEventType;
+import data.events.Change;
+import data.stream.CategoricalEventStream;
+import data.stream.InMemoryCategoricalEventStream;
 import data.stream.SlidableStreamWindow;
 import data.stream.StreamWindowSlider;
 import util.Pair;
@@ -19,17 +19,17 @@ import util.Pair;
 public class StreamWindowSliderTest {
 
 	//some event types for testing
-	private static AnnotatedEventType A = new AnnotatedEventType("foo", Change.UP);
-	private static AnnotatedEventType B = new AnnotatedEventType("bar", Change.EQUAL);
-	private static AnnotatedEventType C = new AnnotatedEventType("mystic", Change.DOWN);
-	private static AnnotatedEventType D = new AnnotatedEventType("magic", Change.UP);
-	private static AnnotatedEventType E = new AnnotatedEventType("company", Change.EQUAL);
-	private static AnnotatedEventType F = new AnnotatedEventType("names", Change.DOWN);
-	private static AnnotatedEventType G = new AnnotatedEventType("names", Change.UP);
+	private static CategoricalEventType A = new CategoricalEventType("foo", Change.UP);
+	private static CategoricalEventType B = new CategoricalEventType("bar", Change.EQUAL);
+	private static CategoricalEventType C = new CategoricalEventType("mystic", Change.DOWN);
+	private static CategoricalEventType D = new CategoricalEventType("magic", Change.UP);
+	private static CategoricalEventType E = new CategoricalEventType("company", Change.EQUAL);
+	private static CategoricalEventType F = new CategoricalEventType("names", Change.DOWN);
+	private static CategoricalEventType G = new CategoricalEventType("names", Change.UP);
 	
 	@Test
 	public void testSimple() throws IOException {
-		AnnotatedEventStream stream = TestUtil.buildStream(1, 	
+		CategoricalEventStream stream = TestUtil.buildStream(1, 	
 				A,A,A,A,A,
 				B);
 		StreamWindowSlider slider = new StreamWindowSlider(stream, 4);
@@ -44,7 +44,7 @@ public class StreamWindowSliderTest {
 	}
 	
 	public void testMultipleEventsPerSlide() throws IOException{
-		AnnotatedEventStream stream = TestUtil.buildStream(
+		CategoricalEventStream stream = TestUtil.buildStream(
 				new Pair<>(A,1),new Pair<>(A,1),new Pair<>(A,1),
 				new Pair<>(B,7),new Pair<>(B,7),
 				new Pair<>(C,9),

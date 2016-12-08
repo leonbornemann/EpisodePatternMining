@@ -6,7 +6,7 @@ import java.util.Arrays;
 
 import org.junit.Test;
 
-import data.Change;
+import data.events.Change;
 import prediction.mining.FeatureSelection;
 
 public class FeatureSelectionTest {

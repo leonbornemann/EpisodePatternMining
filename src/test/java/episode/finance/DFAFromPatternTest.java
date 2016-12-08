@@ -4,15 +4,16 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-import data.AnnotatedEventType;
-import data.Change;
+import data.events.CategoricalEventType;
+import data.events.Change;
+import episode.pattern.SerialEpisodePattern;
 
 public class DFAFromPatternTest {
 
-	private static AnnotatedEventType A = new AnnotatedEventType("foo", Change.UP);
-	private static AnnotatedEventType B = new AnnotatedEventType("bar", Change.EQUAL);
-	private static AnnotatedEventType C = new AnnotatedEventType("mystic", Change.DOWN);
-	private static AnnotatedEventType D = new AnnotatedEventType("magic", Change.UP);
+	private static CategoricalEventType A = new CategoricalEventType("foo", Change.UP);
+	private static CategoricalEventType B = new CategoricalEventType("bar", Change.EQUAL);
+	private static CategoricalEventType C = new CategoricalEventType("mystic", Change.DOWN);
+	private static CategoricalEventType D = new CategoricalEventType("magic", Change.UP);
 	
 	@Test
 	public void testSize1() {

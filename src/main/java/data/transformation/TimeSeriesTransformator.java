@@ -9,25 +9,39 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import data.AnnotatedEvent;
-import data.Change;
-import prediction.util.IOService;
+import data.events.CategoricalEvent;
+import data.events.Change;
+import util.IOService;
 import util.Pair;
 
+/***
+ * Transforms a time series into a categorical event stream (and serializes the result). The class can operate in two different modes: normal, and threshold 
+ * @author Leon Bornemann
+ *
+ */
 public class TimeSeriesTransformator {
 
 	private File inputDir;
 	private File outputDir;
 	private boolean thresholdIsSet = false;
 	private double threshold;
-	private double aggregationThreshold;
-	private boolean aggregationThresholdIsSet;
 
+	/***
+	 * Initilizes an object that will do a normal transformation
+	 * @param inputDir
+	 * @param outputDir
+	 */
 	public TimeSeriesTransformator(String inputDir, String outputDir) {
 		this.inputDir  = new File(inputDir);
 		this.outputDir = new File(outputDir);
 	}
 	
+	/***
+	 * Initializes an object that will transform the time series, but only include events whose relative increase or decrease (compared to the previous value) is above the threshold
+	 * @param inputDir
+	 * @param outputDir
+	 * @param threshold
+	 */
 	public TimeSeriesTransformator(String inputDir, String outputDir, double threshold) {
 		this.inputDir  = new File(inputDir);
 		this.outputDir = new File(outputDir);
@@ -35,13 +49,6 @@ public class TimeSeriesTransformator {
 		thresholdIsSet = true;
 	}
 	
-	public TimeSeriesTransformator(String inputDir, String outputDir, boolean aggregate, double aggregationThreshold) {
-		this.inputDir  = new File(inputDir);
-		this.outputDir = new File(outputDir);
-		this.aggregationThreshold = aggregationThreshold;
-		this.aggregationThresholdIsSet = aggregate;
-	}
-
 	public void transform() {
 		List<File> allFiles = Arrays.asList(inputDir.listFiles());
 		for(File file : allFiles){
@@ -66,46 +73,21 @@ public class TimeSeriesTransformator {
 	
 	private void transform(File source, File outFile) throws IOException {
 		List<Pair<LocalDateTime,BigDecimal>> lowLevelEvents = IOService.readTimeSeriesData(source);
-		List<AnnotatedEvent> annotated;
+		List<CategoricalEvent> annotated;
 		if(thresholdIsSet){
 			annotated = transformToAnnotated(lowLevelEvents,source.getName().split("\\.")[0],threshold);
-		}  else if(aggregationThresholdIsSet){
-			annotated = aggregateToAnnotated(lowLevelEvents,source.getName().split("\\.")[0],aggregationThreshold);
-		} else{
+		}  else{
 			annotated = transformToAnnotated(lowLevelEvents,source.getName().split("\\.")[0]);
 		}
 		if(!annotated.isEmpty()){
-			AnnotatedEvent.serialize(annotated, outFile);
+			CategoricalEvent.serialize(annotated, outFile);
 		} else{
 			System.out.println("warning: empty annotated file!");
 		}
 	}
 
-	private List<AnnotatedEvent> aggregateToAnnotated(List<Pair<LocalDateTime, BigDecimal>> lowLevelEvents,String companyID, double aggregationThreshold) {
-		List<AnnotatedEvent> annotatedEvents = new ArrayList<>();
-		BigDecimal referenceValue = lowLevelEvents.get(0).getSecond();
-		BigDecimal bdAggregationThreshold = new BigDecimal(aggregationThreshold);
-		for(int i=1;i<lowLevelEvents.size();i++){
-			Pair<LocalDateTime,BigDecimal> now = lowLevelEvents.get(i);
-			BigDecimal cur = now.getSecond();
-			Change change;
-			BigDecimal relativeDiff = cur.subtract(referenceValue).divide(referenceValue,100,RoundingMode.FLOOR);
-			if(relativeDiff.abs().compareTo(bdAggregationThreshold) >0  ){
-				if(relativeDiff.compareTo(BigDecimal.ZERO)>0){
-					change = Change.UP;
-					annotatedEvents.add(new AnnotatedEvent(companyID, change, now.getFirst()));
-				} else if(relativeDiff.compareTo(BigDecimal.ZERO) <0){
-					change = Change.DOWN;
-					annotatedEvents.add(new AnnotatedEvent(companyID, change, now.getFirst()));
-				}
-				referenceValue = cur;
-			}
-		}
-		return annotatedEvents;
-	}
-
-	private List<AnnotatedEvent> transformToAnnotated(List<Pair<LocalDateTime, BigDecimal>> lowLevelEvents,String companyID, double threshold) {
-		List<AnnotatedEvent> annotatedEvents = new ArrayList<>();
+	private List<CategoricalEvent> transformToAnnotated(List<Pair<LocalDateTime, BigDecimal>> lowLevelEvents,String companyID, double threshold) {
+		List<CategoricalEvent> annotatedEvents = new ArrayList<>();
 		BigDecimal prev = lowLevelEvents.get(0).getSecond();
 		BigDecimal bdThreshold = new BigDecimal(threshold);
 		for(int i=1;i<lowLevelEvents.size();i++){
@@ -116,10 +98,10 @@ public class TimeSeriesTransformator {
 			if(relativeDiff.abs().compareTo(bdThreshold) >0  ){
 				if(relativeDiff.compareTo(BigDecimal.ZERO)>0){
 					change = Change.UP;
-					annotatedEvents.add(new AnnotatedEvent(companyID, change, now.getFirst()));
+					annotatedEvents.add(new CategoricalEvent(companyID, change, now.getFirst()));
 				} else if(relativeDiff.compareTo(BigDecimal.ZERO) <0){
 					change = Change.DOWN;
-					annotatedEvents.add(new AnnotatedEvent(companyID, change, now.getFirst()));
+					annotatedEvents.add(new CategoricalEvent(companyID, change, now.getFirst()));
 				} 
 			}
 			prev = cur;
@@ -127,8 +109,8 @@ public class TimeSeriesTransformator {
 		return annotatedEvents;
 	}
 
-	private List<AnnotatedEvent> transformToAnnotated(List<Pair<LocalDateTime,BigDecimal>> lowLevelEvents, String companyID) {
-		List<AnnotatedEvent> annotatedEvents = new ArrayList<>();
+	private List<CategoricalEvent> transformToAnnotated(List<Pair<LocalDateTime,BigDecimal>> lowLevelEvents, String companyID) {
+		List<CategoricalEvent> annotatedEvents = new ArrayList<>();
 		BigDecimal referenceValue = lowLevelEvents.get(0).getSecond();
 		for(int i=1;i<lowLevelEvents.size();i++){
 			Pair<LocalDateTime,BigDecimal> now = lowLevelEvents.get(i);
@@ -136,11 +118,11 @@ public class TimeSeriesTransformator {
 			if(now.getSecond().compareTo(referenceValue) >0  ){
 				change = Change.UP;
 				referenceValue = now.getSecond();
-				annotatedEvents.add(new AnnotatedEvent(companyID, change, now.getFirst()));
+				annotatedEvents.add(new CategoricalEvent(companyID, change, now.getFirst()));
 			} else if(now.getSecond().compareTo(referenceValue) <0){
 				change = Change.DOWN;
 				referenceValue = now.getSecond();
-				annotatedEvents.add(new AnnotatedEvent(companyID, change, now.getFirst()));
+				annotatedEvents.add(new CategoricalEvent(companyID, change, now.getFirst()));
 			} 
 		}
 		return annotatedEvents;

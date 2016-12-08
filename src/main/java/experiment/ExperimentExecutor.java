@@ -20,28 +20,28 @@ import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import data.AnnotatedEventType;
-import data.Change;
-import data.stream.AnnotatedEventStream;
-import data.stream.InMemoryMultiTimeSeriesAnnotatedEventStream;
+import data.events.CategoricalEventType;
+import data.events.Change;
+import data.stream.CategoricalEventStream;
+import data.stream.InMemoryMultiFileCategoricalEventStream;
 import data.stream.StreamWindow;
 import data.stream.StreamWindowSlider;
-import episode.finance.EpisodePattern;
-import prediction.evaluation.CompanyBasedResultSerializer;
-import prediction.evaluation.DayBasedResultSerializer;
-import prediction.evaluation.EvaluationFiles;
-import prediction.evaluation.EvaluationResult;
-import prediction.evaluation.NoAggregationEvaluator;
-import prediction.mining.FBSWCModel;
-import prediction.mining.Method;
-import prediction.mining.PERMSTrainer;
-import prediction.mining.PERSMModel;
-import prediction.mining.PredictiveModel;
-import prediction.mining.RandomGuessingModel;
-import prediction.mining.SimpleAverageForecastingModel;
+import episode.pattern.EpisodePattern;
+import evaluation.CompanyBasedResultSerializer;
+import evaluation.DayBasedResultSerializer;
+import evaluation.EvaluationFiles;
+import evaluation.EvaluationResult;
+import evaluation.Evaluator;
 import prediction.mining.WindowMiner;
-import prediction.util.IOService;
+import prediction.models.FBSWCModel;
+import prediction.models.Method;
+import prediction.models.PERMSTrainer;
+import prediction.models.PERMSModel;
+import prediction.models.PredictiveModel;
+import prediction.models.RandomGuessingModel;
+import prediction.models.SimpleMovingAverageForecastingModel;
 import semantic.SemanticKnowledgeCollector;
+import util.IOService;
 import util.Pair;
 
 /***
@@ -54,31 +54,24 @@ import util.Pair;
  */
 public class ExperimentExecutor {
 
-	private File annotatedStreamDirDesktop = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Time Series\\");
-	private File annotatedSectorStreamDirDesktop = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Sector Time Series\\");
+	private File annotatedStreamDirDesktop;
+	private File annotatedSectorStreamDirDesktop;
 	
-	private File lowLevelStreamDirDesktop = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Time Series\\");
-	private File lowLevelSectorStreamDirDesktop = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Sector Time Series\\");
-	
-	private File lowLevelSmoothedStreamDirDesktop = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Time Series Smoothed\\");
-	private File lowLevelSmoothedSectorStreamDirDesktop = new File("D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Sector Time Series Smoothed\\");
+	private File timeSeriesDir;
+	private File sectorTimeSeriesDir;
 	
 	private EvaluationConfig config;
 	private Set<String> annotatedCompanyCodes;
 	private File resultDir;
 	private Set<String> toIgnore = new HashSet<>();
 	
-	public ExperimentExecutor(EvaluationConfig config,File resultDir) throws IOException, ClassNotFoundException{
+	public ExperimentExecutor(EvaluationConfig config,File resultDir, File categoricalStremDir, File categoricalSectorStreamDir, File timeSeriesDir, File sectorTimeSeriesDir) throws IOException, ClassNotFoundException{
 		this.config = config;
 		initAllCmpCodes();
-		this.resultDir = resultDir;
-	}
-	
-	public ExperimentExecutor(EvaluationConfig config, File resultDir, File annotatedDir, File sectorAnnotatedDir) throws IOException {
-		this.config = config;
-		initAllCmpCodes();
-		this.annotatedStreamDirDesktop = annotatedDir;
-		this.annotatedSectorStreamDirDesktop = sectorAnnotatedDir;
+		this.annotatedStreamDirDesktop = categoricalStremDir;
+		this.annotatedSectorStreamDirDesktop = categoricalSectorStreamDir;
+		this.timeSeriesDir = timeSeriesDir;
+		this.sectorTimeSeriesDir = sectorTimeSeriesDir;
 		this.resultDir = resultDir;
 	}
 
@@ -133,28 +126,23 @@ public class ExperimentExecutor {
 	}
 
 	private void runEvaluation(Method method, Map<String, Pair<Long, Long>> times) throws IOException {
-		List<File> lowLevelStreamDirs = new ArrayList<>();
-		lowLevelStreamDirs.add(lowLevelStreamDirDesktop);
+		List<File> timeSeriesDirs = new ArrayList<>();
+		timeSeriesDirs.add(timeSeriesDir);
 		if(config.isUseSemantics()){
-			lowLevelStreamDirs.add(lowLevelSectorStreamDirDesktop);
+			timeSeriesDirs.add(sectorTimeSeriesDir);
 		}
-		List<File> smoothedStreamDirs = new ArrayList<>();
-		smoothedStreamDirs.add(lowLevelSmoothedStreamDirDesktop);
-		if(config.isUseSemantics()){
-			smoothedStreamDirs.add(lowLevelSmoothedSectorStreamDirDesktop);
-		}
-		NoAggregationEvaluator evaluator = new NoAggregationEvaluator(config.getWindowSizeInSeconds(),lowLevelStreamDirs,smoothedStreamDirs);
+		Evaluator evaluator = new Evaluator(timeSeriesDirs);
 		List<EvaluationFiles> evaluationFiles = annotatedCompanyCodes.stream().map(id -> new EvaluationFiles(id, IOService.buildPredictionsTargetFile(id,method,resultDir),IOService.buildTimeTargetFile(id,method,resultDir),IOService.getEvaluationResultFile(id,method,resultDir))).collect(Collectors.toList());
 		evaluator.eval(evaluationFiles,times);
 	}
 	
 	private Map<String, Pair<Long, Long>> buildAndApplyModel(Method method) throws IOException, ClassNotFoundException {
-		Set<AnnotatedEventType> eventAlphabet = AnnotatedEventType.loadEventAlphabet(annotatedCompanyCodes);
+		Set<CategoricalEventType> eventAlphabet = CategoricalEventType.loadEventAlphabet(annotatedCompanyCodes);
 		//List<String> done = Arrays.asList("AAPL","ALSK","CERN","CSCO","CSTE","EA","ELNK","EYES","GNCMA","NK","OHGI","ON","OPTT","SODA","SP");
-		List<AnnotatedEventType> toDo = eventAlphabet.stream().filter(e -> e.getChange()==Change.UP ).collect(Collectors.toList());
+		List<CategoricalEventType> toDo = eventAlphabet.stream().filter(e -> e.getChange()==Change.UP ).collect(Collectors.toList());
 		Map<String,Pair<Long,Long>> times = new HashMap<>();
 		for(int i=0;i<toDo.size();i++){
-			AnnotatedEventType toPredict = toDo.get(i);
+			CategoricalEventType toPredict = toDo.get(i);
 			System.out.println("Iteration "+i + "out of "+toDo.size());
 			System.out.println("beginning company " + toPredict.getCompanyID());
 			//parameters:
@@ -163,7 +151,7 @@ public class ExperimentExecutor {
 			if(config.isUseSemantics()){
 				streamDirs.add(annotatedSectorStreamDirDesktop);
 			}
-			InMemoryMultiTimeSeriesAnnotatedEventStream stream = new InMemoryMultiTimeSeriesAnnotatedEventStream(streamDirs);
+			InMemoryMultiFileCategoricalEventStream stream = new InMemoryMultiFileCategoricalEventStream(streamDirs);
 			System.out.println("beginning to mine windows");
 			long beforeTrainingNs = getCpuTime();
 			WindowMiner winMiner = new WindowMiner(stream,toPredict,config.getNumWindows(),config.getWindowSizeInSeconds());
@@ -183,7 +171,7 @@ public class ExperimentExecutor {
 					assert(method == Method.RandomGuessing);
 					model = new RandomGuessingModel(new Random(13));
 				} else if(method == Method.SimpleAverageForecasting){
-					model = new SimpleAverageForecastingModel(toPredict,lowLevelStreamDirDesktop,config.getWindowSizeInSeconds());
+					model = new SimpleMovingAverageForecastingModel(toPredict,timeSeriesDir,config.getWindowSizeInSeconds());
 				}
 				long afterTrainingNs = getCpuTime();
 				long trainingTimeNs = afterTrainingNs - beforeTrainingNs;
@@ -211,7 +199,7 @@ public class ExperimentExecutor {
 	    return bean.getCurrentThreadCpuTime();
 	}
 	
-	private void applyPredictor(AnnotatedEventType toPredict, AnnotatedEventStream stream,PredictiveModel featureBasedPredictor, Method method) throws IOException {
+	private void applyPredictor(CategoricalEventType toPredict, CategoricalEventStream stream,PredictiveModel featureBasedPredictor, Method method) throws IOException {
 		StreamWindowSlider slider = new StreamWindowSlider(stream,config.getWindowSizeInSeconds());
 		List<Pair<LocalDateTime,Change>> predictions = new ArrayList<>();
 		while(slider.canSlide()){
@@ -225,7 +213,7 @@ public class ExperimentExecutor {
 		IOService.serializePairList(predictions,IOService.buildPredictionsTargetFile(toPredict.getCompanyID(),method,resultDir));
 	}
 	
-	private FBSWCModel fbscw(AnnotatedEventStream stream,AnnotatedEventType toPredict,WindowMiner winMiner,Set<AnnotatedEventType> eventAlphabet) throws IOException, ClassNotFoundException {
+	private FBSWCModel fbscw(CategoricalEventStream stream,CategoricalEventType toPredict,WindowMiner winMiner,Set<CategoricalEventType> eventAlphabet) throws IOException, ClassNotFoundException {
 		FBSWCModel featureBasedPredictor;
 		File featurebasedPredictorFile = IOService.getFeatureBasedPredictorFile(toPredict.getCompanyID(),resultDir);
 		featureBasedPredictor = new FBSWCModel(winMiner.getPredictiveWindows(), winMiner.getInversePredictiveWindows(), winMiner.getNeutralWindows(), eventAlphabet, config.getSupportSerial(),config.getSupportParallel());
@@ -233,7 +221,7 @@ public class ExperimentExecutor {
 		return featureBasedPredictor;
 	}
 	
-	private PredictiveModel perms(AnnotatedEventStream stream, AnnotatedEventType toPredict, WindowMiner winMiner, Set<AnnotatedEventType> eventAlphabet) throws IOException, ClassNotFoundException {
+	private PredictiveModel perms(CategoricalEventStream stream, CategoricalEventType toPredict, WindowMiner winMiner, Set<CategoricalEventType> eventAlphabet) throws IOException, ClassNotFoundException {
 		File predictorsFile = IOService.buildPredictorsFilePath(toPredict.getCompanyID(),resultDir);
 		File inversePredictorsFile = IOService.buildInversePredictorsFilePath(toPredict.getCompanyID(),resultDir);
 		PERMSTrainer miner = new PERMSTrainer(winMiner,eventAlphabet,config.getSupportSerial(),config.getSupportParallel(),config.getPERMSNumPredictors());
@@ -246,6 +234,6 @@ public class ExperimentExecutor {
 		predictors.keySet().stream().forEach(p -> System.out.println("found predictor" + p + "with " + predictors.get(p) + " confidence" ));
 		System.out.println("inverse");
 		inversePredictors.keySet().stream().forEach(p -> System.out.println("found predictor" + p + "with " + inversePredictors.get(p) + " confidence" ));
-		return new PERSMModel(predictors,inversePredictors);
+		return new PERMSModel(predictors,inversePredictors);
 	}
 }

@@ -4,59 +4,67 @@ import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 
+/***
+ * Main class that starts the transformation of time series to categorical event streams
+ * @author Leon Bornemann
+ *
+ */
 public class TransformationMain {
+			
+	private static String timeSeriesSourceLocation;
+	private static String sectorTimeSeriesSourceLocation;
+	
+	private static String timeSeriesTargetLocation;
+	private static String sectorTimeSeriesTargetLocation;
+	
+	private static String timeSeriesThresholdTargetLocation;
+	private static String sectorTimeSeriesThresholdTargetLocation;
 
-	private static String databaseLocationLaptop = "C:\\Users\\LeonBornemann\\Documents\\Uni\\Master thesis\\data\\Low Level Data\\";
-	private static String targetLaptop = "C:\\Users\\LeonBornemann\\Documents\\Uni\\Master thesis\\data\\Annotated Data\\";
-	private static String illegalFormatDirLaptop = "C:\\Users\\LeonBornemann\\Documents\\Uni\\Master thesis\\data\\Low Level Bad Format\\";
-	
-	private static String dataBaseLocation = "D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Low Level Data\\";
-	private static String target = "D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Data\\";
-	private static String illegalFormatDir = "D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Illegally Formatted";
-		
-	private static String timeSeriesSourceLocation = "D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Time Series\\";
-	private static String sectorTimeSeriesSourceLocation = "D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Sector Time Series\\";
-	
-	private static String timeSeriesTargetLocation = "D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Time Series\\";
-	private static String sectorTimeSeriesTargetLocation = "D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Sector Time Series\\";
-	
-	private static String smoothedTimeSeriesLocation = "D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Time Series Smoothed\\";
-	private static String smoothedSectorTimeSeriesLocation = "D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Sector Time Series Smoothed\\";
-	
-	private static String timeSeries20PercentTargetLocation = "D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Time Series 20 Percent\\";
-	private static String sectorTimeSeries20PercentTargetLocation = "D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Sector Time Series 20 Percent\\";
-	
-	private static String timeSeriesAggregatedTargetLocation = "D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Time Series Aggregated\\";
-	private static String sectorTimeSeriesAggregatedTargetLocation = "D:\\Personal\\Documents\\Uni\\Master thesis\\Datasets\\Finance\\Annotated Sector Time Series Aggregated\\";
-	
-	
+	/***
+	 * @param args contains one argument, which is the working directory in which the started process must have read and write access
+	 * @throws IOException
+	 */
 	public static void main(String[] args) throws IOException {
-		//laptop();
-		//desktop();
+		String workingDir = args[0];
+		if(!workingDir.endsWith(File.separator)){
+			workingDir = workingDir + File.separator;
+		}
+		timeSeriesSourceLocation = workingDir + "Datasets" + File.separator + "Finance" + File.separator + "Time Series" + File.separator;
+		sectorTimeSeriesSourceLocation = workingDir + "Datasets" + File.separator + "Finance" + File.separator + "Sector Time Series" + File.separator;
+		
+		timeSeriesTargetLocation = workingDir + "Datasets" + File.separator + "Finance" + File.separator + "Categorical Event Streams" + File.separator;
+		sectorTimeSeriesTargetLocation = workingDir + "Datasets" + File.separator + "Finance" + File.separator + "Categorical Sector Event Streams" + File.separator;
+		
+		timeSeriesThresholdTargetLocation = workingDir + "Datasets" + File.separator + "Finance" + File.separator + "Categorical Threshold Event Streams" + File.separator;
+		sectorTimeSeriesThresholdTargetLocation = workingDir + "Datasets" + File.separator + "Finance" + File.separator + "Categorical Sector Threshold Event Streams" + File.separator;
+		mkTargetdirs();
+		
 		timeSeriesToAnnotated();
-		//smoothTimeSeries();
 	}
 
-	private static void smoothTimeSeries() throws IOException {
-		TimeSeriesSmoother smoother = new TimeSeriesSmoother();
-		smoother.smoothAll(new File(timeSeriesSourceLocation), new File(smoothedTimeSeriesLocation));
-		smoother.smoothAll(new File(sectorTimeSeriesSourceLocation), new File(smoothedSectorTimeSeriesLocation));
+	private static void mkTargetdirs() {
+		new File(timeSeriesTargetLocation).mkdirs();
+		new File(sectorTimeSeriesTargetLocation).mkdirs();
+		new File(timeSeriesThresholdTargetLocation).mkdirs();
+		new File(sectorTimeSeriesThresholdTargetLocation).mkdirs();
 	}
 
 	private static void timeSeriesToAnnotated() {
-		TimeSeriesTransformator transformer = new TimeSeriesTransformator(timeSeriesSourceLocation,timeSeriesAggregatedTargetLocation,true,0.001);
+		normal();
+		threshold();
+	}
+
+	private static void normal() {
+		TimeSeriesTransformator transformer = new TimeSeriesTransformator(timeSeriesSourceLocation,timeSeriesTargetLocation);
 		transformer.transform();
-		transformer = new TimeSeriesTransformator(sectorTimeSeriesSourceLocation,sectorTimeSeriesAggregatedTargetLocation,true,0.001);
+		transformer = new TimeSeriesTransformator(sectorTimeSeriesSourceLocation,sectorTimeSeriesTargetLocation);
 		transformer.transform();
 	}
 
-	private static void laptop() throws IOException {
-		LowToAnnotatedTransformator transformer = new LowToAnnotatedTransformator(new File(databaseLocationLaptop),new File(targetLaptop),new File(illegalFormatDirLaptop),new BigDecimal("0.001"));
+	private static void threshold() {
+		TimeSeriesTransformator transformer = new TimeSeriesTransformator(timeSeriesSourceLocation,timeSeriesThresholdTargetLocation,0.001);
 		transformer.transform();
-	}
-
-	private static void desktop() throws IOException {
-		LowToAnnotatedTransformator transformer = new LowToAnnotatedTransformator(new File(dataBaseLocation),new File(target),new File(illegalFormatDir));
+		transformer = new TimeSeriesTransformator(sectorTimeSeriesSourceLocation,sectorTimeSeriesThresholdTargetLocation,0.001);
 		transformer.transform();
 	}
 }

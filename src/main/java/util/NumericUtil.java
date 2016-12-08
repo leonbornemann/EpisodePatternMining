@@ -5,6 +5,11 @@ import java.math.RoundingMode;
 import java.util.Collection;
 import java.util.List;
 
+/***
+ * Some utility methods for big decimals
+ * @author Leon Bornemann
+ *
+ */
 public class NumericUtil {
 
 	public static BigDecimal mean(Collection<BigDecimal> vals, int scale) {

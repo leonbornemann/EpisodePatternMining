@@ -9,10 +9,10 @@ import java.util.List;
 
 import org.junit.Test;
 
-import data.AnnotatedEventType;
-import data.Change;
+import data.events.CategoricalEventType;
+import data.events.Change;
 import data.stream.FixedStreamWindow;
-import data.stream.MultiFileAnnotatedEventStream;
+import data.stream.MultiFileCategoricalEventStream;
 import prediction.mining.WindowMiner;
 
 public class WindowMinerTest {
@@ -24,19 +24,19 @@ public class WindowMinerTest {
 	
 	@Test
 	public void test() throws IOException {
-		MultiFileAnnotatedEventStream stream = new MultiFileAnnotatedEventStream(streamFile , windowDuration*2 );
-		WindowMiner miner = new WindowMiner(stream, new AnnotatedEventType("A",Change.UP), numWindows, windowDuration);
+		MultiFileCategoricalEventStream stream = new MultiFileCategoricalEventStream(streamFile , windowDuration*2 );
+		WindowMiner miner = new WindowMiner(stream, new CategoricalEventType("A",Change.UP), numWindows, windowDuration);
 		assertEquals(2,miner.getPredictiveWindows().size());
-		assertBorders(new AnnotatedEventType("B",Change.DOWN),new AnnotatedEventType("E",Change.DOWN),miner.getPredictiveWindows().get(0));
-		assertBorders(new AnnotatedEventType("B",Change.DOWN),new AnnotatedEventType("C",Change.DOWN),miner.getPredictiveWindows().get(1));
+		assertBorders(new CategoricalEventType("B",Change.DOWN),new CategoricalEventType("E",Change.DOWN),miner.getPredictiveWindows().get(0));
+		assertBorders(new CategoricalEventType("B",Change.DOWN),new CategoricalEventType("C",Change.DOWN),miner.getPredictiveWindows().get(1));
 		assertEquals(2,miner.getInversePredictiveWindows().size());
 		assertEquals(1,miner.getInversePredictiveWindows().get(0).getEvents().size());
-		assertBorders(new AnnotatedEventType("B",Change.DOWN),new AnnotatedEventType("F",Change.UP),miner.getInversePredictiveWindows().get(1));
+		assertBorders(new CategoricalEventType("B",Change.DOWN),new CategoricalEventType("F",Change.UP),miner.getInversePredictiveWindows().get(1));
 		System.out.println(miner.getNeutralWindows().size());
 
 	}
 
-	private void assertBorders(AnnotatedEventType first, AnnotatedEventType last,
+	private void assertBorders(CategoricalEventType first, CategoricalEventType last,
 			FixedStreamWindow fixedStreamWindow) {
 		assertEquals(first,fixedStreamWindow.getEvents().get(0).getEventType());
 		assertEquals(last,fixedStreamWindow.getEvents().get(fixedStreamWindow.getEvents().size()-1).getEventType());

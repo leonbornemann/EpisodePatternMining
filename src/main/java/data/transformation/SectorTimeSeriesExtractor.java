@@ -13,9 +13,14 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
-import data.LowLevelEvent;
-import prediction.util.StandardDateTimeFormatter;
+import data.events.LowLevelEvent;
+import util.StandardDateTimeFormatter;
 
+/***
+ * Class that aggregates low level data to sector time series.
+ * @author Leon Bornemann
+ *
+ */
 public class SectorTimeSeriesExtractor extends TimeSeriesExtractor{
 
 	public SectorTimeSeriesExtractor(String dataBaseLocation) {

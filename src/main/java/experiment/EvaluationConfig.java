@@ -7,6 +7,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Properties;
 
+/***
+ * Config class to save all parameters of an experimental setting to evaluate the algorithms.
+ * @author Leon Bornemann
+ *
+ */
 public class EvaluationConfig {
 
 	private int numWindows;

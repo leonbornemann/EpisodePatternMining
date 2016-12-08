@@ -9,10 +9,10 @@ import java.util.List;
 
 import org.junit.Test;
 
-import data.AnnotatedEvent;
-import data.AnnotatedEventType;
-import data.Change;
-import data.stream.MultiFileAnnotatedEventStream;
+import data.events.CategoricalEvent;
+import data.events.CategoricalEventType;
+import data.events.Change;
+import data.stream.MultiFileCategoricalEventStream;
 import data.stream.StreamWindow;
 
 public class MultiFileAnnotatedEventStreamTest {
@@ -22,7 +22,7 @@ public class MultiFileAnnotatedEventStreamTest {
 
 	@Test
 	public void testBackwardsWindow() throws IOException {
-		MultiFileAnnotatedEventStream stream = new MultiFileAnnotatedEventStream(streamFile , windowDuration );
+		MultiFileCategoricalEventStream stream = new MultiFileCategoricalEventStream(streamFile , windowDuration );
 		stream.next();
 		stream.next();
 		stream.next();
@@ -34,16 +34,16 @@ public class MultiFileAnnotatedEventStreamTest {
 		stream.next();
 		win = stream.getBackwardsWindow(windowDuration);
 		assertEquals(1,win.getEvents().size());
-		assertEquals(new AnnotatedEventType("E", Change.DOWN),win.getEvents().get(0).getEventType());
+		assertEquals(new CategoricalEventType("E", Change.DOWN),win.getEvents().get(0).getEventType());
 	}
 	
 	@Test
 	public void testPeek() throws IOException{
-		MultiFileAnnotatedEventStream stream = new MultiFileAnnotatedEventStream(streamFile , windowDuration );
+		MultiFileCategoricalEventStream stream = new MultiFileCategoricalEventStream(streamFile , windowDuration );
 		while(stream.hasNext()){
-			AnnotatedEvent peekResult = stream.peek();
+			CategoricalEvent peekResult = stream.peek();
 			stream.peek(); //call it again to assert that it is an idempotent operation
-			AnnotatedEvent nextResult = stream.next();
+			CategoricalEvent nextResult = stream.next();
 			assertEquals(peekResult.getEventType(),nextResult.getEventType());
 			assertEquals(peekResult.getTimestamp(),nextResult.getTimestamp());
 		}

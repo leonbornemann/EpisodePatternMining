@@ -6,11 +6,16 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
-import data.AnnotatedEvent;
-import data.AnnotatedEventType;
-import data.stream.AnnotatedEventStream;
+import data.events.CategoricalEvent;
+import data.events.CategoricalEventType;
+import data.stream.CategoricalEventStream;
 import data.stream.FixedStreamWindow;
 
+/***
+ * Class that mines training examples (windows) from a categorical event stream.
+ * @author Leon Bornemann
+ *
+ */
 public class WindowMiner {
 
 
@@ -26,14 +31,14 @@ public class WindowMiner {
 	 * @param windowDuration the window duration in seconds
 	 * @throws IOException
 	 */
-	public WindowMiner(AnnotatedEventStream stream, AnnotatedEventType toPredict, int numWindows, int windowDuration) throws IOException{
+	public WindowMiner(CategoricalEventStream stream, CategoricalEventType toPredict, int numWindows, int windowDuration) throws IOException{
 		predictiveWindows = new ArrayList<>();
 		inversePredictiveWindows = new ArrayList<>();
 		nothingWindows = new ArrayList<>();
 		LocalDateTime currentTime;
 		LocalDateTime lastUsedTimeOfEvent =null;;
 		while(stream.hasNext()){
-			AnnotatedEvent current = stream.next();
+			CategoricalEvent current = stream.next();
 			currentTime = current.getTimestamp();
 			if(lastUsedTimeOfEvent==null){
 				lastUsedTimeOfEvent = currentTime;

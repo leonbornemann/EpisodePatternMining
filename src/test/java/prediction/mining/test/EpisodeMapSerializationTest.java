@@ -10,19 +10,19 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import data.AnnotatedEventType;
-import data.Change;
-import episode.finance.EpisodePattern;
-import episode.finance.ParallelEpisodePattern;
-import episode.finance.SerialEpisodePattern;
-import prediction.util.IOService;
+import data.events.CategoricalEventType;
+import data.events.Change;
+import episode.pattern.EpisodePattern;
+import episode.pattern.ParallelEpisodePattern;
+import episode.pattern.SerialEpisodePattern;
+import util.IOService;
 
 public class EpisodeMapSerializationTest {
 
-	private static AnnotatedEventType A = new AnnotatedEventType("foo", Change.UP);
-	private static AnnotatedEventType B = new AnnotatedEventType("bar", Change.EQUAL);
-	private static AnnotatedEventType C = new AnnotatedEventType("mystic", Change.DOWN);
-	private static AnnotatedEventType D = new AnnotatedEventType("magic", Change.UP);
+	private static CategoricalEventType A = new CategoricalEventType("foo", Change.UP);
+	private static CategoricalEventType B = new CategoricalEventType("bar", Change.EQUAL);
+	private static CategoricalEventType C = new CategoricalEventType("mystic", Change.DOWN);
+	private static CategoricalEventType D = new CategoricalEventType("magic", Change.UP);
 	
 	
 	@Test

@@ -5,28 +5,28 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import data.AnnotatedEvent;
-import episode.finance.EpisodePattern;
-import episode.finance.recognition.SimpleEpisodeRecognitionDFA;
+import data.events.CategoricalEvent;
+import episode.pattern.EpisodePattern;
+import episode.pattern.recognition.SimpleEpisodeRecognitionDFA;
 
 public abstract class AbstractStreamWindow implements StreamWindow {
 
-	protected List<AnnotatedEvent> window;
+	protected List<CategoricalEvent> window;
 	
 	@Override
-	public List<AnnotatedEvent> getEvents() {
+	public List<CategoricalEvent> getEvents() {
 		return window;
 	}
 
 	@Override
-	public Map<LocalDateTime, List<AnnotatedEvent>> getEventTypesByTimestamp() {
-		return window.stream().collect(Collectors.groupingBy(AnnotatedEvent::getTimestamp));
+	public Map<LocalDateTime, List<CategoricalEvent>> getEventTypesByTimestamp() {
+		return window.stream().collect(Collectors.groupingBy(CategoricalEvent::getTimestamp));
 	}
 
 	@Override
 	public boolean containsPattern(EpisodePattern pattern) {
 		SimpleEpisodeRecognitionDFA dfa = pattern.getSimpleRecognitionDFA();
-		for(AnnotatedEvent event : window){
+		for(CategoricalEvent event : window){
 			dfa.processEvent(event.getEventType());
 			if(dfa.isDone()){
 				return true;
