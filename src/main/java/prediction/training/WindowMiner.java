@@ -1,4 +1,4 @@
-package prediction.mining;
+package prediction.training;
 
 import java.io.IOException;
 import java.time.LocalDateTime;

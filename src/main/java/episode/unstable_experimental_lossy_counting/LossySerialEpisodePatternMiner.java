@@ -5,20 +5,20 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.apache.flink.api.java.tuple.Tuple2;
 
 import episode.unstable_experimental_lossy_counting.trie.SerialEpisodeTrie;
+import util.Pair;
 
 public class LossySerialEpisodePatternMiner {
 
 	private double s;
-	private List<Tuple2<EventType, Integer>> source;
+	private List<Pair<EventType, Integer>> source;
 	private Set<EventType> eventAlphabet;
 	private SerialEpisodeTrie<FrequencyListElement> frequencyList;
 	private double e;
 	private int bucketWidth;
 
-	public LossySerialEpisodePatternMiner(List<Tuple2<EventType, Integer>> dataSet, Set<EventType> eventAlphabet, double support,double epsilon) {
+	public LossySerialEpisodePatternMiner(List<Pair<EventType, Integer>> dataSet, Set<EventType> eventAlphabet, double support,double epsilon) {
 		this.source = dataSet;
 		this.eventAlphabet = eventAlphabet;
 		this.s = support;

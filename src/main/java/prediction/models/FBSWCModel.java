@@ -33,8 +33,8 @@ import episode.pattern.ParallelEpisodePattern;
 import episode.pattern.SerialEpisodePattern;
 import episode.pattern.storage.EpisodeIdentifier;
 import episode.pattern.storage.EpisodeTrie;
-import prediction.mining.EpisodeDiscovery;
-import prediction.mining.FeatureSelection;
+import prediction.training.EpisodeDiscovery;
+import prediction.training.FeatureSelection;
 import util.Pair;
 
 /***

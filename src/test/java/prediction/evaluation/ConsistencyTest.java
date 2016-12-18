@@ -28,7 +28,7 @@ import evaluation.ConfusionMatrix;
 import experiment.EvaluationConfig;
 import prediction.models.Method;
 import prediction.models.PredictiveModel;
-import semantic.SemanticKnowledgeCollector;
+import semantics.SemanticKnowledgeCollector;
 import util.IOService;
 import util.NumericUtil;
 import util.Pair;

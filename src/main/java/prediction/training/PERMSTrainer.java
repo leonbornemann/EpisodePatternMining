@@ -1,4 +1,4 @@
-package prediction.models;
+package prediction.training;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -11,7 +11,6 @@ import data.stream.FixedStreamWindow;
 import episode.pattern.EpisodePattern;
 import episode.pattern.mining.ParallelEpisodePatternMiner;
 import episode.pattern.mining.SerialEpisodePatternMiner;
-import prediction.mining.WindowMiner;
 
 /***
  * Training algorithm for the PERMS model.

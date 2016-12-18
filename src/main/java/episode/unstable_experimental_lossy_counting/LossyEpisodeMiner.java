@@ -8,20 +8,20 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.flink.api.java.tuple.Tuple2;
 
 import episode.unstable_experimental_lossy_counting.trie.SerialEpisodeTrie;
+import util.Pair;
 
 public class LossyEpisodeMiner {
 
-	private List<Tuple2<EventType, Integer>> source;
+	private List<Pair<EventType, Integer>> source;
 	private int curEndBucketNum;
 	private SerialEpisodeTrie<FrequencyListElement> frequencyList;
 	private SerialEpisodePatternGenerator patternGen;
 	private int curStartBucketNum;
 	private Set<EventType> eventAlphabet;
 
-	public LossyEpisodeMiner(List<Tuple2<EventType, Integer>> source,int curStartBucketNum, int curEndBucketNum,SerialEpisodeTrie<FrequencyListElement> frequencyList, Set<EventType> eventAlphabet) {
+	public LossyEpisodeMiner(List<Pair<EventType, Integer>> source,int curStartBucketNum, int curEndBucketNum,SerialEpisodeTrie<FrequencyListElement> frequencyList, Set<EventType> eventAlphabet) {
 		System.out.println("creating Miner for buckets " +curStartBucketNum + "-" +curEndBucketNum);
 		this.source = source;
 		this.curStartBucketNum = curStartBucketNum;
@@ -44,28 +44,28 @@ public class LossyEpisodeMiner {
 	}
 	
 	protected List<SerialEpisode> countFrequency(List<SerialEpisode> candidates) {
-		Map<EventType,List<Tuple2<SerialEpisode,Integer>>> waits = new HashMap<>();
+		Map<EventType,List<Pair<SerialEpisode,Integer>>> waits = new HashMap<>();
 		for(EventType A : eventAlphabet){
 			waits.put(A, new ArrayList<>());
 		}
 		for(SerialEpisode alpha : candidates){
-			waits.get(alpha.get(0)).add(new Tuple2<SerialEpisode, Integer>(alpha,0));
+			waits.get(alpha.get(0)).add(new Pair<SerialEpisode, Integer>(alpha,0));
 		}
 		for(int i=0;i<source.size();i++){
 			assertWaitsCondidtion(waits,candidates.size());
-			Set<Tuple2<SerialEpisode,Integer>> bag = new HashSet<>();
-			EventType e_i= source.get(i).getField(0);
-			for(Tuple2<SerialEpisode,Integer> cur : waits.get(e_i)){
-				SerialEpisode alpha = cur.getField(0);
-				Integer j = cur.getField(1);
+			Set<Pair<SerialEpisode,Integer>> bag = new HashSet<>();
+			EventType e_i= source.get(i).getFirst();
+			for(Pair<SerialEpisode,Integer> cur : waits.get(e_i)){
+				SerialEpisode alpha = cur.getFirst();
+				Integer j = cur.getSecond();
 				int j_new = j+1;
 				if(j_new == alpha.getLength()){
 					j_new = 0;
 				}
 				if(alpha.get(j_new).equals(e_i)){
-					bag.add(new Tuple2<SerialEpisode,Integer>(alpha,j_new));
+					bag.add(new Pair<SerialEpisode,Integer>(alpha,j_new));
 				} else{
-					waits.get(alpha.get(j_new)).add(new Tuple2<SerialEpisode,Integer>(alpha,j_new));
+					waits.get(alpha.get(j_new)).add(new Pair<SerialEpisode,Integer>(alpha,j_new));
 				}
 				if(alpha.isLastIndex(j)){
 					if(frequencyList.hasValue(alpha)){
@@ -80,7 +80,7 @@ public class LossyEpisodeMiner {
 		return candidates.stream().filter(e -> isFrequent(e)).collect(Collectors.toList());
 	}
 
-	private void assertWaitsCondidtion(Map<EventType, List<Tuple2<SerialEpisode, Integer>>> waits, int size) {
+	private void assertWaitsCondidtion(Map<EventType, List<Pair<SerialEpisode, Integer>>> waits, int size) {
 		int totalSize = waits.values().stream().mapToInt( e -> e.size()).reduce( (a,b) -> a+b).getAsInt();
 		assert(size==totalSize);
 	}

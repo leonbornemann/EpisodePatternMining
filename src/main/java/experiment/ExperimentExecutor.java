@@ -32,15 +32,15 @@ import evaluation.DayBasedResultSerializer;
 import evaluation.EvaluationFiles;
 import evaluation.EvaluationResult;
 import evaluation.Evaluator;
-import prediction.mining.WindowMiner;
 import prediction.models.FBSWCModel;
 import prediction.models.Method;
-import prediction.models.PERMSTrainer;
 import prediction.models.PERMSModel;
 import prediction.models.PredictiveModel;
 import prediction.models.RandomGuessingModel;
 import prediction.models.SimpleMovingAverageForecastingModel;
-import semantic.SemanticKnowledgeCollector;
+import prediction.training.PERMSTrainer;
+import prediction.training.WindowMiner;
+import semantics.SemanticKnowledgeCollector;
 import util.IOService;
 import util.Pair;
 

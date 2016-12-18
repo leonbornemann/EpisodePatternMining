@@ -13,7 +13,7 @@ import data.events.CategoricalEventType;
 import data.events.Change;
 import data.stream.FixedStreamWindow;
 import data.stream.MultiFileCategoricalEventStream;
-import prediction.mining.WindowMiner;
+import prediction.training.WindowMiner;
 
 public class WindowMinerTest {
 

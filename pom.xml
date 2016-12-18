@@ -38,22 +38,7 @@
       <version>2.2.1</version>
   </dependency>   
 <!-- Use this dependency if you are using the DataStream API -->
-	<dependency>
-  	<groupId>org.apache.flink</groupId>
-  	<artifactId>flink-streaming-java_2.10</artifactId>
- 	 <version>1.0.1</version>
-	</dependency>
 <!-- Use this dependency if you are using the DataSet API -->
-	<dependency>
-  	<groupId>org.apache.flink</groupId>
-  	<artifactId>flink-java</artifactId>
-  	<version>1.0.1</version>
-	</dependency>
-	<dependency>
-  	<groupId>org.apache.flink</groupId>
-  	<artifactId>flink-clients_2.10</artifactId>
-  	<version>1.0.1</version>
-</dependency>
 <dependency>
     <groupId>org.apache.spark</groupId>
     <artifactId>spark-core_2.10</artifactId>

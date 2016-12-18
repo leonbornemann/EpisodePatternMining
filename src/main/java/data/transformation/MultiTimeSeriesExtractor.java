@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
-import semantic.SemanticKnowledgeCollector;
+import semantics.SemanticKnowledgeCollector;
 import util.IOService;
 
 /***

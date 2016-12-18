@@ -1,4 +1,4 @@
-package prediction.mining;
+package prediction.training;
 
 import java.util.List;
 import java.util.Set;

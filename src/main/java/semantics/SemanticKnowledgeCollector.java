@@ -1,4 +1,4 @@
-package semantic;
+package semantics;
 
 import java.io.IOException;
 import java.util.ArrayList;
