@@ -51,7 +51,7 @@ public class TransformationMain {
 
 	private static void timeSeriesToAnnotated() {
 		normal();
-		threshold();
+		//threshold();
 	}
 
 	private static void normal() {
