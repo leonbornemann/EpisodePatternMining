@@ -22,7 +22,7 @@ import episode.pattern.storage.EpisodeIdentifier;
 import episode.pattern.storage.EpisodeTrie;
 import episode.unstable_experimental_lossy_counting.EventType;
 import episode.unstable_experimental_lossy_counting.SerialEpisode;
-import episode.unstable_experimental_lossy_counting.trie.SerialEpisodeTrie;
+import episode.unstable_experimental_lossy_counting.SerialEpisodeTrie;
 
 public class TrieTest {
 
@@ -37,20 +37,6 @@ public class TrieTest {
 	private static CategoricalEventType I = new CategoricalEventType("mystic7", Change.DOWN);
 	private static CategoricalEventType J = new CategoricalEventType("mystic8", Change.DOWN);
 	private static CategoricalEventType K = new CategoricalEventType("mystic9", Change.DOWN);
-	
-	
-	@Test
-	public void memoryTest(){
-		HashMap<ParallelEpisodePattern,Integer> powerset = initPowerset(Arrays.asList(A,B,C,D,E,F,G,H,I,J,K,K,K,K));
-		EpisodeTrie<Integer> trie = new EpisodeTrie<>();
-		for (ParallelEpisodePattern pattern : powerset.keySet()) {
-			assert(!trie.hasValue(pattern));
-			trie.setValue(pattern, powerset.get(pattern));
-		}
-		System.out.println("done");
-		System.out.println(trie.getValue(null));
-		System.out.println(powerset.getOrDefault(null, 1));
-	}
 	
 	@Test
 	public void addAllNewTest(){

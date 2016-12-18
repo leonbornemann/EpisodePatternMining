@@ -18,7 +18,7 @@ import data.stream.CategoricalEventStream;
 import data.stream.InMemoryCategoricalEventStream;
 import episode.pattern.EpisodePattern;
 import episode.pattern.SerialEpisodePattern;
-import episode.pattern.recognition.SimpleSerialEpisodeIdentifierRecognitionDFA;
+import episode.pattern.recognition.SerialEpisodeRecognitionDFA;
 import util.StandardDateTimeFormatter;
 
 /***
@@ -53,7 +53,7 @@ public class Generator {
 	private ArrayList<Double> weights;
 	private ArrayList<SerialEpisodePattern> sourceEpisodes;
 	private ArrayList<CategoricalEvent> stream;
-	private Map<SerialEpisodePattern,SimpleSerialEpisodeIdentifierRecognitionDFA> embedStatus = new HashMap<>();
+	private Map<SerialEpisodePattern,SerialEpisodeRecognitionDFA> embedStatus = new HashMap<>();
 	private Map<SerialEpisodePattern, LocalDateTime> lastTimeStamps = new HashMap<>();
 	private CategoricalEventType toPredict;
 	
@@ -88,7 +88,7 @@ public class Generator {
 
 	private void generateStream() {
 		stream = new ArrayList<>();
-		sourceEpisodes.forEach(e -> embedStatus.put(e, (SimpleSerialEpisodeIdentifierRecognitionDFA) e.getSimpleRecognitionDFA()));
+		sourceEpisodes.forEach(e -> embedStatus.put(e, (SerialEpisodeRecognitionDFA) e.getSimpleRecognitionDFA()));
 		LocalDateTime timestamp = LocalDateTime.parse("2001-01-01 10:00:00",StandardDateTimeFormatter.getStandardDateTimeFormatter());
 		while(stream.size() < T){
 			if(noiseEvent()){
@@ -130,7 +130,7 @@ public class Generator {
 	}
 
 	private void embedNextEvent(LocalDateTime timestamp, SerialEpisodePattern chosen) {
-		SimpleSerialEpisodeIdentifierRecognitionDFA dfa = embedStatus.get(chosen);
+		SerialEpisodeRecognitionDFA dfa = embedStatus.get(chosen);
 		CategoricalEventType nextEvent = dfa.peek();
 		dfa.processEvent(nextEvent);
 		if(dfa.isDone()){

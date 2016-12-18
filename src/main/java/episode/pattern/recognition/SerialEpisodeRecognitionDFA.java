@@ -3,12 +3,12 @@ package episode.pattern.recognition;
 import data.events.CategoricalEventType;
 import episode.pattern.storage.EpisodeIdentifier;
 
-public class SimpleSerialEpisodeIdentifierRecognitionDFA<T> implements SimpleEpisodeRecognitionDFA<T>{
+public class SerialEpisodeRecognitionDFA<T> implements EpisodeRecognitionDFA<T>{
 
 	private int pos;
 	private EpisodeIdentifier<T> identifier;
 	
-	public SimpleSerialEpisodeIdentifierRecognitionDFA(EpisodeIdentifier<T> identifier) {
+	public SerialEpisodeRecognitionDFA(EpisodeIdentifier<T> identifier) {
 		pos = 0;
 		this.identifier = identifier;
 	}

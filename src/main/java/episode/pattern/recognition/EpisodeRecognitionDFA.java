@@ -9,7 +9,7 @@ import episode.pattern.storage.EpisodeIdentifier;
  *
  * @param <T>
  */
-public interface SimpleEpisodeRecognitionDFA<T> {
+public interface EpisodeRecognitionDFA<T> {
 
 	public void reset();
 	

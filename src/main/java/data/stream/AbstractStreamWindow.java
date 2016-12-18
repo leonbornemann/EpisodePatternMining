@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 
 import data.events.CategoricalEvent;
 import episode.pattern.EpisodePattern;
-import episode.pattern.recognition.SimpleEpisodeRecognitionDFA;
+import episode.pattern.recognition.EpisodeRecognitionDFA;
 
 public abstract class AbstractStreamWindow implements StreamWindow {
 
@@ -25,7 +25,7 @@ public abstract class AbstractStreamWindow implements StreamWindow {
 
 	@Override
 	public boolean containsPattern(EpisodePattern pattern) {
-		SimpleEpisodeRecognitionDFA dfa = pattern.getSimpleRecognitionDFA();
+		EpisodeRecognitionDFA dfa = pattern.getSimpleRecognitionDFA();
 		for(CategoricalEvent event : window){
 			dfa.processEvent(event.getEventType());
 			if(dfa.isDone()){

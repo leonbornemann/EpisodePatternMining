@@ -7,13 +7,13 @@ import data.events.CategoricalEventType;
 import episode.pattern.ParallelEpisodePattern;
 import episode.pattern.storage.EpisodeIdentifier;
 
-public class SimpleParallelEpisodeIdentifierRecognitionDFA<T> implements SimpleEpisodeRecognitionDFA<T> {
+public class ParallelEpisodeRecognitionDFA<T> implements EpisodeRecognitionDFA<T> {
 
 	private HashMap<CategoricalEventType,Integer> remaining;
 	private EpisodeIdentifier<T> identifier;
 
 	
-	public SimpleParallelEpisodeIdentifierRecognitionDFA(EpisodeIdentifier<T> identifier) {
+	public ParallelEpisodeRecognitionDFA(EpisodeIdentifier<T> identifier) {
 		this.identifier = identifier;
 		reset();
 	}

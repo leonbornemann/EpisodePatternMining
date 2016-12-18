@@ -35,17 +35,17 @@ sd(perms$return)
 boxplot(return*100~method,data=totalTable,
         ylab="Total Return [%]",ylim = c(-250,500))
 boxplot(AccuracyIngoreEqual*100~method,data=totalTable,
-        ylab="Accuracy (Ignore Equal) [%]")
+        ylab="Accuracy [%]")
 
 barchart(AccuracyIngoreEqual*100~company,
          data=totalTable,
          groups=method,
          par.settings=list(superpose.polygon=list(col=colors)),
          origin = 50,
-         ylab = list(label="Accuracy (Ignore Equal) [%]",cex = 1.5),
+         ylab = list(label="Accuracy [%]",cex = 1.5),
          auto.key=list(space="top", columns=2, cex.title=1),
          scales=list(x=list(rot=90,cex = 1.1),y=list(rot=0,cex=1.2)),
-         main=list(label = "Accuracy (IE) by Company",cex = 1.25)
+         main=list(label = "Accuracy by Company",cex = 1.25)
 )
 
 barchart(return*100~company,
@@ -225,6 +225,7 @@ barchart(ImprovedAccuracyIngoreEqual*100~company,
 
 fbswc = read.table("FBSWC.csv",header=T,sep=",")
 perms = read.table("PERMS.csv",header=T,sep=",")
+colors = c("purple","blue")
 fbswc$method = "fbswc"
 perms$method = "perms"
 totalTable = rbind(fbswc,perms)
@@ -234,7 +235,7 @@ barchart(avgAccuracyIngoreEqual*100~date,
          data=totalTable,
          groups=method,
          par.settings=list(superpose.polygon=list(col=colors)),
-         origin = 0,
+         origin = 50,
          xlab = "time [days]",
          ylab = "average Return [%]",
          auto.key=list(space="top", columns=2, cex.title=1),

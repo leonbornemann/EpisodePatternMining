@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.Set;
 
 import data.events.CategoricalEventType;
-import episode.pattern.recognition.SimpleEpisodeRecognitionDFA;
-import episode.pattern.recognition.SimpleSerialEpisodeIdentifierRecognitionDFA;
+import episode.pattern.recognition.EpisodeRecognitionDFA;
+import episode.pattern.recognition.SerialEpisodeRecognitionDFA;
 import episode.pattern.storage.EpisodeTrie;
 
 public class SerialEpisodePattern implements EpisodePattern {
@@ -45,12 +45,12 @@ public class SerialEpisodePattern implements EpisodePattern {
 		events.add(annotatedEventType);
 	}
 
-	public SimpleSerialEpisodeIdentifierRecognitionDFA<?> getSimpleDFA() {
+	public SerialEpisodeRecognitionDFA<?> getSimpleDFA() {
 		if(trieForSelf==null){
 			trieForSelf = new EpisodeTrie<Object>();
 			trieForSelf.setValue(this, null);
 		}
-		return new SimpleSerialEpisodeIdentifierRecognitionDFA<>(trieForSelf.bfsIterator().next());
+		return new SerialEpisodeRecognitionDFA<>(trieForSelf.bfsIterator().next());
 	}
 	
 	@Override
@@ -59,7 +59,7 @@ public class SerialEpisodePattern implements EpisodePattern {
 	}
 
 	@Override
-	public SimpleEpisodeRecognitionDFA<?> getSimpleRecognitionDFA() {
+	public EpisodeRecognitionDFA<?> getSimpleRecognitionDFA() {
 		return getSimpleDFA();
 	}
 

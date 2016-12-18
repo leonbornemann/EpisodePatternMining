@@ -7,8 +7,6 @@ import java.util.Set;
 
 import org.apache.flink.api.java.tuple.Tuple2;
 
-import episode.unstable_experimental_lossy_counting.trie.SerialEpisodeTrie;
-
 public class LossySerialEpisodePatternMiner {
 
 	private double s;

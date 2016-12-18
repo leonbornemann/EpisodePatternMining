@@ -10,8 +10,6 @@ import java.util.stream.Collectors;
 
 import org.apache.flink.api.java.tuple.Tuple2;
 
-import episode.unstable_experimental_lossy_counting.trie.SerialEpisodeTrie;
-
 public class LossyEpisodeMiner {
 
 	private List<Tuple2<EventType, Integer>> source;
