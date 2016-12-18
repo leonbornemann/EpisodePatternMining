@@ -1,11 +1,7 @@
-package episode.unstable_experimental_lossy_counting.trie;
+package episode.unstable_experimental_lossy_counting;
 
 import java.util.Iterator;
 import java.util.Map.Entry;
-
-import episode.unstable_experimental_lossy_counting.EventType;
-import episode.unstable_experimental_lossy_counting.SerialEpisode;
-
 import java.util.Set;
 
 public class SerialEpisodeTrie<T> {

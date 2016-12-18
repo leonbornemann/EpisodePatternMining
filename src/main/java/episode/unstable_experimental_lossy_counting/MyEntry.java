@@ -1,4 +1,4 @@
-package episode.unstable_experimental_lossy_counting.trie;
+package episode.unstable_experimental_lossy_counting;
 
 import java.util.Map.Entry;
 

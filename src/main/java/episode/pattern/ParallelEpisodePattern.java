@@ -8,8 +8,8 @@ import java.util.Map;
 import java.util.Set;
 
 import data.events.CategoricalEventType;
-import episode.pattern.recognition.SimpleEpisodeRecognitionDFA;
-import episode.pattern.recognition.SimpleParallelEpisodeIdentifierRecognitionDFA;
+import episode.pattern.recognition.EpisodeRecognitionDFA;
+import episode.pattern.recognition.ParallelEpisodeRecognitionDFA;
 import episode.pattern.storage.EpisodeTrie;
 
 public class ParallelEpisodePattern implements EpisodePattern{
@@ -66,16 +66,16 @@ public class ParallelEpisodePattern implements EpisodePattern{
 	}
 
 	@Override
-	public SimpleEpisodeRecognitionDFA<?> getSimpleRecognitionDFA() {
+	public EpisodeRecognitionDFA<?> getSimpleRecognitionDFA() {
 		return getSimpleDFA();
 	}
 
-	public SimpleParallelEpisodeIdentifierRecognitionDFA<?> getSimpleDFA(){
+	public ParallelEpisodeRecognitionDFA<?> getSimpleDFA(){
 		if(trieForSelf==null){
 			trieForSelf = new EpisodeTrie<Object>();
 			trieForSelf.setValue(this, null);
 		}
-		return new SimpleParallelEpisodeIdentifierRecognitionDFA<>(trieForSelf.bfsIterator().next());
+		return new ParallelEpisodeRecognitionDFA<>(trieForSelf.bfsIterator().next());
 	}
 
 	public Map<CategoricalEventType,Integer> getEvents() {

@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import data.events.CategoricalEventType;
-import episode.pattern.recognition.SimpleEpisodeRecognitionDFA;
+import episode.pattern.recognition.EpisodeRecognitionDFA;
 
 /***
  * Main interface for episode patterns.
@@ -16,7 +16,7 @@ public interface EpisodePattern extends Serializable{
 
 	public int length();
 		
-	public SimpleEpisodeRecognitionDFA getSimpleRecognitionDFA();
+	public EpisodeRecognitionDFA getSimpleRecognitionDFA();
 
 	public Set<CategoricalEventType> getAllContainedTypes();
 

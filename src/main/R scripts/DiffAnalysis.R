@@ -31,7 +31,7 @@ library(lattice)
 boxplot(results[results$company=="ACOR",]$diff*100,horizontal = TRUE,
         main = "Distribution of the Relative Distance Vector",
         ylab = "ACOR",
-        xlab = "D_R [%]")
+        xlab = "D [%]")
 
 barchart(discrepancy*100 ~ company ,
        data = cmpInfo,
@@ -47,7 +47,7 @@ barchart(std*100 ~ company ,
          type = "o",
          origin = 0,
          main = list(label = "Standard Deviation of the Relative Difference Vector",cex = 1.25),
-         ylab = list(label="std(D_R) [%]",cex = 1.5),
+         ylab = list(label="std(D) [%]",cex = 1.5),
          scales=list(x=list(rot=90,cex = 1.1),y=list(rot=0,cex=1.2)))
 xyplot(std*100 ~ company ,data = cmpInfo, type = "o",main = "Standard Deviation of the Difference Vector",xlab = "companies",ylab = "std ( DIFF ) [%]")
 xyplot(numOutliers ~ company ,data = cmpInfo, type = "o",main = "Number of Outliers",xlab = "companies",ylab = "num Outliers")
